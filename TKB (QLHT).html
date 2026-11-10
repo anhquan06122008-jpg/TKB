@@ -1096,6 +1096,10 @@ legend {
         <span class="icon">📥</span>
         <span>Nhập lịch FAP</span>
       </button>
+      <button class="nav-item" data-view="oldImport" id="btnSideOldImport">
+        <span class="icon">📂</span>
+        <span>Nhập từ web cũ (HTML)</span>
+      </button>
       <button class="nav-item" data-view="subjects" id="btnSideSubj">
         <span class="icon">📚</span>
         <span>Quản lý Môn học</span>
@@ -1105,6 +1109,36 @@ legend {
         <span>Cài đặt & Tùy biến</span>
       </button>
     </nav>
+
+    <!-- User Account & Cloud Sync Card -->
+    <div id="userProfileCard" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 12px;">
+      <div id="userLoggedOutView" style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">TÀI KHOẢN CLOUD</span>
+          <span class="btn-pill" style="font-size: 10px; padding: 1px 6px;">Cục bộ</span>
+        </div>
+        <button type="button" class="btn primary" id="openAuthModalBtn" style="width: 100%; font-size: 12px; padding: 7px 10px; justify-content: center; gap: 6px;">
+          👤 Đăng nhập / Đăng ký
+        </button>
+      </div>
+      <div id="userLoggedInView" style="display: none; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div id="userAvatarCircle" style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">U</div>
+          <div style="overflow: hidden; flex: 1;">
+            <div id="userDisplayNameText" style="font-size: 13px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">User</div>
+            <div id="userEmailText" style="font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">user@mail.com</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-top: 2px;">
+          <span id="syncStatusBadge" style="color: var(--success); font-weight: 600;">🟢 Đã đồng bộ</span>
+          <button type="button" id="manualSyncBtn" title="Đồng bộ ngay" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 11px; font-weight: 600;">🔄 Sync</button>
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 4px;">
+          <button type="button" class="btn" id="openChangePwdBtn" style="flex: 1; font-size: 11px; padding: 4px 6px;">Đổi pass</button>
+          <button type="button" class="btn danger" id="userLogoutBtn" style="font-size: 11px; padding: 4px 6px;">Thoát</button>
+        </div>
+      </div>
+    </div>
 
     <div class="sidebar-footer">
       <button class="theme-toggle-btn" id="themeToggleBtn" type="button">
@@ -1149,6 +1183,8 @@ legend {
           <button type="button" class="view-mode-btn" data-mode="day">Hôm nay</button>
         </div>
 
+        <button type="button" class="btn-pill" id="openOldImportTopBtn">📂 Nhập web cũ</button>
+        <button type="button" class="btn-pill" id="topAuthBtn" title="Tài khoản cá nhân & Đồng bộ">👤 <span id="topAuthName">Tài khoản</span></button>
         <button type="button" class="btn-pill primary" id="openAddClassBtn">+ Thêm lịch</button>
       </div>
     </header>
@@ -1634,6 +1670,151 @@ legend {
   </form>
 </dialog>
 
+<!-- 7. USER AUTHENTICATION MODAL -->
+<dialog id="authModal" style="max-width: 440px;" aria-labelledby="authModalTitle">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <h2 id="authModalTitle" style="margin:0; font-size:18px;">Tài khoản EduMate Cloud</h2>
+    <button type="button" class="btn" id="closeAuthModalBtn" style="padding:4px 8px; font-size:12px;">✕</button>
+  </div>
+  
+  <div style="display:flex; border-bottom:1px solid var(--border); margin-bottom:16px;">
+    <button type="button" class="btn" id="authTabLogin" style="flex:1; border:none; border-bottom:2px solid var(--primary); font-weight:700; color:var(--primary); background:none; border-radius:0; cursor:pointer;">Đăng nhập</button>
+    <button type="button" class="btn" id="authTabRegister" style="flex:1; border:none; font-weight:600; color:var(--text-muted); background:none; border-radius:0; cursor:pointer;">Đăng ký</button>
+  </div>
+
+  <!-- Login Form -->
+  <form id="loginForm" style="display:grid; gap:12px;">
+    <label>Tên đăng nhập hoặc Email
+      <input type="text" id="loginIdInput" placeholder="VD: anhquan hoặc email@gmail.com" required autocomplete="username">
+    </label>
+    <label>Mật khẩu
+      <input type="password" id="loginPasswordInput" placeholder="••••••••" required autocomplete="current-password">
+    </label>
+    <p id="authLoginError" style="color:var(--danger); font-size:12px; margin:0;"></p>
+    <button type="submit" class="btn primary" id="submitLoginBtn" style="width:100%; padding:10px; font-weight:700; margin-top:4px;">
+      Đăng nhập & Đồng bộ
+    </button>
+    <p style="font-size:11px; color:var(--text-muted); text-align:center;">
+      Đăng nhập giúp bạn truy cập cùng thời khóa biểu trên cả máy tính và điện thoại.
+    </p>
+  </form>
+
+  <!-- Register Form -->
+  <form id="registerForm" style="display:none; gap:12px;">
+    <label>Tên đăng nhập
+      <input type="text" id="regUsernameInput" placeholder="VD: anhquan" required autocomplete="username">
+    </label>
+    <label>Email cá nhân
+      <input type="email" id="regEmailInput" placeholder="VD: anhquan@gmail.com" required autocomplete="email">
+    </label>
+    <label>Tên hiển thị
+      <input type="text" id="regDisplayNameInput" placeholder="VD: Anh Quân">
+    </label>
+    <label>Mật khẩu (Tối thiểu 6 ký tự)
+      <input type="password" id="regPasswordInput" placeholder="••••••••" required autocomplete="new-password">
+    </label>
+    <label>Xác nhận mật khẩu
+      <input type="password" id="regConfirmPasswordInput" placeholder="••••••••" required autocomplete="new-password">
+    </label>
+    <p id="authRegError" style="color:var(--danger); font-size:12px; margin:0;"></p>
+    <button type="submit" class="btn primary" id="submitRegisterBtn" style="width:100%; padding:10px; font-weight:700; margin-top:4px;">
+      Tạo tài khoản mới
+    </button>
+  </form>
+</dialog>
+
+<!-- 8. CHANGE PASSWORD MODAL -->
+<dialog id="changePasswordModal" style="max-width: 420px;" aria-labelledby="cpModalTitle">
+  <form id="changePasswordForm">
+    <h2 id="cpModalTitle">Đổi mật khẩu tài khoản</h2>
+    <label>Mật khẩu hiện tại
+      <input type="password" id="cpOldPassword" required>
+    </label>
+    <label>Mật khẩu mới (Tối thiểu 6 ký tự)
+      <input type="password" id="cpNewPassword" required>
+    </label>
+    <label>Xác nhận mật khẩu mới
+      <input type="password" id="cpConfirmPassword" required>
+    </label>
+    <p id="cpError" style="color:var(--danger); font-size:12px; margin:0;"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="cancelCpBtn">Hủy</button>
+      <button type="submit" class="btn primary">Cập nhật mật khẩu</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 9. OLD WEBSITE HTML / JSON IMPORT MODAL -->
+<dialog id="oldImportModal" style="max-width: 720px;" aria-labelledby="oldImportTitle">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <h2 id="oldImportTitle" style="margin:0; font-size:18px;">📂 Nhập thời khóa biểu từ website cũ (QLHT)</h2>
+    <button type="button" class="btn" id="closeOldImportBtn" style="padding:4px 8px; font-size:12px;">✕</button>
+  </div>
+  <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+    Hỗ trợ chuyển toàn bộ thời khóa biểu cá nhân từ file HTML của website QLHT cũ hoặc file sao lưu JSON sang EduMate 2.0.
+  </p>
+
+  <!-- Drag and drop zone -->
+  <div id="oldDropZone" style="border: 2px dashed var(--primary); border-radius: var(--radius-md); background: var(--bg-input); padding: 26px 20px; text-align: center; cursor: pointer; transition: background 0.2s;">
+    <div style="font-size: 36px; margin-bottom: 8px;">📄</div>
+    <div style="font-weight: 700; font-size: 14px; color: var(--text-main);">Kéo thả file HTML của website cũ vào đây</div>
+    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">hoặc bấm vào đây để chọn file (.html, .htm, .json) từ máy tính của bạn</div>
+    <input type="file" id="oldFileInput" accept=".html,.htm,.json" style="display:none;">
+  </div>
+
+  <div id="oldFileStatus" style="font-size: 13px; color: var(--text-muted); margin-top: 10px;"></div>
+
+  <!-- Preview Container -->
+  <div id="oldPreviewContainer" style="display:none; margin-top:14px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+      <div style="font-size:13px; font-weight:700;">
+        Đã tìm thấy: <span id="oldPreviewSubjCount" style="color:var(--primary);">0</span> môn học · <span id="oldPreviewClassCount" style="color:var(--primary);">0</span> buổi học
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button type="button" class="btn-pill" id="oldSelectAllBtn" style="font-size:11px;">Chọn tất cả</button>
+        <button type="button" class="btn-pill" id="oldDeselectAllBtn" style="font-size:11px;">Bỏ chọn</button>
+      </div>
+    </div>
+
+    <!-- Mode Selector: Merge vs Replace -->
+    <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:10px; display:flex; gap:16px; flex-wrap:wrap;">
+      <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer; font-weight:600;">
+        <input type="radio" name="oldImportMode" value="merge" checked>
+        ➕ Thêm vào lịch hiện tại (Gộp - An toàn)
+      </label>
+      <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer; font-weight:600; color:var(--danger);">
+        <input type="radio" name="oldImportMode" value="replace">
+        ⚠️ Thay thế toàn bộ lịch hiện tại (Tự động sao lưu)
+      </label>
+    </div>
+
+    <div class="fap-preview-wrap">
+      <table class="fap-preview-table" id="oldPreviewTable">
+        <thead>
+          <tr>
+            <th width="30"></th>
+            <th>Thứ / Ngày</th>
+            <th>Tiết / Giờ</th>
+            <th>Mã môn</th>
+            <th>Tên môn</th>
+            <th>Phòng</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody id="oldPreviewTableBody"></tbody>
+      </table>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px;">
+      <button type="button" class="btn" id="oldRollbackBtn" style="display:none; font-size:12px;">↩ Khôi phục bản sao lưu trước</button>
+      <div style="display:flex; gap:8px; margin-left:auto;">
+        <button type="button" class="btn" id="oldCancelBtn">Hủy</button>
+        <button type="button" class="btn primary" id="oldConfirmBtn">Xác nhận nhập vào lịch</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
 <!-- ==========================================================================
      CORE APPLICATION JAVASCRIPT
      ========================================================================== -->
@@ -1686,6 +1867,17 @@ legend {
       viewMode: 'grid'
     }
   };
+
+  // Auth & Cloud Sync State
+  const AUTH_TOKEN_KEY = 'edumate-auth-token';
+  const AUTH_USER_KEY = 'edumate-auth-user';
+  const PRE_REPLACE_KEY = 'edumate-pre-replace-backup';
+  
+  let currentUser = null;
+  let authToken = null;
+  let syncTimer = null;
+  let oldImportBatch = [];
+  let oldImportRawData = null;
 
   // View state
   let currentMonday = '';      // YYYY-MM-DD representing Monday of viewing week
@@ -1807,10 +1999,151 @@ legend {
     }
   }
 
+  function getApiBaseUrl() {
+    if (appState.settings && appState.settings.apiUrl) {
+      return appState.settings.apiUrl.replace(/\/+$/, '');
+    }
+    if (window.location.protocol.startsWith('http')) {
+      return window.location.origin;
+    }
+    return 'http://localhost:8080';
+  }
+
+  function queueCloudSync() {
+    if (!authToken) return;
+    const badge = $('syncStatusBadge');
+    if (badge) {
+      badge.textContent = '🔄 Đang đồng bộ...';
+      badge.style.color = 'var(--warning)';
+    }
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(pushCloudSync, 1200);
+  }
+
+  async function pushCloudSync() {
+    if (!authToken) return;
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/sync/push`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ data: appState })
+      });
+      const data = await res.json();
+      const badge = $('syncStatusBadge');
+      if (data.success && badge) {
+        badge.textContent = '🟢 Đã đồng bộ';
+        badge.style.color = 'var(--success)';
+      } else if (badge) {
+        badge.textContent = '⚠️ Lỗi đồng bộ';
+        badge.style.color = 'var(--danger)';
+      }
+    } catch (err) {
+      const badge = $('syncStatusBadge');
+      if (badge) {
+        badge.textContent = '⚠️ Ngoại tuyến (Đã lưu máy)';
+        badge.style.color = 'var(--warning)';
+      }
+    }
+  }
+
+  async function pullCloudSync() {
+    if (!authToken) return;
+    const badge = $('syncStatusBadge');
+    if (badge) {
+      badge.textContent = '🔄 Đang tải...';
+      badge.style.color = 'var(--warning)';
+    }
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/sync/pull`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success && data.data && typeof data.data === 'object') {
+        appState = upgradeData(data.data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        renderSchedule();
+        updateDashboard();
+        if (badge) {
+          badge.textContent = '🟢 Đã đồng bộ';
+          badge.style.color = 'var(--success)';
+        }
+      } else if (data.success && !data.data) {
+        // First sync: initialize cloud with local schedule
+        pushCloudSync();
+      }
+    } catch (err) {
+      if (badge) {
+        badge.textContent = '⚠️ Ngoại tuyến';
+        badge.style.color = 'var(--warning)';
+      }
+    }
+  }
+
+  function updateAuthUI() {
+    if (currentUser) {
+      $('userLoggedOutView').style.display = 'none';
+      $('userLoggedInView').style.display = 'flex';
+      $('userDisplayNameText').textContent = currentUser.displayName || currentUser.username;
+      $('userEmailText').textContent = currentUser.email || currentUser.username;
+      $('userAvatarCircle').textContent = (currentUser.displayName || currentUser.username).slice(0, 1).toUpperCase();
+      $('topAuthName').textContent = currentUser.displayName || currentUser.username;
+    } else {
+      $('userLoggedOutView').style.display = 'flex';
+      $('userLoggedInView').style.display = 'none';
+      $('topAuthName').textContent = 'Tài khoản';
+    }
+  }
+
+  async function initAuth() {
+    try {
+      authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      const rawUser = localStorage.getItem(AUTH_USER_KEY);
+      if (rawUser) currentUser = JSON.parse(rawUser);
+    } catch (e) {
+      authToken = null;
+      currentUser = null;
+    }
+    updateAuthUI();
+
+    if (authToken) {
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (data.success && data.user) {
+          currentUser = data.user;
+          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
+          updateAuthUI();
+          pullCloudSync();
+        } else {
+          authToken = null;
+          currentUser = null;
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem(AUTH_USER_KEY);
+          updateAuthUI();
+        }
+      } catch (err) {
+        const badge = $('syncStatusBadge');
+        if (badge) {
+          badge.textContent = '⚠️ Ngoại tuyến';
+          badge.style.color = 'var(--warning)';
+        }
+      }
+    }
+  }
+
   function saveStorage() {
     try {
       appState.v = 3;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      queueCloudSync();
     } catch (e) {
       alert('Không thể ghi dữ liệu vào trình duyệt (dung lượng đầy). Vui lòng dùng tính năng Xuất sao lưu.');
     }
@@ -2553,6 +2886,290 @@ legend {
   }
 
   // ==========================================================================
+  // OLD QLHT WEBSITE (HTML / JSON) IMPORTER (Yêu cầu 2 Spec)
+  // ==========================================================================
+  function parseOldWebsiteFile(text) {
+    const out = {
+      source: 'unknown',
+      subjects: [],
+      rules: [],
+      occurrences: []
+    };
+
+    // 1. Kiểm tra JSON trực tiếp
+    try {
+      const d = JSON.parse(text);
+      if (d && Array.isArray(d.subjects) && Array.isArray(d.rules)) {
+        out.source = 'json_backup';
+        out.subjects = d.subjects;
+        out.rules = d.rules;
+        return out;
+      }
+    } catch (e) {}
+
+    // 2. Phân tích HTML bằng DOMParser
+    const doc = new DOMParser().parseFromString(text, 'text/html');
+
+    // 2.1 Kiểm tra script chứa state JSON nhúng
+    const scripts = doc.querySelectorAll('script');
+    for (const sc of scripts) {
+      const content = sc.textContent || '';
+      const m = content.match(/data\s*=\s*(\{.*?subjects.*?rules.*?\});/s) || content.match(/\{["']v["']\s*:\s*[123].*?subjects.*?rules.*?\}/s);
+      if (m) {
+        try {
+          const parsed = JSON.parse(m[1] || m[0]);
+          if (parsed && Array.isArray(parsed.subjects) && Array.isArray(parsed.rules)) {
+            out.source = 'embedded_json';
+            out.subjects = parsed.subjects;
+            out.rules = parsed.rules;
+            return out;
+          }
+        } catch (err) {}
+      }
+    }
+
+    // 2.2 Trích xuất môn học từ danh sách <div class="subj" data-id="...">
+    const subjDivs = doc.querySelectorAll('.subj[data-id]');
+    subjDivs.forEach(div => {
+      const sid = div.dataset.id;
+      const nameInp = div.querySelector('input[data-act="name"]');
+      const codeInp = div.querySelector('input[data-act="code"]');
+      const colorInp = div.querySelector('input[data-act="color"]');
+      const name = (nameInp ? nameInp.value : '') || div.textContent.trim() || 'Môn học';
+      const code = codeInp ? codeInp.value.trim() : '';
+      const color = colorInp ? colorInp.value : PALETTE[out.subjects.length % PALETTE.length];
+      if (!out.subjects.some(s => s.id === sid)) {
+        out.subjects.push({ id: sid, name, code, color });
+      }
+    });
+
+    // 2.3 Trích xuất buổi học từ <button class="occ"> (Dấu hiệu đặc trưng web QLHT cũ)
+    const occBtns = doc.querySelectorAll('.occ');
+    if (occBtns.length > 0) {
+      out.source = 'old_qlht_html';
+      occBtns.forEach(btn => {
+        const rid = btn.dataset.rule || uid();
+        const dateStr = btn.dataset.date || '';
+        const strong = btn.querySelector('strong');
+        const span = btn.querySelector('span');
+        const name = strong ? strong.textContent.trim() : 'Môn học';
+        const spanText = span ? span.textContent.trim() : '';
+
+        const parts = spanText.split('·').map(p => p.trim());
+        let code = '';
+        let room = '';
+        let timePart = '';
+        if (parts.length >= 3) {
+          code = parts[0];
+          room = parts[1];
+          timePart = parts[2];
+        } else if (parts.length === 2) {
+          if (parts[1].includes(':')) {
+            code = parts[0];
+            timePart = parts[1];
+          } else {
+            code = parts[0];
+            room = parts[1];
+          }
+        }
+
+        const slot = detectSlot(timePart) || 1;
+        const color = btn.style.getPropertyValue('--c') || PALETTE[out.occurrences.length % PALETTE.length];
+
+        out.occurrences.push({
+          ruleId: rid,
+          date: dateStr,
+          name,
+          code,
+          room,
+          slot,
+          color,
+          selected: true
+        });
+      });
+    }
+
+    // 2.4 Nếu không có .occ, thử đọc bảng thông qua FAP / Generic table parser
+    if (!out.occurrences.length && !out.rules.length) {
+      const generic = parseFapHtmlOrText(text);
+      if (generic.length > 0) {
+        out.source = 'generic_table';
+        out.occurrences = generic;
+      }
+    }
+
+    return out;
+  }
+
+  function renderOldImportPreview() {
+    if (!oldImportBatch.length && !oldImportRawData) {
+      $('oldPreviewContainer').style.display = 'none';
+      $('oldFileStatus').textContent = 'Chưa nhận diện được dữ liệu thời khóa biểu trong file này.';
+      return;
+    }
+
+    $('oldPreviewContainer').style.display = 'block';
+    
+    const subjNames = new Set();
+    if (oldImportRawData && oldImportRawData.subjects) {
+      oldImportRawData.subjects.forEach(s => subjNames.add(s.name));
+    }
+    oldImportBatch.forEach(o => subjNames.add(o.name));
+
+    $('oldPreviewSubjCount').textContent = subjNames.size;
+    $('oldPreviewClassCount').textContent = oldImportBatch.length || (oldImportRawData ? oldImportRawData.rules.length : 0);
+
+    let html = '';
+    oldImportBatch.forEach((item, idx) => {
+      const wd = item.date ? weekdayOf(item.date) : 1;
+      const dayLabel = item.date ? `${shown(item.date)} (${DAYS_VN[wd - 1]})` : 'Hàng tuần';
+      const slotTime = DEFAULT_SLOTS[item.slot - 1] || ['07:00', '08:30'];
+      
+      const existing = item.date ? occAt(item.date, item.slot) : null;
+      let badge = '<span class="badge-status badge-new">Mới</span>';
+      if (existing) {
+        badge = (existing.code === item.code) ? '<span class="badge-status badge-dup">Đã có</span>' : '<span class="badge-status badge-clash">Trùng giờ</span>';
+      }
+
+      html += `
+        <tr>
+          <td><input type="checkbox" data-idx="${idx}" ${item.selected ? 'checked' : ''} class="old-row-check"></td>
+          <td>${dayLabel}</td>
+          <td>Tiết ${item.slot} (${slotTime.join('–')})</td>
+          <td><b>${esc(item.code || '--')}</b></td>
+          <td>${esc(item.name)}</td>
+          <td>${esc(item.room || '--')}</td>
+          <td>${badge}</td>
+        </tr>
+      `;
+    });
+
+    if (!html && oldImportRawData) {
+      html = `<tr><td colspan="7" style="text-align:center; padding:12px;">Đã tìm thấy bản sao lưu đầy đủ gồm ${oldImportRawData.subjects.length} môn học và ${oldImportRawData.rules.length} quy tắc xếp lịch.</td></tr>`;
+    }
+
+    $('oldPreviewTableBody').innerHTML = html;
+    
+    const preBackup = localStorage.getItem(PRE_REPLACE_KEY);
+    $('oldRollbackBtn').style.display = preBackup ? 'inline-block' : 'none';
+  }
+
+  function executeOldImport() {
+    const mode = document.querySelector('input[name="oldImportMode"]:checked').value;
+    
+    if (mode === 'replace') {
+      if (!confirm('BẠN ĐANG CHỌN THAY THẾ TOÀN BỘ LỊCH:\n\nToàn bộ lịch học hiện tại sẽ được tự động sao lưu dự phòng trước khi thay thế. Bạn có chắc chắn muốn tiếp tục không?')) {
+        return;
+      }
+      localStorage.setItem(PRE_REPLACE_KEY, JSON.stringify(appState));
+    }
+
+    if (oldImportRawData && (oldImportRawData.source === 'json_backup' || oldImportRawData.source === 'embedded_json')) {
+      if (mode === 'replace') {
+        appState.subjects = clone(oldImportRawData.subjects);
+        appState.rules = clone(oldImportRawData.rules);
+      } else {
+        const existingSids = new Set(appState.subjects.map(s => s.id));
+        oldImportRawData.subjects.forEach(s => {
+          if (!existingSids.has(s.id)) appState.subjects.push(s);
+        });
+        const existingRids = new Set(appState.rules.map(r => r.id));
+        oldImportRawData.rules.forEach(r => {
+          if (!existingRids.has(r.id)) appState.rules.push(r);
+        });
+      }
+    } else {
+      const selectedItems = oldImportBatch.filter(i => i.selected);
+      if (!selectedItems.length) {
+        alert('Vui lòng chọn ít nhất một buổi học để nhập!');
+        return;
+      }
+
+      if (mode === 'replace') {
+        appState.subjects = [];
+        appState.rules = [];
+      }
+
+      const dates = selectedItems.map(s => s.date).filter(Boolean).sort();
+      const bFrom = dates.length ? dates[0] : currentMonday;
+      const bTo = dates.length ? dates[dates.length - 1] : addDays(currentMonday, 7 * 16);
+
+      const findSubj = item => appState.subjects.find(x => 
+        (item.code && x.code && x.code.toLowerCase() === item.code.toLowerCase()) || 
+        x.name.toLowerCase() === item.name.toLowerCase()
+      );
+
+      const groups = new Map();
+      for (const s of selectedItems) {
+        let sub = findSubj(s);
+        if (!sub) {
+          sub = {
+            id: uid(),
+            name: s.name,
+            code: s.code || '',
+            color: s.color || PALETTE[appState.subjects.length % PALETTE.length],
+            from: bFrom,
+            to: bTo
+          };
+          appState.subjects.push(sub);
+        }
+        const wd = s.date ? weekdayOf(s.date) : 1;
+        const key = `${sub.id}|${wd}|${s.slot}|${s.room}`;
+        if (!groups.has(key)) {
+          groups.set(key, { sid: sub.id, wd, slot: s.slot, room: s.room, dates: new Set() });
+        }
+        if (s.date) groups.get(key).dates.add(s.date);
+      }
+
+      const newRules = [...groups.values()].map(g => {
+        const skip = [];
+        if (g.dates.size > 0) {
+          for (let k = bFrom; k <= bTo; k = addDays(k, 1)) {
+            if (weekdayOf(k) === g.wd && !g.dates.has(k)) skip.push(k);
+          }
+        }
+        return {
+          id: uid(),
+          sid: g.sid,
+          wd: g.wd,
+          slot: g.slot,
+          room: g.room || '',
+          from: bFrom,
+          to: bTo,
+          skip,
+          moved: {},
+          src: 'old_qlht'
+        };
+      });
+
+      appState.rules.push(...newRules);
+    }
+
+    saveStorage();
+    $('oldImportModal').close();
+    renderSchedule();
+    updateDashboard();
+    alert('🎉 ĐÃ NHẬP TOÀN BỘ LỊCH TỪ WEBSITE CŨ THÀNH CÔNG!\n\nDữ liệu đã được cập nhật và đồng bộ an toàn.');
+  }
+
+  function executeRollback() {
+    const preBackup = localStorage.getItem(PRE_REPLACE_KEY);
+    if (!preBackup) return;
+    if (confirm('Khôi phục lại toàn bộ lịch học trước thời điểm bạn thực hiện thao tác thay thế?')) {
+      try {
+        appState = upgradeData(JSON.parse(preBackup));
+        saveStorage();
+        renderSchedule();
+        updateDashboard();
+        $('oldImportModal').close();
+        alert('Đã khôi phục thành công bản sao lưu trước đó!');
+      } catch (e) {
+        alert('Lỗi khôi phục: ' + e.message);
+      }
+    }
+  }
+
+  // ==========================================================================
   // ICS (iCALENDAR) & BACKUP EXPORT / IMPORT
   // ==========================================================================
   function exportToIcs() {
@@ -2736,6 +3353,10 @@ legend {
           $('fapErrorMsg').textContent = '';
           $('fapPasteArea').textContent = '';
           $('fapModal').showModal();
+          return;
+        }
+        if (targetView === 'oldImport') {
+          openOldImportModal();
           return;
         }
         if (targetView === 'subjects') {
@@ -3025,6 +3646,9 @@ legend {
       e.preventDefault();
       appState.settings.university = $('setUniversity').value;
       appState.settings.semester = $('setSemester').value;
+      if ($('setApiUrl')) {
+        appState.settings.apiUrl = $('setApiUrl').value.trim();
+      }
       saveStorage();
       alert('Đã lưu cấu hình thành công!');
     });
@@ -3037,6 +3661,281 @@ legend {
         alert('Đã xóa toàn bộ dữ liệu.');
       }
     });
+
+    // ========================================================================
+    // AUTH & CLOUD SYNC EVENT HANDLERS
+    // ========================================================================
+    initAuth();
+
+    $('openAuthModalBtn').addEventListener('click', () => {
+      $('authLoginError').textContent = '';
+      $('authRegError').textContent = '';
+      $('authModal').showModal();
+    });
+
+    $('topAuthBtn').addEventListener('click', () => {
+      if (currentUser) {
+        if (confirm(`Tài khoản hiện tại: ${currentUser.displayName || currentUser.username}\nEmail: ${currentUser.email}\n\nBạn có muốn đăng xuất không?`)) {
+          logoutUser();
+        }
+      } else {
+        $('authLoginError').textContent = '';
+        $('authRegError').textContent = '';
+        $('authModal').showModal();
+      }
+    });
+
+    $('closeAuthModalBtn').addEventListener('click', () => $('authModal').close());
+
+    // Switch Login / Register Tabs
+    $('authTabLogin').addEventListener('click', () => {
+      $('authTabLogin').style.borderBottom = '2px solid var(--primary)';
+      $('authTabLogin').style.color = 'var(--primary)';
+      $('authTabRegister').style.borderBottom = 'none';
+      $('authTabRegister').style.color = 'var(--text-muted)';
+      $('loginForm').style.display = 'grid';
+      $('registerForm').style.display = 'none';
+    });
+
+    $('authTabRegister').addEventListener('click', () => {
+      $('authTabRegister').style.borderBottom = '2px solid var(--primary)';
+      $('authTabRegister').style.color = 'var(--primary)';
+      $('authTabLogin').style.borderBottom = 'none';
+      $('authTabLogin').style.color = 'var(--text-muted)';
+      $('loginForm').style.display = 'none';
+      $('registerForm').style.display = 'grid';
+    });
+
+    // Login Form Submit
+    $('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('authLoginError').textContent = '';
+      const loginId = $('loginIdInput').value.trim();
+      const password = $('loginPasswordInput').value.trim();
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login: loginId, password })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+          authToken = data.token;
+          currentUser = data.user;
+          localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
+          updateAuthUI();
+          $('authModal').close();
+          $('loginForm').reset();
+          pullCloudSync();
+          alert(`Xin chào ${currentUser.displayName || currentUser.username}! Đăng nhập thành công và đã kết nối đồng bộ Cloud.`);
+        } else {
+          $('authLoginError').textContent = data.error || 'Đăng nhập không thành công.';
+        }
+      } catch (err) {
+        $('authLoginError').textContent = 'Không thể kết nối máy chủ API. Vui lòng đảm bảo server.py đang chạy.';
+      }
+    });
+
+    // Register Form Submit
+    $('registerForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('authRegError').textContent = '';
+      const username = $('regUsernameInput').value.trim();
+      const email = $('regEmailInput').value.trim();
+      const displayName = $('regDisplayNameInput').value.trim() || username;
+      const password = $('regPasswordInput').value.trim();
+      const confirmPwd = $('regConfirmPasswordInput').value.trim();
+
+      if (password !== confirmPwd) {
+        $('authRegError').textContent = 'Mật khẩu xác nhận không khớp.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, displayName, password })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+          authToken = data.token;
+          currentUser = data.user;
+          localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
+          updateAuthUI();
+          $('authModal').close();
+          $('registerForm').reset();
+          pushCloudSync();
+          alert(`Chúc mừng ${currentUser.displayName || currentUser.username}! Đã tạo tài khoản thành công và bắt đầu đồng bộ.`);
+        } else {
+          $('authRegError').textContent = data.error || 'Đăng ký không thành công.';
+        }
+      } catch (err) {
+        $('authRegError').textContent = 'Không thể kết nối máy chủ API. Vui lòng kiểm tra lại server.';
+      }
+    });
+
+    // Logout Function
+    function logoutUser() {
+      if (confirm('Bạn có chắc chắn muốn đăng xuất không? Dữ liệu lịch trên máy vẫn được giữ nguyên.')) {
+        if (authToken) {
+          fetch(`${getApiBaseUrl()}/api/auth/logout`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          }).catch(() => {});
+        }
+        authToken = null;
+        currentUser = null;
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_USER_KEY);
+        updateAuthUI();
+        alert('Đã đăng xuất.');
+      }
+    }
+    $('userLogoutBtn').addEventListener('click', logoutUser);
+
+    $('manualSyncBtn').addEventListener('click', () => {
+      pullCloudSync();
+      pushCloudSync();
+    });
+
+    // Change Password Handlers
+    $('openChangePwdBtn').addEventListener('click', () => {
+      $('cpError').textContent = '';
+      $('changePasswordForm').reset();
+      $('changePasswordModal').showModal();
+    });
+    $('cancelCpBtn').addEventListener('click', () => $('changePasswordModal').close());
+    $('changePasswordForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('cpError').textContent = '';
+      const oldPassword = $('cpOldPassword').value.trim();
+      const newPassword = $('cpNewPassword').value.trim();
+      const confirmPwd = $('cpConfirmPassword').value.trim();
+
+      if (newPassword !== confirmPwd) {
+        $('cpError').textContent = 'Mật khẩu mới xác nhận không khớp.';
+        return;
+      }
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/change-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ oldPassword, newPassword })
+        });
+        const data = await res.json();
+        if (data.success) {
+          $('changePasswordModal').close();
+          alert('Đổi mật khẩu thành công!');
+        } else {
+          $('cpError').textContent = data.error || 'Không thể đổi mật khẩu.';
+        }
+      } catch (err) {
+        $('cpError').textContent = 'Lỗi kết nối máy chủ.';
+      }
+    });
+
+    // ========================================================================
+    // OLD QLHT WEBSITE IMPORT HANDLERS (Yêu cầu 2)
+    // ========================================================================
+    function openOldImportModal() {
+      oldImportBatch = [];
+      oldImportRawData = null;
+      $('oldPreviewContainer').style.display = 'none';
+      $('oldFileStatus').textContent = '';
+      const preBackup = localStorage.getItem(PRE_REPLACE_KEY);
+      $('oldRollbackBtn').style.display = preBackup ? 'inline-block' : 'none';
+      $('oldImportModal').showModal();
+    }
+
+    $('btnSideOldImport').addEventListener('click', openOldImportModal);
+    $('openOldImportTopBtn').addEventListener('click', openOldImportModal);
+    $('closeOldImportBtn').addEventListener('click', () => $('oldImportModal').close());
+    $('oldCancelBtn').addEventListener('click', () => $('oldImportModal').close());
+
+    // Drag and Drop Zone
+    const dropZone = $('oldDropZone');
+    dropZone.addEventListener('click', () => $('oldFileInput').click());
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.style.background = 'var(--bg-hover)';
+      dropZone.style.borderColor = 'var(--accent)';
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.background = 'var(--bg-input)';
+      dropZone.style.borderColor = 'var(--primary)';
+    });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.style.background = 'var(--bg-input)';
+      dropZone.style.borderColor = 'var(--primary)';
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processOldWebsiteFile(e.dataTransfer.files[0]);
+      }
+    });
+    $('oldFileInput').addEventListener('change', e => {
+      if (e.target.files && e.target.files[0]) {
+        processOldWebsiteFile(e.target.files[0]);
+      }
+      e.target.value = '';
+    });
+
+    function processOldWebsiteFile(file) {
+      $('oldFileStatus').textContent = `Đang đọc file: ${file.name}...`;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const res = parseOldWebsiteFile(reader.result);
+          if (res.source === 'json_backup' || res.source === 'embedded_json') {
+            oldImportRawData = res;
+            oldImportBatch = [];
+            const occurrences = [];
+            res.rules.forEach(r => {
+              const sub = res.subjects.find(s => s.id === r.sid) || {};
+              occurrences.push({
+                date: r.from || currentMonday,
+                slot: r.slot,
+                code: sub.code || '',
+                name: sub.name || '',
+                room: r.room || '',
+                selected: true
+              });
+            });
+            oldImportBatch = occurrences;
+          } else {
+            oldImportRawData = null;
+            oldImportBatch = res.occurrences || [];
+          }
+          $('oldFileStatus').textContent = `Đã phân tích thành công: ${file.name} (Phương thức: ${res.source})`;
+          renderOldImportPreview();
+        } catch (err) {
+          $('oldFileStatus').textContent = 'Lỗi phân tích file: ' + err.message;
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    $('oldSelectAllBtn').addEventListener('click', () => {
+      oldImportBatch.forEach(i => i.selected = true);
+      renderOldImportPreview();
+    });
+    $('oldDeselectAllBtn').addEventListener('click', () => {
+      oldImportBatch.forEach(i => i.selected = false);
+      renderOldImportPreview();
+    });
+    $('oldPreviewTableBody').addEventListener('change', e => {
+      if (e.target.classList.contains('old-row-check')) {
+        const idx = +e.target.dataset.idx;
+        if (oldImportBatch[idx]) oldImportBatch[idx].selected = e.target.checked;
+      }
+    });
+    $('oldConfirmBtn').addEventListener('click', executeOldImport);
+    $('oldRollbackBtn').addEventListener('click', executeRollback);
 
     // Render Initial Schedule
     renderSchedule();

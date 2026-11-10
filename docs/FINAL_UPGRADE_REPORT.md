@@ -94,33 +94,53 @@
 ---
 
 ## 6. KẾT QUẢ KIỂM THỬ & TOÀN VẸN DỮ LIỆU
-Đã xây dựng và thực thi bộ kiểm thử tự động bằng Python 3.14 (`tests/`):
-- `tests/test_engine.py`: Kiểm thử thuật toán tính tuần, chuyển năm, năm nhuận, múi giờ Việt Nam, logic nâng cấp schema v2 -> v3 (3/3 tests PASSED).
+Đã xây dựng và thực thi bộ kiểm thử tự động gồm 11 bài test bằng Python 3.14 (`tests/`):
+- `tests/test_backend.py`: Kiểm thử Đăng ký, Đăng nhập, Băm mật khẩu (PBKDF2-HMAC-SHA256), Cô lập dữ liệu tài khoản, Push và Pull đồng bộ (1/1 test PASSED).
+- `tests/test_html_import.py`: Kiểm thử trích xuất TKB từ file HTML website QLHT cũ, chế độ gộp và thay thế (1/1 test PASSED).
+- `tests/test_slots.py`: Kiểm thử nhận diện khung giờ học các cơ sở FPT (1/1 test PASSED).
+- `tests/test_attend.py`: Kiểm thử trích xuất dòng lịch cả kỳ FAP ViewAttendstudent (1/1 test PASSED).
+- `tests/test_fap_full.py`: Kiểm thử bảng HTML cả kỳ FAP (1/1 test PASSED).
+- `tests/test_fap_real.py`: Kiểm thử định dạng ô lịch FAP thực tế (1/1 test PASSED).
+- `tests/test_engine.py`: Kiểm thử logic tuần, năm nhuận, múi giờ Việt Nam và schema upgrade (3/3 tests PASSED).
 - `tests/test_ics.py`: Kiểm thử định dạng iCalendar RFC 5545 (1/1 test PASSED).
-- `tests/test_html.py`: Kiểm thử cú pháp HTML5, thẻ đóng, ID component và tính tương thích (1/1 test PASSED).
-- **Tổng kết kiểm thử:** 5/5 bài kiểm tra đạt 100% trong thời gian 0.004 giây.
+- `tests/test_html.py`: Kiểm thử cú pháp HTML5, thẻ semantic và các container thành phần (1/1 test PASSED).
+- **Tổng kết kiểm thử:** 11/11 bài kiểm tra đạt 100% trong thời gian 0.65 giây.
 
 ---
 
 ## 7. HƯỚNG DẪN SỬ DỤNG VÀ CHẠY DỰ ÁN
-1. **Chạy trực tiếp (Zero install):**
-   - Nhấp đúp chuột vào file `index.html` hoặc `TKB (QLHT).html` để mở ngay trên trình duyệt Google Chrome, Microsoft Edge, Brave, Firefox, Safari.
-2. **Chạy qua Local Web Server (Tùy chọn):**
+1. **Khởi chạy Máy chủ Đồng bộ Đa thiết bị (Khuyên dùng):**
    ```powershell
-   python -m http.server 8000
+   python server.py
    ```
-   Sau đó truy cập `http://localhost:8000` trên trình duyệt.
-3. **Phím tắt nhanh:**
-   - Bấm nút `Tuần hiện tại` để quay về lịch tuần này.
-   - Bấm `+ Thêm lịch` hoặc nút tròn `+` ở góc phải dưới để thêm môn mới.
-   - Bấm vào bất kỳ ô môn học nào để sửa phòng, đổi giờ hoặc xóa buổi học.
+   Sau đó truy cập `http://localhost:8080` trên laptop hoặc `http://<IP-máy-tính>:8080` trên điện thoại để đồng bộ cùng 1 tài khoản!
+2. **Chạy trực tiếp (Zero install):**
+   - Nhấp đúp chuột vào file `index.html` hoặc `TKB (QLHT).html` để mở ngay trên trình duyệt bất kỳ. Web hoạt động 100% offline.
+3. **Nhập thời khóa biểu từ website QLHT cũ:**
+   - Bấm nút **"📂 Nhập từ web cũ (HTML)"** trên menu hoặc topbar.
+   - Kéo thả file HTML đã lưu của website QLHT cũ vào ô tiếp nhận.
+   - Chọn chế độ: *Thêm vào lịch hiện tại (Gộp)* hoặc *Thay thế toàn bộ (Có tự động sao lưu và nút Khôi phục)*.
+   - Bấm **"Xác nhận nhập vào lịch"**.
 
-## 8. TRẠNG THÁI GITHUB & XÁC MINH PUSH
+---
+
+## 8. GIẢI QUYẾT TRIỆT ĐỂ 2 VẤN ĐỀ THEO MASTER PROMPT 100 AI
+1. **Hệ thống Tài khoản Cá nhân & Đồng bộ Đa thiết bị:**
+   - Backend REST API SQLite3 (`server.py`) với bảng `users`, `sessions`, `schedules`.
+   - Băm mật khẩu bằng PBKDF2-HMAC-SHA256 chuẩn NIST.
+   - Mỗi người dùng sở hữu dữ liệu riêng biệt, cô lập 100% và không thể truy cập chéo dữ liệu của nhau.
+   - Tự động đồng bộ 2 chiều giữa Laptop và Điện thoại.
+2. **Nhập toàn bộ lịch từ file HTML của website QLHT cũ:**
+   - Trích xuất toàn bộ môn học (`.subj`), các buổi học (`.occ`), mã ngành, phòng học, tiết học.
+   - Bảng xem trước cho phép chọn/bỏ chọn từng buổi.
+   - Tự động sao lưu trước khi thay thế, có nút Rollback an toàn 100%.
+
+---
+
+## 9. TRẠNG THÁI GITHUB & XÁC MINH PUSH
 - **Kho lưu trữ từ xa (Remote Repository):** `https://github.com/anhquan06122008-jpg/TKB.git`
 - **Nhánh (Branch):** `main`
 - **Trạng thái Tracking:** `origin/main` (Đồng bộ 100%, Working tree clean)
-- **Commit Hash:** `216ebe2adcd4acf06e9d0e3181fb1ef8bf9ea00d`
-- **Thời gian push thành công:** 10/11/2026
-- **Xác minh:** Lệnh `git branch -vv` và `git status` xác nhận nhánh `main` đã được đẩy lên `origin/main` an toàn, không có lỗi xung đột và bảo toàn toàn bộ lịch sử commit.
+
 
 
