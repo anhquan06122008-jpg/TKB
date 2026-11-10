@@ -39,7 +39,7 @@ class TestHtmlIntegrity(unittest.TestCase):
         parser.feed(content)
         # Check required semantic elements
         self.assertIn("<!DOCTYPE html>", content)
-        self.assertIn("<title>EduMate — Universal Student Planner & LMS 2.0</title>", content)
+        self.assertIn("<title>QLHT — Hệ Thống Quản Lý Thời Khóa Biểu & Học Tập</title>", content)
         self.assertIn("id=\"appHeader\"", content)
         self.assertIn("id=\"timetableToolbar\"", content)
         self.assertIn("id=\"pageTitleText\"", content)

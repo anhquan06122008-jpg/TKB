@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0f172a">
-<title>EduMate — Universal Student Planner & LMS 2.0</title>
+<title>QLHT — Hệ Thống Quản Lý Thời Khóa Biểu & Học Tập</title>
 <!-- OCR Engine CDN (Client-side only, optional for image scanning) -->
 <script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <style>
@@ -482,6 +482,7 @@ body {
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
   background: var(--bg-card);
 }
@@ -548,9 +549,26 @@ body {
 .schedule-body-scroll {
   flex: 1;
   min-height: 0;
+  height: 0;
   overflow-y: auto;
   overflow-x: auto;
   background: var(--bg-card);
+  scrollbar-width: thin;
+  scrollbar-color: #475569 var(--bg-sidebar);
+}
+.schedule-body-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.schedule-body-scroll::-webkit-scrollbar-track {
+  background: var(--bg-sidebar);
+}
+.schedule-body-scroll::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+.schedule-body-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 .schedule-body {
   display: grid;
@@ -1155,7 +1173,7 @@ legend {
   <div style="width:100%; max-width:440px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px 28px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
     <div style="text-align:center; margin-bottom:24px;">
       <div style="font-size:38px; margin-bottom:8px;">📖</div>
-      <h1 style="font-size:22px; font-weight:800; color:var(--text-main); margin:0 0 6px 0;">EduMate LMS</h1>
+      <h1 style="font-size:22px; font-weight:800; color:var(--text-main); margin:0 0 6px 0;">QLHT LMS</h1>
       <p style="font-size:13px; color:var(--text-muted); margin:0;">Đăng nhập để xem thời khóa biểu cá nhân của bạn</p>
     </div>
 
@@ -1228,8 +1246,8 @@ legend {
     <div class="brand">
       <div class="brand-icon">📖</div>
       <div class="brand-text">
-        <h1>EduMate</h1>
-        <span>Your Study Companion</span>
+        <h1>QLHT</h1>
+        <span>Quản Lý Học Tập</span>
       </div>
     </div>
 
@@ -1521,7 +1539,7 @@ legend {
 
           <label>Chế độ giao diện (Theme)
             <select id="setTheme">
-              <option value="dark">Tối (Dark Mode - EduMate Slate)</option>
+              <option value="dark">Tối (Dark Mode - QLHT Slate)</option>
               <option value="light">Sáng (Light Mode - Modern Clean)</option>
             </select>
           </label>
@@ -1596,7 +1614,7 @@ legend {
       Kéo nút tím bên dưới thả lên thanh Dấu trang (Bookmark Bar) trình duyệt. Khi đang ở trang FAP (Weekly Timetable hoặc View Attendance), chỉ cần <b>bấm nút này 1 cái</b> là toàn bộ lịch FAP sẽ tự động copy vào bộ nhớ máy tính!
     </p>
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-      <a href="javascript:(function(){try{var tables=Array.from(document.querySelectorAll('table'));var t=tables.find(function(tbl){var txt=tbl.innerText||tbl.textContent||'';return/(slot|tiết)\s*\d/i.test(txt)||(/(mon|tue|wed|thu|fri|sat|sun)/i.test(txt)&&/\d{1,2}\/\d{1,2}/.test(txt));})||tables.find(function(tbl){return/activity|attendance|student/i.test(tbl.className+' '+tbl.id);})||document.querySelector('#ctl00_mainContent_divStudents table')||document.querySelector('.table-bordered');if(!t){alert('Không tìm thấy bảng lịch trên trang này!\n\nBạn hãy mở trang Weekly Timetable hoặc View Attendance trên FAP rồi bấm lại nhé!');return;}var h=t.outerHTML;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(h).then(function(){alert('🎉 ĐÃ COPY TOÀN BỘ LỊCH TỪ FAP THÀNH CÔNG!\n\n👉 Bây giờ hãy quay lại trang EduMate và bấm nút: &quot;📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; (hoặc nhấn Ctrl+V) để nạp lịch nhé!');}).catch(function(){fallback(h);});}else{fallback(h);}function fallback(val){var ta=document.createElement('textarea');ta.value=val;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('🎉 ĐÃ COPY TOÀN BỘ LỊCH TỪ FAP!\n\n👉 Quay lại trang EduMate và bấm nút: &quot;📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; nhé!');}}catch(e){alert('Lỗi: '+e.message);}})();" 
+      <a href="javascript:(function(){try{var tables=Array.from(document.querySelectorAll('table'));var t=tables.find(function(tbl){var txt=tbl.innerText||tbl.textContent||'';return/(slot|tiết)\s*\d/i.test(txt)||(/(mon|tue|wed|thu|fri|sat|sun)/i.test(txt)&&/\d{1,2}\/\d{1,2}/.test(txt));})||tables.find(function(tbl){return/activity|attendance|student/i.test(tbl.className+' '+tbl.id);})||document.querySelector('#ctl00_mainContent_divStudents table')||document.querySelector('.table-bordered');if(!t){alert('Không tìm thấy bảng lịch trên trang này!\n\nBạn hãy mở trang Weekly Timetable hoặc View Attendance trên FAP rồi bấm lại nhé!');return;}var h=t.outerHTML;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(h).then(function(){alert('🎉 ĐÃ COPY TOÀN BỘ LỊCH TỪ FAP THÀNH CÔNG!\n\n👉 Bây giờ hãy quay lại trang QLHT và bấm nút: &quot;📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; (hoặc nhấn Ctrl+V) để nạp lịch nhé!');}).catch(function(){fallback(h);});}else{fallback(h);}function fallback(val){var ta=document.createElement('textarea');ta.value=val;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('🎉 ĐÃ COPY TOÀN BỘ LỊCH TỪ FAP!\n\n👉 Quay lại trang QLHT và bấm nút: &quot;📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; nhé!');}}catch(e){alert('Lỗi: '+e.message);}})();" 
          class="btn primary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-size:12px; cursor:grab;" title="Kéo nút này thả lên thanh Bookmark (Ctrl+Shift+B)">
         ⭐ Kéo vào Bookmark: [Lấy Lịch]
       </a>
@@ -1724,9 +1742,13 @@ legend {
       <label>Phòng học / Nền tảng
         <input id="newCourseRoom" maxlength="60" placeholder="VD: 327, BE-302, Zoom">
       </label>
-      <label>Màu sắc môn
-        <input type="color" id="newCourseColor" value="#2563eb" style="height: 38px; width: 100%; padding: 2px; cursor: pointer;">
-      </label>
+      <div>
+        <label style="display:block; margin-bottom: 6px; font-weight:600; font-size:13px;">Màu sắc môn (10 màu tiêu chuẩn)
+          <input type="hidden" id="newCourseColor" value="#2563eb">
+        </label>
+        <div id="courseColorPalette" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 4px 0;"></div>
+        <div id="colorSyncNotice" style="font-size: 11.5px; color: var(--primary); margin-top: 4px; min-height: 16px;"></div>
+      </div>
     </div>
 
     <p id="addClassError" style="color: var(--danger); font-size: 12.5px; white-space: pre-line; margin: 0;"></p>
@@ -1760,6 +1782,13 @@ legend {
       <label>Phòng / Nền tảng
         <input id="editCourseRoom" maxlength="60">
       </label>
+    </div>
+
+    <div>
+      <label style="display:block; margin-bottom: 6px; font-weight:600; font-size:13px;">Màu sắc môn (10 màu tiêu chuẩn)
+        <input type="hidden" id="editCourseColor" value="#2563eb">
+      </label>
+      <div id="editColorPalette" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 4px 0;"></div>
     </div>
 
     <fieldset style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--bg-card);">
@@ -1875,7 +1904,7 @@ legend {
 <!-- 7. USER AUTHENTICATION MODAL -->
 <dialog id="authModal" style="max-width: 440px;" aria-labelledby="authModalTitle">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-    <h2 id="authModalTitle" style="margin:0; font-size:18px;">Tài khoản EduMate Cloud</h2>
+    <h2 id="authModalTitle" style="margin:0; font-size:18px;">Tài khoản QLHT Cloud</h2>
     <button type="button" class="btn" id="closeAuthModalBtn" style="padding:4px 8px; font-size:12px;">✕</button>
   </div>
   
@@ -2015,9 +2044,18 @@ legend {
   ];
 
   // Palette with vivid modern colors
+  // 10 Màu sắc tiêu chuẩn cao cấp, tương phản tốt, dễ nhìn trên cả nền tối & sáng
   const PALETTE = [
-    '#7c3aed', '#2563eb', '#0891b2', '#059669', 
-    '#d97706', '#dc2626', '#db2777', '#4b5563'
+    '#2563eb', // 1. Xanh hoàng gia (Royal Blue)
+    '#7c3aed', // 2. Tím thạch anh (Deep Violet)
+    '#059669', // 3. Xanh ngọc lục (Emerald Green)
+    '#ea580c', // 4. Cam san hô (Coral Orange)
+    '#0284c7', // 5. Xanh dương sáng (Sky Blue)
+    '#db2777', // 6. Hồng cánh sen (Rose Pink)
+    '#0d9488', // 7. Xanh mòng két (Teal)
+    '#d97706', // 8. Vàng hổ phách (Amber Gold)
+    '#4f46e5', // 9. Chàm Indigo (Modern Indigo)
+    '#9333ea'  // 10. Tím phong lan (Purple Orchid)
   ];
 
   // Primary State Container
@@ -2573,7 +2611,7 @@ legend {
     updateRelativeWeekDisplay();
     renderHeaderDays();
     if (activeGridMode === 'grid') {
-      $('gridDisplayWrap').style.display = 'block';
+      $('gridDisplayWrap').style.display = 'flex';
       $('agendaDisplayWrap').style.display = 'none';
       $('dayDisplayWrap').style.display = 'none';
       renderGridBody();
@@ -2919,6 +2957,63 @@ legend {
   }
 
   // ==========================================================================
+  // ==========================================================================
+  // 10 STANDARD COLORS PALETTE CONTROLLER & SYNC ENGINE
+  // ==========================================================================
+  function renderColorPalette(containerId, inputId, activeColor, onSelect) {
+    const container = $(containerId);
+    const hiddenInput = $(inputId);
+    if (!container || !hiddenInput) return;
+
+    let currentColor = (activeColor || hiddenInput.value || PALETTE[0]).toLowerCase();
+    const match = PALETTE.find(c => c.toLowerCase() === currentColor);
+    currentColor = match || PALETTE[0];
+    hiddenInput.value = currentColor;
+
+    container.innerHTML = PALETTE.map((hex, i) => {
+      const isSelected = hex.toLowerCase() === currentColor.toLowerCase();
+      return `
+        <button type="button" class="color-swatch-btn ${isSelected ? 'active' : ''}" 
+                data-color="${hex}" 
+                title="Màu ${i + 1}: ${hex}"
+                style="width: 28px; height: 28px; border-radius: 50%; background: ${hex}; border: ${isSelected ? '2.5px solid #ffffff' : '2px solid transparent'}; outline: ${isSelected ? '2px solid var(--primary)' : 'none'}; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.25); transition: transform 0.15s, outline 0.15s;">
+          ${isSelected ? '<span style="color: #ffffff; font-size: 13px; font-weight: 800; line-height: 1;">✓</span>' : ''}
+        </button>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.color-swatch-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = btn.dataset.color;
+        hiddenInput.value = c;
+        renderColorPalette(containerId, inputId, c, onSelect);
+        if (onSelect) onSelect(c);
+      });
+    });
+  }
+
+  function syncAddModalColorFromExisting() {
+    const code = $('newCourseCode') ? $('newCourseCode').value.trim().toUpperCase() : '';
+    const name = $('newCourseName') ? $('newCourseName').value.trim().toLowerCase() : '';
+    const existing = appState.subjects.find(s => 
+      (code && s.code && s.code.toUpperCase() === code) ||
+      (name && s.name && s.name.toLowerCase() === name)
+    );
+    if (existing) {
+      const col = existing.color || PALETTE[0];
+      $('newCourseColor').value = col;
+      renderColorPalette('courseColorPalette', 'newCourseColor', col);
+      if (existing.room && $('newCourseRoom') && !$('newCourseRoom').value) {
+        $('newCourseRoom').value = existing.room;
+      }
+      if ($('colorSyncNotice')) {
+        $('colorSyncNotice').innerHTML = `🔄 <i>Đã tự động đồng bộ màu với môn <b>${esc(existing.name || existing.code)}</b></i>`;
+      }
+    } else {
+      if ($('colorSyncNotice')) $('colorSyncNotice').innerHTML = '';
+    }
+  }
+
   // INITIALIZATION & EVENT LISTENERS
   // ==========================================================================
   function init() {
@@ -2989,7 +3084,7 @@ legend {
           focus: '⏱ Đồng hồ Tập trung (Focus)',
           settings: '⚙ Cài đặt & Tùy biến'
         };
-        if ($('pageTitleText')) $('pageTitleText').textContent = viewTitles[targetView] || 'EduMate LMS';
+        if ($('pageTitleText')) $('pageTitleText').textContent = viewTitles[targetView] || 'QLHT';
         if ($('timetableToolbar')) $('timetableToolbar').style.display = (targetView === 'schedule') ? 'flex' : 'none';
 
         if (targetView === 'dashboard') updateDashboard();
@@ -3190,6 +3285,8 @@ legend {
     const closeAddBtn = $('closeAddClassBtn');
     if (closeAddBtn) closeAddBtn.addEventListener('click', () => $('addClassModal').close());
     $('newDaysCheckboxGroup').addEventListener('change', updateSlotPickersGroup);
+    $('newCourseCode').addEventListener('input', syncAddModalColorFromExisting);
+    $('newCourseName').addEventListener('input', syncAddModalColorFromExisting);
 
     $('addClassForm').addEventListener('submit', handleSaveAddClass);
 
@@ -3832,7 +3929,11 @@ legend {
 
     $('newCourseFrom').value = currentMonday || mondayKey(todayKey());
     $('newCourseTo').value = addDays($('newCourseFrom').value, 7 * 7 - 3);
-    $('newCourseColor').value = PALETTE[appState.subjects.length % PALETTE.length];
+    
+    const initialColor = PALETTE[appState.subjects.length % PALETTE.length];
+    $('newCourseColor').value = initialColor;
+    renderColorPalette('courseColorPalette', 'newCourseColor', initialColor);
+    if ($('colorSyncNotice')) $('colorSyncNotice').innerHTML = '';
     
     updateSlotPickersGroup();
     $('addClassModal').showModal();
@@ -3880,9 +3981,10 @@ legend {
       s.color = color;
       if (!s.from || from < s.from) s.from = from;
       if (!s.to || to > s.to) s.to = to;
-      // Filter out overlapping rules for the selected weekdays
-      const pickedWds = slotPicks.map(p => p.wd);
-      appState.rules = appState.rules.filter(r => !(r.sid === s.id && pickedWds.includes(r.wd)));
+      // Chỉ xóa quy tắc nếu trùng cả Thứ VÀ Tiết học của môn này (giữ nguyên các tiết khác cùng môn trong cùng ngày)
+      appState.rules = appState.rules.filter(r => 
+        !(r.sid === s.id && slotPicks.some(p => p.wd === r.wd && p.slot === r.slot))
+      );
     }
 
     const newRules = slotPicks.map(p => ({
@@ -3945,6 +4047,9 @@ legend {
     $('editCourseRoom').value = o.room || '';
     $('editSubjFrom').value = r.from || sub.from || '';
     $('editSubjTo').value = r.to || sub.to || '';
+    const curSubjColor = sub.color || PALETTE[0];
+    if ($('editCourseColor')) $('editCourseColor').value = curSubjColor;
+    renderColorPalette('editColorPalette', 'editCourseColor', curSubjColor);
 
     // Dynamic scope descriptions for clarity
     const lblOne = $('editScopeOneLabel');
@@ -3978,6 +4083,8 @@ legend {
 
     const newFrom = $('editSubjFrom').value.trim();
     const newTo = $('editSubjTo').value.trim();
+    const newColor = $('editCourseColor') ? $('editCourseColor').value : '';
+    if (newColor) sub.color = newColor;
     if (newFrom && newTo && newFrom > newTo) {
       $('editClassError').textContent = 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.';
       return;
