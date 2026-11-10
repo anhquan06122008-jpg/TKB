@@ -64,6 +64,12 @@ class TestBackendApi(unittest.TestCase):
             except Exception:
                 pass
 
+    def test_health_check(self):
+        status, res = api_call("/api/health")
+        self.assertEqual(status, 200)
+        self.assertTrue(res.get("success"))
+        self.assertEqual(res.get("status"), "online")
+
     def test_auth_and_isolation(self):
         # 1. Register User A
         status, res_a = api_call("/api/auth/register", "POST", {

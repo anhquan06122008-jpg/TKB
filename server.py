@@ -9,6 +9,7 @@ Features:
 
 import http.server
 import socketserver
+import socket
 import urllib.parse
 import sqlite3
 import hashlib
@@ -148,6 +149,15 @@ class EduMateHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
+
+        if path in ("/api/health", "/api/ping"):
+            return self.send_json(200, {
+                "success": True,
+                "status": "online",
+                "app": "EduMate Cloud Server",
+                "version": "3.5.0",
+                "time": datetime.now(timezone.utc).isoformat()
+            })
 
         if path == "/api/auth/me":
             user = get_authenticated_user(self.headers)
@@ -368,10 +378,32 @@ class EduMateHandler(http.server.SimpleHTTPRequestHandler):
 
         return self.send_json(404, {"success": False, "error": "API route không tồn tại."})
 
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
 def run_server(port=DEFAULT_PORT):
     init_db()
-    with socketserver.TCPServer(("", port), EduMateHandler) as httpd:
-        print(f"🚀 EduMate LMS 2.0 Server đang chạy tại http://localhost:{port}")
+    local_ip = get_local_ip()
+    server_address = ("", port)
+    with ThreadedTCPServer(server_address, EduMateHandler) as httpd:
+        print("=" * 65)
+        print("🚀 EduMate LMS 2.0 Cloud Server đã sẵn sàng!")
+        print(f"💻 Truy cập trên Máy tính (Laptop/PC):  http://localhost:{port}")
+        if local_ip != "127.0.0.1":
+            print(f"📱 Truy cập trên Điện thoại (Chung Wi-Fi): http://{local_ip}:{port}")
+        print("=" * 65)
+        print("💡 Nhấn Ctrl + C để dừng máy chủ.\n")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:

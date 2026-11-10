@@ -72,25 +72,31 @@
 
 ## 🚀 Hướng dẫn khởi chạy Máy chủ & Web
 
-### Cách 1: Khởi chạy Máy chủ Đồng bộ Đa thiết bị (Khuyên dùng)
-EduMate đi kèm máy chủ backend siêu tốc viết bằng Python chuẩn (không cần cài đặt thư viện ngoài):
+### Cách 1: Khởi chạy 1-Click trên Windows (Nhanh nhất & Khuyên dùng)
+- Chỉ cần **nhấp đúp chuột vào file `Chay_Server.bat`** trong thư mục `TKB`.
+- Tệp lệnh sẽ tự động nhận diện Python trên máy tính, khởi động máy chủ đồng bộ Cloud tại cổng `8080`, và **tự động mở trình duyệt web** tại `http://localhost:8080`.
+- Đồng thời cửa sổ console sẽ in sẵn địa chỉ IP để mở trên điện thoại (ví dụ: `http://192.168.1.15:8080`).
+
+### Cách 2: Khởi chạy thủ công qua Terminal
+EduMate đi kèm máy chủ backend siêu tốc viết bằng Python chuẩn (không cần cài đặt thêm bất kỳ thư viện ngoài nào):
 
 ```bash
 # Khởi chạy server
-python server.py
+python server.py 8080
+# Hoặc nếu dùng MSYS2:
+C:\msys64\ucrt64\bin\python.exe server.py 8080
 ```
-Server sẽ chạy tại `http://localhost:8080`.
 - Mở trên laptop: Truy cập `http://localhost:8080`.
 - Mở trên điện thoại (cùng mạng Wi-Fi): Truy cập `http://<địa-chỉ-IP-máy-tính>:8080` (ví dụ `http://192.168.1.15:8080`).
 - Đăng ký 1 tài khoản $\rightarrow$ Lịch học tự động đồng bộ giữa cả 2 thiết bị!
 
-### Cách 2: Chạy trực tiếp tệp tin (Local-First Offline)
-Chỉ cần nhấp đúp chuột vào file `index.html` hoặc `TKB (QLHT).html` để mở ngay trên trình duyệt bất kỳ. Web vẫn hoạt động 100% bằng bộ nhớ cục bộ.
+### Cách 3: Chạy trực tiếp tệp tin (Local-First Offline)
+Chỉ cần nhấp đúp chuột vào file `index.html` hoặc `TKB (QLHT).html` để mở ngay trên trình duyệt bất kỳ. Web vẫn hoạt động 100% bằng bộ nhớ cục bộ, hoặc bấm **[Dùng Hồ sơ Cục bộ (Offline)]** trong hộp thoại tài khoản mà không cần bật server.
 
 ---
 
 ## 🧪 Kiểm thử tự động (Automated Testing)
-Dự án có bộ kiểm thử tự động 11 bài test nghiêm ngặt bao phủ backend, auth, bảo mật, import HTML và logic lịch:
+Dự án có bộ kiểm thử tự động 12 bài test nghiêm ngặt bao phủ backend, auth, bảo mật, import HTML, ping/health check và logic lịch:
 
 ```bash
 python -m unittest discover tests

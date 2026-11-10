@@ -1721,6 +1721,43 @@ legend {
       Tạo tài khoản mới
     </button>
   </form>
+
+  <!-- API Server Status & URL Config -->
+  <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; margin-top:14px; font-size:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+        🌐 Máy chủ API:
+        <span id="authModalApiBadge" style="color:var(--text-muted);">Đang kiểm tra...</span>
+      </span>
+      <button type="button" class="btn" id="toggleApiConfigBtn" style="padding:2px 8px; font-size:11px;">⚙️ Đổi URL</button>
+    </div>
+
+    <!-- Collapsible URL input -->
+    <div id="apiConfigRow" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);">
+      <label style="display:block; font-size:11px; margin-bottom:4px; color:var(--text-muted);">
+        Địa chỉ Máy chủ API (Backend Server URL):
+      </label>
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="customApiUrlInput" placeholder="VD: http://localhost:8080" style="flex:1; padding:6px 8px; font-size:12px;">
+        <button type="button" class="btn primary" id="testAndSaveApiBtn" style="padding:6px 10px; font-size:12px; white-space:nowrap;">⚡ Lưu & Thử lại</button>
+      </div>
+      <p style="font-size:11px; color:var(--text-muted); margin:6px 0 0 0;">
+        💡 Nếu dùng trên điện thoại, nhập địa chỉ IP của máy tính (ví dụ: <code>http://192.168.1.15:8080</code>).
+      </p>
+    </div>
+
+    <!-- Friendly Server Offline Help (shows when server unreachable) -->
+    <div id="authServerOfflineHelp" style="display:none; margin-top:10px; padding:10px; background:rgba(239, 68, 68, 0.08); border:1px solid var(--danger); border-radius:var(--radius-sm); font-size:11.5px; line-height:1.5; color:var(--text-main);">
+      <div style="font-weight:700; color:var(--danger); margin-bottom:4px; display:flex; align-items:center; gap:4px;">
+        ⚠️ Máy chủ API chưa được khởi động!
+      </div>
+      <div>Để đăng ký / đồng bộ thời khóa biểu:</div>
+      <div style="margin: 4px 0;">
+        1. <strong>Trên máy tính:</strong> Nhấp đúp file <code style="background:var(--bg-input); padding:2px 6px; border-radius:4px; font-weight:bold; color:var(--primary);">Chay_Server.bat</code> trong thư mục TKB để tự động bật máy chủ.<br>
+        2. <strong>Hoặc trải nghiệm ngay:</strong> Bấm <button type="button" class="btn" id="activateOfflineProfileBtn" style="padding:2px 8px; font-size:11px; font-weight:bold; color:var(--primary); background:rgba(99,102,241,0.15); border:1px solid var(--primary); border-radius:4px; margin-left:2px; cursor:pointer;">Dùng Hồ sơ Cục bộ (Offline)</button> để sử dụng ngay mà không cần server.
+      </div>
+    </div>
+  </div>
 </dialog>
 
 <!-- 8. CHANGE PASSWORD MODAL -->
@@ -2003,6 +2040,14 @@ legend {
     if (appState.settings && appState.settings.apiUrl) {
       return appState.settings.apiUrl.replace(/\/+$/, '');
     }
+    const saved = localStorage.getItem('edumate_custom_api_url');
+    if (saved) {
+      return saved.replace(/\/+$/, '');
+    }
+    // Static hosting (GitHub Pages, Vercel, Netlify static, pages.dev) doesn't have local API:
+    if (window.location.hostname && (window.location.hostname.endsWith('github.io') || window.location.hostname.endsWith('pages.dev'))) {
+      return 'http://localhost:8080';
+    }
     if (window.location.protocol.startsWith('http')) {
       return window.location.origin;
     }
@@ -2089,8 +2134,18 @@ legend {
     if (currentUser) {
       $('userLoggedOutView').style.display = 'none';
       $('userLoggedInView').style.display = 'flex';
-      $('userDisplayNameText').textContent = currentUser.displayName || currentUser.username;
-      $('userEmailText').textContent = currentUser.email || currentUser.username;
+      if (currentUser.isOffline) {
+        $('userDisplayNameText').textContent = (currentUser.displayName || currentUser.username) + ' (Cục bộ)';
+        $('userEmailText').textContent = 'Hồ sơ thiết bị (Ngoại tuyến)';
+        const badge = $('syncStatusBadge');
+        if (badge) {
+          badge.textContent = '💾 Cục bộ (Offline)';
+          badge.style.color = 'var(--text-muted)';
+        }
+      } else {
+        $('userDisplayNameText').textContent = currentUser.displayName || currentUser.username;
+        $('userEmailText').textContent = currentUser.email || currentUser.username;
+      }
       $('userAvatarCircle').textContent = (currentUser.displayName || currentUser.username).slice(0, 1).toUpperCase();
       $('topAuthName').textContent = currentUser.displayName || currentUser.username;
     } else {
@@ -3667,25 +3722,115 @@ legend {
     // ========================================================================
     initAuth();
 
-    $('openAuthModalBtn').addEventListener('click', () => {
+    async function checkApiHealth(customUrl) {
+      const base = (customUrl || getApiBaseUrl()).replace(/\/+$/, '');
+      const badge = $('authModalApiBadge');
+      const helpBox = $('authServerOfflineHelp');
+      if (badge) {
+        badge.textContent = '🔄 Đang kiểm tra...';
+        badge.style.color = 'var(--warning)';
+      }
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 2000);
+        const res = await fetch(`${base}/api/health`, { method: 'GET', signal: controller.signal });
+        clearTimeout(timer);
+        if (res.ok) {
+          if (badge) {
+            badge.textContent = `🟢 Online (${base})`;
+            badge.style.color = 'var(--success)';
+          }
+          if (helpBox) helpBox.style.display = 'none';
+          return true;
+        }
+      } catch (e) {
+        try {
+          const controller2 = new AbortController();
+          const timer2 = setTimeout(() => controller2.abort(), 1500);
+          const res2 = await fetch(`${base}/api/auth/me`, { method: 'GET', signal: controller2.signal });
+          clearTimeout(timer2);
+          if (res2.status === 401 || res2.status === 200) {
+            if (badge) {
+              badge.textContent = `🟢 Online (${base})`;
+              badge.style.color = 'var(--success)';
+            }
+            if (helpBox) helpBox.style.display = 'none';
+            return true;
+          }
+        } catch (e2) {}
+      }
+      if (badge) {
+        badge.textContent = `🔴 Offline (${base})`;
+        badge.style.color = 'var(--danger)';
+      }
+      if (helpBox) helpBox.style.display = 'block';
+      return false;
+    }
+
+    function openAuthModal() {
       $('authLoginError').textContent = '';
       $('authRegError').textContent = '';
+      $('customApiUrlInput').value = getApiBaseUrl();
       $('authModal').showModal();
-    });
+      checkApiHealth();
+    }
+
+    $('openAuthModalBtn').addEventListener('click', openAuthModal);
 
     $('topAuthBtn').addEventListener('click', () => {
       if (currentUser) {
-        if (confirm(`Tài khoản hiện tại: ${currentUser.displayName || currentUser.username}\nEmail: ${currentUser.email}\n\nBạn có muốn đăng xuất không?`)) {
+        if (confirm(`Tài khoản hiện tại: ${currentUser.displayName || currentUser.username}\n${currentUser.isOffline ? 'Chế độ: Ngoại tuyến (Cục bộ)' : 'Email: ' + (currentUser.email || 'N/A')}\n\nBạn có muốn đăng xuất / đổi tài khoản không?`)) {
           logoutUser();
         }
       } else {
-        $('authLoginError').textContent = '';
-        $('authRegError').textContent = '';
-        $('authModal').showModal();
+        openAuthModal();
       }
     });
 
     $('closeAuthModalBtn').addEventListener('click', () => $('authModal').close());
+
+    $('toggleApiConfigBtn').addEventListener('click', () => {
+      const row = $('apiConfigRow');
+      row.style.display = row.style.display === 'none' ? 'block' : 'none';
+      if (row.style.display === 'block') {
+        $('customApiUrlInput').value = getApiBaseUrl();
+      }
+    });
+
+    $('testAndSaveApiBtn').addEventListener('click', async () => {
+      const url = $('customApiUrlInput').value.trim();
+      if (!url) {
+        alert('Vui lòng nhập địa chỉ URL máy chủ (Ví dụ: http://localhost:8080)');
+        return;
+      }
+      const ok = await checkApiHealth(url);
+      if (ok) {
+        localStorage.setItem('edumate_custom_api_url', url);
+        if (!appState.settings) appState.settings = {};
+        appState.settings.apiUrl = url;
+        saveStorage();
+        alert(`✅ Kết nối thành công tới máy chủ ${url}!`);
+      } else {
+        alert(`❌ Không thể kết nối tới ${url}. Vui lòng kiểm tra lại URL hoặc đảm bảo server đang bật.`);
+      }
+    });
+
+    $('activateOfflineProfileBtn').addEventListener('click', () => {
+      const name = prompt('Nhập tên hiển thị của bạn (Ví dụ: Anh Quân):', (currentUser && currentUser.displayName) || 'Anh Quân');
+      if (name === null) return;
+      const displayName = name.trim() || 'Học viên';
+      currentUser = {
+        id: 'local_' + Date.now(),
+        username: 'local_user',
+        email: 'local@device',
+        displayName: displayName,
+        isOffline: true
+      };
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
+      updateAuthUI();
+      $('authModal').close();
+      alert(`Đã kích hoạt Hồ sơ Cục bộ cho "${displayName}". Mọi dữ liệu lịch học sẽ được lưu an toàn trên máy của bạn.`);
+    });
 
     // Switch Login / Register Tabs
     $('authTabLogin').addEventListener('click', () => {
@@ -3733,7 +3878,9 @@ legend {
           $('authLoginError').textContent = data.error || 'Đăng nhập không thành công.';
         }
       } catch (err) {
-        $('authLoginError').textContent = 'Không thể kết nối máy chủ API. Vui lòng đảm bảo server.py đang chạy.';
+        const url = getApiBaseUrl();
+        $('authLoginError').innerHTML = `Không thể kết nối máy chủ API tại <strong>${url}</strong>.<br>Vui lòng chạy file <strong>Chay_Server.bat</strong> hoặc chọn "Dùng Hồ sơ Cục bộ" bên dưới.`;
+        if ($('authServerOfflineHelp')) $('authServerOfflineHelp').style.display = 'block';
       }
     });
 
@@ -3773,7 +3920,9 @@ legend {
           $('authRegError').textContent = data.error || 'Đăng ký không thành công.';
         }
       } catch (err) {
-        $('authRegError').textContent = 'Không thể kết nối máy chủ API. Vui lòng kiểm tra lại server.';
+        const url = getApiBaseUrl();
+        $('authRegError').innerHTML = `Không thể kết nối máy chủ API tại <strong>${url}</strong>.<br>Vui lòng chạy file <strong>Chay_Server.bat</strong> hoặc chọn "Dùng Hồ sơ Cục bộ" bên dưới.`;
+        if ($('authServerOfflineHelp')) $('authServerOfflineHelp').style.display = 'block';
       }
     });
 
