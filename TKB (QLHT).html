@@ -487,6 +487,32 @@ body {
   background: var(--bg-card);
 }
 
+#agendaDisplayWrap, #dayDisplayWrap {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 20px 100px 20px;
+  background: var(--bg-card);
+  scrollbar-width: thin;
+  scrollbar-color: #475569 var(--bg-sidebar);
+}
+#agendaDisplayWrap::-webkit-scrollbar, #dayDisplayWrap::-webkit-scrollbar {
+  width: 8px;
+}
+#agendaDisplayWrap::-webkit-scrollbar-track, #dayDisplayWrap::-webkit-scrollbar-track {
+  background: var(--bg-sidebar);
+}
+#agendaDisplayWrap::-webkit-scrollbar-thumb, #dayDisplayWrap::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+#agendaDisplayWrap::-webkit-scrollbar-thumb:hover, #dayDisplayWrap::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 /* Days Header (Fixed at top of schedule view) */
 .schedule-header {
   display: grid;
@@ -1393,14 +1419,14 @@ legend {
       </div>
 
       <!-- Agenda / List Mode Display -->
-      <div id="agendaDisplayWrap" style="display: none; padding: 16px 20px;">
+      <div id="agendaDisplayWrap" style="display: none;">
         <div class="agenda-list" id="agendaListContent">
           <!-- Rendered dynamically -->
         </div>
       </div>
 
       <!-- Day View Mode Display -->
-      <div id="dayDisplayWrap" style="display: none; padding: 16px 20px;">
+      <div id="dayDisplayWrap" style="display: none;">
         <div class="agenda-list" id="dayListContent" style="max-width: 650px;">
           <!-- Rendered dynamically -->
         </div>

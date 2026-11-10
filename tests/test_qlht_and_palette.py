@@ -31,11 +31,13 @@ class TestQlhtAndPalette(unittest.TestCase):
         self.assertIn("Tối (Dark Mode - QLHT Slate)</option>", self.index_content)
 
     def test_requirement_2_scroll_8_slots(self):
-        """Grid must be flexbox with flex:1, height:0, overflow-y:auto to enable scrolling 8 slots"""
+        """Grid and Agenda/Day views must have overflow-y:auto to enable scrolling"""
         self.assertIn("$('gridDisplayWrap').style.display = 'flex';", self.index_content)
         self.assertIn(".schedule-body-scroll", self.index_content)
         self.assertIn("overflow-y: auto;", self.index_content)
         self.assertIn(".schedule-body-scroll::-webkit-scrollbar", self.index_content)
+        self.assertIn("#agendaDisplayWrap, #dayDisplayWrap", self.index_content)
+        self.assertIn("-webkit-overflow-scrolling: touch;", self.index_content)
 
     def test_requirement_3_10_color_palette(self):
         """10 Standard Colors Palette must be defined and integrated into Add & Edit modals"""
