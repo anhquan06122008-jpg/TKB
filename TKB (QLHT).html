@@ -1,0 +1,3116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0f172a">
+<title>EduMate — Universal Student Planner & LMS 2.0</title>
+<!-- OCR Engine CDN (Client-side only, optional for image scanning) -->
+<script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<style>
+/* ==========================================================================
+   CSS VARIABLES & MODERN SLATE/NAVY THEME (EduMate Style)
+   ========================================================================== */
+:root {
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.35);
+
+  /* Light Theme Defaults */
+  --bg-main: #f8fafc;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #f1f5f9;
+  --bg-input: #f8fafc;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+  
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --primary-light: #ede9fe;
+  --accent: #6366f1;
+  --accent-glow: rgba(99, 102, 241, 0.2);
+  --success: #10b981;
+  --success-bg: #d1fae5;
+  --warning: #f59e0b;
+  --warning-bg: #fef3c7;
+  --danger: #ef4444;
+  --danger-bg: #fee2e2;
+  --grid-line: #e2e8f0;
+  --time-col: #64748b;
+}
+
+[data-theme="dark"], body.dark-mode {
+  --bg-main: #0b0f19;
+  --bg-sidebar: #111726;
+  --bg-card: #161e31;
+  --bg-hover: #1f2a42;
+  --bg-input: #0f1523;
+  --border: #232e48;
+  --border-light: #1b2438;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-inverse: #ffffff;
+
+  --primary: #7c3aed;
+  --primary-hover: #8b5cf6;
+  --primary-light: rgba(124, 58, 237, 0.25);
+  --accent: #6366f1;
+  --accent-glow: rgba(99, 102, 241, 0.3);
+  --success: #10b981;
+  --success-bg: rgba(16, 185, 129, 0.2);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245, 158, 11, 0.2);
+  --danger: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.2);
+  --grid-line: #1c263c;
+  --time-col: #8292ab;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-main: #0b0f19;
+    --bg-sidebar: #111726;
+    --bg-card: #161e31;
+    --bg-hover: #1f2a42;
+    --bg-input: #0f1523;
+    --border: #232e48;
+    --border-light: #1b2438;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-inverse: #ffffff;
+    --primary: #7c3aed;
+    --primary-hover: #8b5cf6;
+    --primary-light: rgba(124, 58, 237, 0.25);
+    --grid-line: #1c263c;
+    --time-col: #8292ab;
+  }
+}
+
+/* ==========================================================================
+   BASE RESET & LAYOUT
+   ========================================================================== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* App Shell Layout */
+#app {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   SIDEBAR NAVIGATION (EduMate reference design)
+   ========================================================================== */
+.sidebar {
+  width: 250px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  flex-shrink: 0;
+  z-index: 40;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 20px;
+}
+.brand-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+.brand-text h1 {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+.brand-text span {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+.nav-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+.nav-item.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+}
+.nav-item .icon {
+  font-size: 18px;
+  width: 22px;
+  display: inline-flex;
+  justify-content: center;
+}
+.nav-item .badge {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+.nav-item.active .badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.theme-toggle-btn:hover {
+  border-color: var(--primary);
+}
+
+/* ==========================================================================
+   MAIN CONTENT WRAPPER
+   ========================================================================== */
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* Top App Header */
+.topbar {
+  background-color: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+.mobile-menu-btn {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  color: var(--text-main);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Week Navigator Pill Controls */
+.week-nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn-pill {
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.btn-pill:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--primary);
+}
+.btn-pill.primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+.btn-pill.primary:hover {
+  filter: brightness(1.1);
+}
+
+.week-indicator {
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
+}
+.week-indicator .relative-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.week-indicator .date-range {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.search-box {
+  position: relative;
+  width: 220px;
+}
+.search-box input {
+  width: 100%;
+  padding: 7px 12px 7px 32px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-box input:focus {
+  border-color: var(--primary);
+}
+.search-box .search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.view-mode-toggle {
+  display: flex;
+  background: var(--bg-input);
+  padding: 3px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+}
+.view-mode-btn {
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.view-mode-btn.active {
+  background: var(--bg-card);
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   VIEW CONTAINERS
+   ========================================================================== */
+.view-container {
+  display: none;
+  padding: 20px 24px;
+  flex: 1;
+}
+.view-container.active {
+  display: block;
+}
+
+/* ==========================================================================
+   SCHEDULE VIEW: TIMETABLE GRID (Matching Reference Image)
+   ========================================================================== */
+.schedule-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Days Header */
+.schedule-header {
+  display: grid;
+  grid-template-columns: 80px repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sidebar);
+}
+.time-corner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 18px;
+  border-right: 1px solid var(--border);
+}
+.day-header-cell {
+  padding: 12px 6px;
+  text-align: center;
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: background-color 0.2s;
+}
+.day-header-cell:last-child {
+  border-right: none;
+}
+.day-header-cell .day-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.day-header-cell .day-number {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+/* Today highlighted pill matching the screenshot */
+.day-header-cell.today {
+  background: #ffffff !important;
+  color: #5b21b6 !important;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.day-header-cell.today .day-name {
+  color: #6d28d9 !important;
+  font-weight: 600;
+}
+.day-header-cell.today .day-number {
+  color: #4c1d95 !important;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* Grid Body */
+.schedule-body-scroll {
+  overflow-x: auto;
+  max-height: calc(100vh - 190px);
+}
+.schedule-body {
+  display: grid;
+  grid-template-columns: 80px repeat(7, minmax(130px, 1fr));
+  min-width: 900px;
+}
+.time-slot-label {
+  padding: 14px 8px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-light);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--time-col);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--bg-sidebar);
+}
+.time-slot-label small {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.grid-cell {
+  border-right: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+  padding: 6px;
+  min-height: 84px;
+  vertical-align: top;
+  position: relative;
+  transition: background-color 0.15s;
+}
+.grid-cell:nth-child(8n) {
+  border-right: none;
+}
+.grid-cell:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Event Class Blocks (EduMate Pill Style) */
+.class-pill {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  cursor: pointer;
+  border: none;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+.class-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
+}
+.class-pill .title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.3;
+}
+.class-pill .title-row .subj-icon {
+  font-size: 13px;
+}
+.class-pill .details-row {
+  font-size: 11px;
+  opacity: 0.92;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.class-pill .code-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+/* ==========================================================================
+   AGENDA / LIST VIEW (Mobile-first)
+   ========================================================================== */
+.agenda-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.agenda-day-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.agenda-day-card.is-today {
+  border-left: 5px solid var(--primary);
+  background: var(--bg-hover);
+}
+.agenda-day-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.agenda-day-title .today-tag {
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+.agenda-events {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.agenda-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  border-left: 4px solid var(--subj-color, var(--primary));
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.agenda-item:hover {
+  transform: translateX(3px);
+}
+.agenda-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.agenda-item-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-main);
+}
+.agenda-item-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.agenda-item-time {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+/* ==========================================================================
+   SMART DASHBOARD VIEW
+   ========================================================================== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+.stat-info h4 {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.stat-info .stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+.stat-info .stat-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 900px) {
+  .dashboard-sections { grid-template-columns: 1fr; }
+}
+.dash-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.dash-card-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   TASK & ASSIGNMENT VIEW
+   ========================================================================== */
+.tasks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+.task-item.completed {
+  opacity: 0.6;
+}
+.task-item.completed .task-title {
+  text-decoration: line-through;
+}
+.task-checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.task-content {
+  flex: 1;
+}
+.task-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.task-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.task-priority {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.priority-high { background: var(--danger-bg); color: var(--danger); }
+.priority-medium { background: var(--warning-bg); color: var(--warning); }
+.priority-low { background: var(--success-bg); color: var(--success); }
+
+/* ==========================================================================
+   FOCUS / POMODORO VIEW
+   ========================================================================== */
+.pomodoro-container {
+  max-width: 500px;
+  margin: 30px auto;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px 30px;
+  box-shadow: var(--shadow-md);
+}
+.pomo-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+.pomo-tab {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.pomo-tab.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.pomo-timer-display {
+  font-size: 72px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main);
+  margin-bottom: 24px;
+  letter-spacing: -2px;
+}
+.pomo-controls {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+.pomo-btn {
+  padding: 12px 32px;
+  border-radius: var(--radius-full);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.15s;
+}
+.pomo-btn:hover { transform: scale(1.04); }
+.pomo-btn.start {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+}
+.pomo-btn.reset {
+  background: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+}
+
+/* ==========================================================================
+   FLOATING ACTION BUTTON (FAB)
+   ========================================================================== */
+.fab-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+  z-index: 50;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.fab-btn:hover {
+  transform: scale(1.1) rotate(90deg);
+}
+
+/* ==========================================================================
+   MODAL DIALOGS (Universal Standard)
+   ========================================================================== */
+dialog {
+  width: calc(100% - 32px);
+  max-width: 560px;
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  margin: auto;
+  position: fixed;
+  inset: 0;
+}
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+}
+dialog h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text-main);
+}
+dialog form {
+  display: grid;
+  gap: 14px;
+}
+dialog label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+dialog input, dialog select, dialog textarea {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.2s;
+}
+dialog input:focus, dialog select:focus, dialog textarea:focus {
+  border-color: var(--primary);
+}
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+legend {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.days-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+.days-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+.btn {
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-main);
+  transition: all 0.15s;
+}
+.btn:hover { background: var(--bg-hover); }
+.btn.primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: #fff;
+  border-color: transparent;
+}
+.btn.danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.btn.danger:hover {
+  background: var(--danger-bg);
+}
+
+/* FAP Import Preview Table */
+.fap-preview-wrap {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin: 12px 0;
+}
+.fap-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.fap-preview-table th, .fap-preview-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: left;
+}
+.fap-preview-table th {
+  background: var(--bg-input);
+  position: sticky;
+  top: 0;
+  font-weight: 600;
+}
+.badge-status {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.badge-new { background: var(--success-bg); color: var(--success); }
+.badge-dup { background: var(--warning-bg); color: var(--warning); }
+.badge-clash { background: var(--danger-bg); color: var(--danger); }
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (Mobile < 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+  .search-box {
+    display: none;
+  }
+  .topbar {
+    padding: 10px 14px;
+  }
+  .view-container {
+    padding: 12px;
+  }
+  .schedule-body {
+    min-width: 650px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="sidebar" id="sidebar" aria-label="Menu chính">
+    <div class="brand">
+      <div class="brand-icon">📖</div>
+      <div class="brand-text">
+        <h1>EduMate</h1>
+        <span>Your Study Companion</span>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <button class="nav-item" data-view="dashboard">
+        <span class="icon">🏠</span>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item active" data-view="schedule">
+        <span class="icon">📅</span>
+        <span>Thời khóa biểu</span>
+        <span class="badge" id="schedBadge">Tuần</span>
+      </button>
+      <button class="nav-item" data-view="tasks">
+        <span class="icon">📝</span>
+        <span>Bài tập & Deadline</span>
+        <span class="badge" id="taskCountBadge">0</span>
+      </button>
+      <button class="nav-item" data-view="exams">
+        <span class="icon">🎯</span>
+        <span>Lịch thi & Hạn chót</span>
+      </button>
+      <button class="nav-item" data-view="focus">
+        <span class="icon">⏱</span>
+        <span>Tập trung (Focus)</span>
+      </button>
+      <button class="nav-item" data-view="fap" id="btnSideFap">
+        <span class="icon">📥</span>
+        <span>Nhập lịch FAP</span>
+      </button>
+      <button class="nav-item" data-view="subjects" id="btnSideSubj">
+        <span class="icon">📚</span>
+        <span>Quản lý Môn học</span>
+      </button>
+      <button class="nav-item" data-view="settings">
+        <span class="icon">⚙</span>
+        <span>Cài đặt & Tùy biến</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="theme-toggle-btn" id="themeToggleBtn" type="button">
+        <span id="themeBtnText">🌙 Dark Mode</span>
+        <span id="themeBtnIcon">☀</span>
+      </button>
+      <button class="btn-pill" id="quickExportBtn" type="button" style="justify-content:center;">
+        💾 Xuất sao lưu JSON
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <div class="main-wrapper">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Mở menu">☰</button>
+
+      <!-- Relative Week Navigator (Phase 4 Spec) -->
+      <div class="week-nav-bar" id="weekNavBar">
+        <button type="button" class="btn-pill" id="prevWeekBtn" title="Xem tuần trước">‹ Tuần trước</button>
+        <button type="button" class="btn-pill primary" id="currentWeekBtn" title="Về tuần hiện tại">Tuần hiện tại</button>
+        <button type="button" class="btn-pill" id="nextWeekBtn" title="Xem tuần sau">Tuần sau ›</button>
+        <input type="date" id="datePickerJump" class="btn-pill" title="Nhảy tới ngày bất kỳ" style="padding: 4px 8px;">
+
+        <div class="week-indicator">
+          <span class="relative-label" id="relativeWeekLabel">TUẦN HIỆN TẠI</span>
+          <span class="date-range" id="weekDateRange">09/11/2026 — 15/11/2026</span>
+        </div>
+      </div>
+
+      <!-- Topbar Right Actions -->
+      <div class="topbar-right">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="globalSearchInput" placeholder="Tìm môn, phòng, task...">
+        </div>
+
+        <div class="view-mode-toggle" id="viewModeToggle">
+          <button type="button" class="view-mode-btn active" data-mode="grid">Lưới</button>
+          <button type="button" class="view-mode-btn" data-mode="agenda">Danh sách</button>
+          <button type="button" class="view-mode-btn" data-mode="day">Hôm nay</button>
+        </div>
+
+        <button type="button" class="btn-pill primary" id="openAddClassBtn">+ Thêm lịch</button>
+      </div>
+    </header>
+
+    <!-- VIEW 1: TIMETABLE SCHEDULE VIEW (Central Core) -->
+    <main class="view-container active" id="scheduleView">
+      <!-- Grid Mode Display -->
+      <div id="gridDisplayWrap">
+        <div class="schedule-card">
+          <div class="schedule-header" id="scheduleHeader">
+            <div class="time-corner-icon">🕒</div>
+            <!-- Day header columns will be rendered here dynamically -->
+          </div>
+          <div class="schedule-body-scroll">
+            <div class="schedule-body" id="scheduleGridBody">
+              <!-- Grid slots and cells rendered here dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agenda / List Mode Display -->
+      <div id="agendaDisplayWrap" style="display: none;">
+        <div class="agenda-list" id="agendaListContent">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Day View Mode Display -->
+      <div id="dayDisplayWrap" style="display: none;">
+        <div class="agenda-list" id="dayListContent" style="max-width: 650px;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </main>
+
+    <!-- VIEW 2: SMART DASHBOARD -->
+    <section class="view-container" id="dashboardView">
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(124, 58, 237, 0.15); color: #7c3aed;">📚</div>
+          <div class="stat-info">
+            <h4>Môn đang học</h4>
+            <div class="stat-value" id="dashSubjCount">0</div>
+            <div class="stat-desc">Học kỳ hiện tại</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">⏱</div>
+          <div class="stat-info">
+            <h4>Giờ học tuần này</h4>
+            <div class="stat-value" id="dashStudyHours">0h</div>
+            <div class="stat-desc">Dựa trên lịch học thực tế</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">🎯</div>
+          <div class="stat-info">
+            <h4>Buổi học kế tiếp</h4>
+            <div class="stat-value" id="dashNextClass" style="font-size: 16px;">Không có</div>
+            <div class="stat-desc" id="dashNextCountdown">--</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">📝</div>
+          <div class="stat-info">
+            <h4>Bài tập cần làm</h4>
+            <div class="stat-value" id="dashPendingTasks">0</div>
+            <div class="stat-desc">Chưa hoàn thành</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-sections">
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h3>📅 Lịch học hôm nay</h3>
+            <span class="btn-pill" id="dashTodayDateLabel">Hôm nay</span>
+          </div>
+          <div id="dashTodayList" class="agenda-events">
+            <p style="color:var(--text-muted); padding: 16px 0; text-align: center;">Hôm nay bạn không có lịch học!</p>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h3>⚠️ Hạn chót & Lịch thi sắp tới</h3>
+          </div>
+          <div id="dashUpcomingList" class="agenda-events">
+            <p style="color:var(--text-muted); padding: 16px 0; text-align: center;">Không có deadline nào sắp đến.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: TASKS & ASSIGNMENTS -->
+    <section class="view-container" id="tasksView">
+      <div class="tasks-header">
+        <div>
+          <h2>Quản lý Bài tập & Nhiệm vụ</h2>
+          <p style="font-size: 13px; color: var(--text-muted);">Theo dõi bài tập theo môn, đặt deadline và mức độ ưu tiên</p>
+        </div>
+        <button type="button" class="btn primary" id="openAddTaskModalBtn">+ Thêm bài tập</button>
+      </div>
+      <div class="tasks-list" id="tasksListContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- VIEW 4: EXAMS & MILESTONES -->
+    <section class="view-container" id="examsView">
+      <div class="tasks-header">
+        <div>
+          <h2>Lịch thi & Sự kiện Quan trọng</h2>
+          <p style="font-size: 13px; color: var(--text-muted);">Quản lý ngày thi, phòng thi, số báo danh và đếm ngược</p>
+        </div>
+        <button type="button" class="btn primary" id="openAddExamModalBtn">+ Thêm lịch thi</button>
+      </div>
+      <div class="tasks-list" id="examsListContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- VIEW 5: FOCUS / POMODORO -->
+    <section class="view-container" id="focusView">
+      <div class="pomodoro-container">
+        <div class="pomo-tabs">
+          <button class="pomo-tab active" data-mins="25">Tập trung (25m)</button>
+          <button class="pomo-tab" data-mins="5">Nghỉ ngắn (5m)</button>
+          <button class="pomo-tab" data-mins="15">Nghỉ dài (15m)</button>
+        </div>
+        <div class="pomo-timer-display" id="pomoDisplay">25:00</div>
+        <div class="pomo-controls">
+          <button class="pomo-btn start" id="pomoStartBtn">Bắt đầu</button>
+          <button class="pomo-btn reset" id="pomoResetBtn">Đặt lại</button>
+        </div>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:24px;">
+          Âm thanh chuông báo tự động kích hoạt khi hết giờ.
+        </p>
+      </div>
+    </section>
+
+    <!-- VIEW 6: SETTINGS & UNIVERSAL CONFIG -->
+    <section class="view-container" id="settingsView">
+      <div class="dash-card" style="max-width: 700px; margin: 0 auto;">
+        <h2 style="margin-bottom: 20px;">Cài đặt & Tùy biến Hệ thống (Universal Student Planner)</h2>
+        
+        <form id="settingsForm" style="display: grid; gap: 16px;">
+          <label>Trường / Cơ sở đào tạo
+            <select id="setUniversity">
+              <option value="Đại học FPT">Đại học FPT (Tích hợp FAP)</option>
+              <option value="Đại học Bách Khoa">Đại học Bách Khoa</option>
+              <option value="Đại học Quốc Gia">Đại học Quốc Gia</option>
+              <option value="Đại học Kinh Tế">Đại học Kinh Tế</option>
+              <option value="Đại học Ngoại Thương">Đại học Ngoại Thương</option>
+              <option value="Trường Đại học khác">Trường Đại học khác</option>
+              <option value="Trường Cao đẳng">Trường Cao đẳng</option>
+              <option value="Học sinh Phổ thông">Học sinh Phổ thông</option>
+              <option value="Người học tự do">Người học tự do / Cá nhân</option>
+            </select>
+          </label>
+
+          <label>Tên Học kỳ / Giai đoạn
+            <input type="text" id="setSemester" placeholder="VD: Fall 2026, Học kỳ 1...">
+          </label>
+
+          <label>Chế độ giao diện (Theme)
+            <select id="setTheme">
+              <option value="dark">Tối (Dark Mode - EduMate Slate)</option>
+              <option value="light">Sáng (Light Mode - Modern Clean)</option>
+            </select>
+          </label>
+
+          <fieldset>
+            <legend>Sao lưu & Đồng bộ lịch ngoài</legend>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:8px;">
+              <button type="button" class="btn" id="exportIcsBtn">📅 Xuất ra Google/Apple Calendar (.ics)</button>
+              <button type="button" class="btn" id="exportJsonBtn">💾 Xuất sao lưu JSON</button>
+              <button type="button" class="btn" id="importJsonBtn">📂 Nhập sao lưu JSON</button>
+              <input type="file" id="jsonFileInput" accept=".json,application/json" hidden>
+            </div>
+          </fieldset>
+
+          <fieldset style="border-color: var(--danger);">
+            <legend style="color: var(--danger);">Vùng nguy hiểm</legend>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">
+              Xóa toàn bộ thời khóa biểu và dữ liệu học tập đã lưu trên trình duyệt này.
+            </p>
+            <button type="button" class="btn danger" id="wipeDataBtn">Xóa sạch toàn bộ dữ liệu</button>
+          </fieldset>
+
+          <div style="text-align: right; margin-top: 10px;">
+            <button type="submit" class="btn primary">Lưu cấu hình</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <!-- FLOATING ACTION BUTTON (QUICK ADD) -->
+  <button class="fab-btn" id="fabAddBtn" title="Thêm lịch nhanh">+</button>
+</div>
+
+<!-- ==========================================================================
+     MODAL DIALOGS
+     ========================================================================== -->
+
+<!-- 1. ADD RECURRING CLASS MODAL (Phase 2 & 5 Spec) -->
+<dialog id="addClassModal" aria-labelledby="addModalTitle">
+  <form id="addClassForm">
+    <h2 id="addModalTitle">Xếp lịch môn học</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+      <label>Mã ngành / Mã môn
+        <input id="newCourseCode" maxlength="20" placeholder="VD: AIF101, MAE101">
+      </label>
+      <label>Tên môn học
+        <input id="newCourseName" list="subjectDatalist" maxlength="80" placeholder="VD: Trí tuệ nhân tạo" required>
+      </label>
+    </div>
+    <datalist id="subjectDatalist"></datalist>
+
+    <fieldset>
+      <legend>Học vào những thứ nào?</legend>
+      <div class="days-checkboxes" id="newDaysCheckboxGroup">
+        <!-- Rendered dynamically: Thứ 2 -> Chủ nhật -->
+      </div>
+    </fieldset>
+
+    <div id="newSlotPickersGroup" style="display: grid; gap: 8px;"></div>
+
+    <label>Phòng học / Nền tảng
+      <input id="newCourseRoom" maxlength="60" placeholder="VD: BE-302, Hall A-101, Zoom">
+    </label>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <label>Áp dụng từ ngày
+        <input type="date" id="newCourseFrom">
+      </label>
+      <label>Đến ngày
+        <input type="date" id="newCourseTo">
+      </label>
+    </div>
+    <p style="font-size: 12px; color: var(--text-muted);">
+      Để trống “Từ ngày” thì tính từ tuần hiện tại. Để trống “Đến ngày” thì áp dụng suốt kỳ học.
+    </p>
+
+    <p id="addClassError" style="color: var(--danger); font-size: 13px; white-space: pre-line;"></p>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="cancelAddClassBtn">Hủy</button>
+      <button type="submit" class="btn primary">Lưu vào lịch</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 2. EDIT / DELETE OCCURRENCE MODAL (Phase 2 Spec) -->
+<dialog id="editClassModal" aria-labelledby="editModalTitle">
+  <form id="editClassForm">
+    <h2 id="editModalTitle">Chỉnh sửa buổi học</h2>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+      <label>Mã ngành / môn
+        <input id="editCourseCode" maxlength="20">
+      </label>
+      <label>Tên môn học
+        <input id="editCourseName" maxlength="80" required>
+      </label>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <label>Tiết học
+        <select id="editCourseSlot"></select>
+      </label>
+      <label>Phòng / Nền tảng
+        <input id="editCourseRoom" maxlength="60">
+      </label>
+    </div>
+
+    <fieldset>
+      <legend>Phạm vi áp dụng</legend>
+      <label style="display:flex; align-items:center; gap:8px;">
+        <input type="radio" name="editScope" value="one" checked> Chỉ buổi này
+      </label>
+      <label style="display:flex; align-items:center; gap:8px;">
+        <input type="radio" name="editScope" value="after"> Buổi này và các buổi sau (cùng tiết)
+      </label>
+      <label style="display:flex; align-items:center; gap:8px;">
+        <input type="radio" name="editScope" value="all"> <span id="editScopeAllText">Tất cả các buổi của môn này</span>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Khoảng ngày của môn</legend>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <label>Từ ngày <input type="date" id="editSubjFrom"></label>
+        <label>Đến ngày <input type="date" id="editSubjTo"></label>
+      </div>
+    </fieldset>
+
+    <p id="editClassError" style="color: var(--danger); font-size: 13px; white-space: pre-line;"></p>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn danger" id="deleteClassBtn">Xóa buổi này</button>
+      <button type="button" class="btn" id="cancelEditClassBtn">Hủy</button>
+      <button type="submit" class="btn primary">Lưu thay đổi</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 3. FAP IMPORT WIZARD MODAL (Phase 3 Spec) -->
+<dialog id="fapModal" style="max-width: 680px;" aria-labelledby="fapModalTitle">
+  <h2 id="fapModalTitle">📥 Nhập thời khóa biểu từ FAP / Tệp tin</h2>
+  <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+    An toàn 100%: Hệ thống không yêu cầu mật khẩu và không can thiệp trái phép tài khoản FAP.
+  </p>
+
+  <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+    <button type="button" class="btn" id="openOfficialFapBtn">🔗 1. Mở trang FAP (WeeklyTimetable)</button>
+    <label class="btn" style="cursor: pointer;">
+      📂 Chọn file HTML/HTM đã lưu (Ctrl+S)
+      <input type="file" id="fapHtmlFileInput" accept=".html,.htm" multiple hidden>
+    </label>
+  </div>
+
+  <div style="margin-bottom: 12px;">
+    <label style="font-weight: 600; margin-bottom: 6px; display:block;">
+      Cách nhanh nhất: Bôi đen & copy bảng lịch trên FAP rồi bấm vào đây và nhấn <b>Ctrl + V</b>:
+    </label>
+    <div id="fapPasteArea" contenteditable="true" 
+         style="min-height: 70px; max-height: 140px; overflow-y: auto; border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 13px; background: var(--bg-input);"
+         placeholder="Dán nội dung thời khóa biểu FAP vào đây (Ctrl+V)..."></div>
+  </div>
+
+  <div style="margin-bottom: 12px;">
+    <label style="font-size: 13px; color: var(--text-muted);">
+      Hoặc quét từ ảnh chụp màn hình lịch tuần (OCR qua Tesseract):
+      <input type="file" id="fapImgFileInput" accept="image/*" multiple style="margin-top: 4px;">
+    </label>
+  </div>
+
+  <!-- Preview Area with Selective Checkboxes (Phase 3 & 14 Criteria) -->
+  <div id="fapPreviewContainer" style="display: none;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px;">
+      <h3 style="font-size: 14px; font-weight: 700;">Xem trước danh sách buổi học (<span id="fapFoundCount">0</span> buổi)</h3>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" class="btn-pill" id="fapSelectAllBtn" style="font-size:11px;">Chọn tất cả</button>
+        <button type="button" class="btn-pill" id="fapDeselectAllBtn" style="font-size:11px;">Bỏ chọn</button>
+      </div>
+    </div>
+
+    <div class="fap-preview-wrap">
+      <table class="fap-preview-table" id="fapPreviewTable">
+        <thead>
+          <tr>
+            <th width="30"></th>
+            <th>Ngày / Thứ</th>
+            <th>Tiết</th>
+            <th>Mã môn</th>
+            <th>Tên môn</th>
+            <th>Phòng</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody id="fapPreviewTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <p id="fapStatusInfo" style="font-size: 13px; color: var(--text-muted); margin-top: 8px; white-space: pre-line;"></p>
+  <p id="fapErrorMsg" style="font-size: 13px; color: var(--danger); margin-top: 4px;"></p>
+
+  <div class="dialog-actions">
+    <button type="button" class="btn" id="fapClearBatchBtn">Xóa danh sách tạm</button>
+    <button type="button" class="btn" id="fapCloseBtn">Đóng</button>
+    <button type="button" class="btn primary" id="fapExecuteImportBtn" disabled>Xác nhận nhập vào lịch</button>
+  </div>
+</dialog>
+
+<!-- 4. SUBJECT MANAGEMENT MODAL (Phase 2 Spec) -->
+<dialog id="subjectModal" style="max-width: 600px;" aria-labelledby="subjModalTitle">
+  <h2 id="subjModalTitle">Quản lý danh sách môn học</h2>
+  <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+    Đổi tên hoặc màu sắc sẽ áp dụng tự động cho toàn bộ các buổi học của môn đó.
+  </p>
+  <div id="subjectListContainer" style="display: grid; gap: 10px; max-height: 350px; overflow-y: auto;"></div>
+  <div class="dialog-actions" style="margin-top: 16px;">
+    <button type="button" class="btn primary" id="closeSubjectModalBtn">Đóng</button>
+  </div>
+</dialog>
+
+<!-- 5. TASK ADD MODAL -->
+<dialog id="taskModal" aria-labelledby="taskModalTitle">
+  <form id="taskForm">
+    <h2 id="taskModalTitle">Thêm bài tập / Nhiệm vụ</h2>
+    <label>Tên bài tập / Nhiệm vụ
+      <input type="text" id="taskTitleInput" placeholder="VD: Hoàn thành Lab 3, Đọc chương 4..." required>
+    </label>
+    <label>Môn học liên quan
+      <select id="taskSubjectSelect"></select>
+    </label>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <label>Hạn chót (Deadline)
+        <input type="datetime-local" id="taskDeadlineInput">
+      </label>
+      <label>Mức độ ưu tiên
+        <select id="taskPrioritySelect">
+          <option value="high">Cao (Gấp)</option>
+          <option value="medium" selected>Trung bình</option>
+          <option value="low">Thấp</option>
+        </select>
+      </label>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="cancelTaskModalBtn">Hủy</button>
+      <button type="submit" class="btn primary">Thêm nhiệm vụ</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 6. EXAM ADD MODAL -->
+<dialog id="examModal" aria-labelledby="examModalTitle">
+  <form id="examForm">
+    <h2 id="examModalTitle">Thêm lịch thi / Cột mốc</h2>
+    <label>Môn thi
+      <select id="examSubjectSelect"></select>
+    </label>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <label>Ngày thi
+        <input type="date" id="examDateInput" required>
+      </label>
+      <label>Giờ thi
+        <input type="time" id="examTimeInput" value="08:00" required>
+      </label>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <label>Phòng thi
+        <input type="text" id="examRoomInput" placeholder="VD: BE-201, Zoom">
+      </label>
+      <label>Số báo danh / Ghế
+        <input type="text" id="examSeatInput" placeholder="VD: SBD 42">
+      </label>
+    </div>
+    <label>Ghi chú thêm
+      <input type="text" id="examNotesInput" placeholder="VD: Mang máy tính Casio, thẻ sinh viên">
+    </label>
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="cancelExamModalBtn">Hủy</button>
+      <button type="submit" class="btn primary">Lưu lịch thi</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ==========================================================================
+     CORE APPLICATION JAVASCRIPT
+     ========================================================================== -->
+<script>
+/**
+ * EduMate — Universal Student Planner & Learning Management System 2.0
+ * Architecture: Clean Vanilla ES6+ Local-First Client
+ * Compatibility: 100% backward compatible with studyflow-tkb-v1 (Schema v1, v2 -> v3)
+ */
+
+(function () {
+  'use strict';
+
+  // Constants & Slot mappings
+  const STORAGE_KEY = 'studyflow-tkb-v1';
+  const DAY_MS = 864e5;
+  const DAYS_VN = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+  const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  
+  // Standard 8 slots (FPT & Universal)
+  const DEFAULT_SLOTS = [
+    ['07:00', '08:30'], // Tiết 1
+    ['08:45', '10:15'], // Tiết 2
+    ['10:30', '12:00'], // Tiết 3
+    ['12:30', '14:00'], // Tiết 4
+    ['14:15', '15:45'], // Tiết 5
+    ['16:00', '17:30'], // Tiết 6
+    ['17:45', '19:15'], // Tiết 7
+    ['19:30', '21:00']  // Tiết 8
+  ];
+
+  // Palette with vivid modern colors
+  const PALETTE = [
+    '#7c3aed', '#2563eb', '#0891b2', '#059669', 
+    '#d97706', '#dc2626', '#db2777', '#4b5563'
+  ];
+
+  // Primary State Container
+  let appState = {
+    v: 3,
+    subjects: [],
+    rules: [],
+    tasks: [],
+    exams: [],
+    personalEvents: [],
+    settings: {
+      theme: 'dark',
+      university: 'Đại học FPT',
+      semester: 'Fall 2026',
+      viewMode: 'grid'
+    }
+  };
+
+  // View state
+  let currentMonday = '';      // YYYY-MM-DD representing Monday of viewing week
+  let activeView = 'schedule';  // schedule | dashboard | tasks | exams | focus | settings
+  let activeGridMode = 'grid';  // grid | agenda | day
+  let editingClass = null;      // { ruleId, date }
+  let fapBatch = [];            // [{ date, slot, code, name, room, status, selected }]
+  let pomoTimer = null;
+  let pomoRemainingSeconds = 25 * 60;
+  let pomoIsRunning = false;
+
+  // DOM Helpers
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+  // Date and Time Calculations (Asia/Ho_Chi_Minh & UTC ISO String based)
+  const fromKey = s => new Date(s + 'T00:00:00Z');
+  const addDays = (s, n) => new Date(Date.parse(s + 'T00:00:00Z') + n * DAY_MS).toISOString().slice(0, 10);
+  const weekdayOf = s => (fromKey(s).getUTCDay() + 6) % 7 + 1; // 1 = Monday ... 7 = Sunday
+  const mondayKey = s => addDays(s, -((fromKey(s).getUTCDay() + 6) % 7));
+  const shown = s => s.split('-').reverse().join('/'); // 2026-11-09 -> 09/11/2026
+  const todayKey = () => {
+    // Local date string in Asia/Ho_Chi_Minh
+    const now = new Date();
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  };
+
+  function isoWeek(s) {
+    const t = fromKey(s);
+    t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+    return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / DAY_MS + 1) / 7);
+  }
+
+  // Audio synthesizer chime using Web Audio API
+  function playNotificationChime() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.8);
+    } catch (e) {
+      // AudioContext not allowed without gesture
+    }
+  }
+
+  // ==========================================================================
+  // STORAGE & DATA INTEGRITY ENGINE (100% Backward Compatible)
+  // ==========================================================================
+  function upgradeData(d) {
+    if (!d) return { v: 3, subjects: [], rules: [], tasks: [], exams: [], personalEvents: [], settings: {} };
+    
+    // Schema v1 legacy date range check
+    if (d.v === undefined || d.v === 1) {
+      const spans = {};
+      (d.rules || []).forEach(r => {
+        if (r.src !== 'fap' && r.src !== 'imp') return;
+        const sp = spans[r.sid] || (spans[r.sid] = { from: r.from, to: r.to || r.from });
+        if (r.from && sp.from && r.from < sp.from) sp.from = r.from;
+        if (r.to && sp.to && r.to > sp.to) sp.to = r.to;
+        r.to = null;
+      });
+      (d.subjects || []).forEach(s => {
+        const sp = spans[s.id];
+        if (sp && !s.from && !s.to) { s.from = sp.from; s.to = sp.to; }
+      });
+    }
+
+    // Upgrade to v3
+    d.subjects = Array.isArray(d.subjects) ? d.subjects : [];
+    d.rules = Array.isArray(d.rules) ? d.rules : [];
+    d.tasks = Array.isArray(d.tasks) ? d.tasks : [];
+    d.exams = Array.isArray(d.exams) ? d.exams : [];
+    d.personalEvents = Array.isArray(d.personalEvents) ? d.personalEvents : [];
+    d.settings = (typeof d.settings === 'object' && d.settings !== null) ? d.settings : {
+      theme: 'dark',
+      university: 'Đại học FPT',
+      semester: 'Fall 2026',
+      viewMode: 'grid'
+    };
+    d.v = 3;
+    return d;
+  }
+
+  function loadStorage() {
+    let raw;
+    try {
+      raw = localStorage.getItem(STORAGE_KEY);
+    } catch (e) {
+      alert('Trình duyệt chưa cho phép lưu dữ liệu vào LocalStorage. Bạn vẫn có thể sử dụng và xuất file sao lưu.');
+      return;
+    }
+    if (!raw) {
+      // First time use: initialize sample empty state
+      appState = upgradeData({});
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.subjects) && Array.isArray(parsed.rules)) {
+        appState = upgradeData(parsed);
+      } else {
+        localStorage.setItem(STORAGE_KEY + '-backup-corrupted', raw);
+        appState = upgradeData({});
+      }
+    } catch (e) {
+      localStorage.setItem(STORAGE_KEY + '-backup-corrupted', raw);
+      appState = upgradeData({});
+    }
+  }
+
+  function saveStorage() {
+    try {
+      appState.v = 3;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    } catch (e) {
+      alert('Không thể ghi dữ liệu vào trình duyệt (dung lượng đầy). Vui lòng dùng tính năng Xuất sao lưu.');
+    }
+  }
+
+  // ==========================================================================
+  // TIMETABLE & CLASH LOGIC
+  // ==========================================================================
+  const subj = id => appState.subjects.find(s => s.id === id);
+
+  function occOn(r, k) {
+    const sub = subj(r.sid) || {};
+    if ((sub.from && k < sub.from) || (sub.to && k > sub.to)) return null;
+    if ((r.from && k < r.from) || (r.to && k > r.to) || weekdayOf(k) !== r.wd || r.skip.includes(k)) return null;
+    const m = (r.moved && r.moved[k]) || {};
+    return {
+      rule: r,
+      date: k,
+      slot: m.slot ?? r.slot,
+      room: m.room ?? r.room,
+      name: m.name ?? r.name ?? sub.name,
+      code: m.code ?? r.code ?? sub.code
+    };
+  }
+
+  function occurrences(r, a, b) {
+    const out = [];
+    const end = r.to && r.to < b ? r.to : b;
+    for (let k = r.from > a ? r.from : a; k <= end; k = addDays(k, 1)) {
+      const o = occOn(r, k);
+      if (o) out.push(o);
+    }
+    return out;
+  }
+
+  function clashes(cand, a, b, skipIds = []) {
+    const hits = [];
+    for (const o of occurrences(cand, a, b)) {
+      for (const other of appState.rules) {
+        if (other.id === cand.id || skipIds.includes(other.id)) continue;
+        const p = occOn(other, o.date);
+        if (p && p.slot === o.slot) {
+          hits.push(`${shown(o.date)} · Tiết ${o.slot}: ${subj(other.sid)?.name || 'Môn khác'}`);
+        }
+      }
+    }
+    return hits;
+  }
+
+  function occAt(d, s) {
+    for (const r of appState.rules) {
+      const o = occOn(r, d);
+      if (o && o.slot === s) return o;
+    }
+    return null;
+  }
+
+  // ==========================================================================
+  // RELATIVE WEEK ENGINE (Phase 4 Spec)
+  // ==========================================================================
+  function updateRelativeWeekDisplay() {
+    const today = todayKey();
+    const curMon = mondayKey(today);
+    const prevMon = addDays(curMon, -7);
+    const nextMon = addDays(curMon, 7);
+    const sundayStr = addDays(currentMonday, 6);
+
+    const rangeStr = `${shown(currentMonday)} — ${shown(sundayStr)}`;
+    $('weekDateRange').textContent = rangeStr;
+
+    let relLabel = 'TUẦN HIỆN TẠI';
+    if (currentMonday === curMon) {
+      relLabel = 'TUẦN HIỆN TẠI';
+      $('currentWeekBtn').classList.add('primary');
+    } else if (currentMonday === prevMon) {
+      relLabel = 'TUẦN TRƯỚC';
+      $('currentWeekBtn').classList.remove('primary');
+    } else if (currentMonday === nextMon) {
+      relLabel = 'TUẦN SAU';
+      $('currentWeekBtn').classList.remove('primary');
+    } else {
+      $('currentWeekBtn').classList.remove('primary');
+      const d1 = fromKey(curMon);
+      const d2 = fromKey(currentMonday);
+      const diff = Math.round((d2 - d1) / (7 * DAY_MS));
+      relLabel = diff > 0 ? `TUẦN TỚI (+${diff})` : `TUẦN TRƯỚC (${diff})`;
+    }
+    $('relativeWeekLabel').textContent = `${relLabel} · TUẦN ${isoWeek(currentMonday)}`;
+    $('datePickerJump').value = currentMonday;
+  }
+
+  // ==========================================================================
+  // VIEW CONTROLLER & RENDERING
+  // ==========================================================================
+  function renderHeaderDays() {
+    const today = todayKey();
+    const days = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(currentMonday, i));
+    
+    let html = '<div class="time-corner-icon">🕒</div>';
+    days.forEach((d, i) => {
+      const isToday = (d === today);
+      const dayNum = d.split('-')[2];
+      html += `
+        <div class="day-header-cell ${isToday ? 'today' : ''}" data-date="${d}">
+          <span class="day-name">${DAYS_SHORT[i]} · ${DAYS_VN[i]}</span>
+          <span class="day-number">${dayNum}</span>
+        </div>
+      `;
+    });
+    $('scheduleHeader').innerHTML = html;
+  }
+
+  function renderGridBody() {
+    const days = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(currentMonday, i));
+    let html = '';
+
+    for (let slot = 1; slot <= 8; slot++) {
+      const slotTime = DEFAULT_SLOTS[slot - 1];
+      // Time label column
+      html += `
+        <div class="time-slot-label">
+          <span>Tiết ${slot}</span>
+          <small>${slotTime[0]}–${slotTime[1]}</small>
+        </div>
+      `;
+
+      // 7 Day cells for this slot
+      for (const d of days) {
+        const o = occAt(d, slot);
+        html += `<div class="grid-cell" data-date="${d}" data-slot="${slot}">${o ? renderClassCard(o) : ''}</div>`;
+      }
+    }
+
+    $('scheduleGridBody').innerHTML = html;
+  }
+
+  function renderClassCard(o) {
+    const sub = subj(o.rule.sid) || {};
+    const color = sub.color || '#7c3aed';
+    const slotTime = DEFAULT_SLOTS[o.slot - 1];
+    const timeStr = `${slotTime[0]} – ${slotTime[1]}`;
+
+    return `
+      <button type="button" class="class-pill" style="background: ${color};" 
+              data-rule="${o.rule.id}" data-date="${o.date}" title="${esc(o.name)} - ${esc(o.room)}">
+        <div class="title-row">
+          <span class="subj-icon">🎓</span>
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(o.name)}</span>
+        </div>
+        <div class="details-row">
+          <span>${timeStr}</span>
+          <span>${o.room ? '📍 ' + esc(o.room) : ''}</span>
+          ${o.code ? `<span class="code-badge">${esc(o.code)}</span>` : ''}
+        </div>
+      </button>
+    `;
+  }
+
+  function renderAgendaView() {
+    const today = todayKey();
+    const days = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(currentMonday, i));
+    let html = '';
+
+    days.forEach((d, i) => {
+      const isToday = (d === today);
+      const dayClasses = [];
+      for (let s = 1; s <= 8; s++) {
+        const o = occAt(d, s);
+        if (o) dayClasses.push(o);
+      }
+
+      html += `
+        <div class="agenda-day-card ${isToday ? 'is-today' : ''}">
+          <div class="agenda-day-title">
+            <span>${DAYS_VN[i]}, ${shown(d)}</span>
+            ${isToday ? '<span class="today-tag">Hôm nay</span>' : ''}
+          </div>
+          <div class="agenda-events">
+            ${dayClasses.length ? dayClasses.map(o => {
+              const sub = subj(o.rule.sid) || {};
+              const slotTime = DEFAULT_SLOTS[o.slot - 1];
+              return `
+                <div class="agenda-item" style="--subj-color: ${sub.color || '#7c3aed'};" data-rule="${o.rule.id}" data-date="${o.date}">
+                  <div class="agenda-item-left">
+                    <span class="agenda-item-title">${esc(o.name)} ${o.code ? `(${esc(o.code)})` : ''}</span>
+                    <span class="agenda-item-sub">📍 ${esc(o.room || 'Chưa có phòng')} · Tiết ${o.slot}</span>
+                  </div>
+                  <div class="agenda-item-time">${slotTime[0]} – ${slotTime[1]}</div>
+                </div>
+              `;
+            }).join('') : '<p style="color:var(--text-muted); font-size:13px;">Không có lịch học</p>'}
+          </div>
+        </div>
+      `;
+    });
+
+    $('agendaListContent').innerHTML = html;
+  }
+
+  function renderDayView() {
+    const today = todayKey();
+    const wd = weekdayOf(today);
+    const dayClasses = [];
+    for (let s = 1; s <= 8; s++) {
+      const o = occAt(today, s);
+      if (o) dayClasses.push(o);
+    }
+
+    $('dayListContent').innerHTML = `
+      <div class="agenda-day-card is-today">
+        <div class="agenda-day-title">
+          <span>Hôm nay: ${DAYS_VN[wd - 1]}, ${shown(today)}</span>
+          <span class="today-tag">Hôm nay</span>
+        </div>
+        <div class="agenda-events">
+          ${dayClasses.length ? dayClasses.map(o => {
+            const sub = subj(o.rule.sid) || {};
+            const slotTime = DEFAULT_SLOTS[o.slot - 1];
+            return `
+              <div class="agenda-item" style="--subj-color: ${sub.color || '#7c3aed'};" data-rule="${o.rule.id}" data-date="${o.date}">
+                <div class="agenda-item-left">
+                  <span class="agenda-item-title">${esc(o.name)} ${o.code ? `(${esc(o.code)})` : ''}</span>
+                  <span class="agenda-item-sub">📍 ${esc(o.room || 'Chưa có phòng')} · Tiết ${o.slot}</span>
+                </div>
+                <div class="agenda-item-time">${slotTime[0]} – ${slotTime[1]}</div>
+              </div>
+            `;
+          }).join('') : '<p style="color:var(--text-muted); font-size:14px; text-align:center; padding:20px;">Hôm nay bạn không có tiết học nào. Hãy tận hưởng ngày nghỉ hoặc tập trung làm bài tập!</p>'}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSchedule() {
+    updateRelativeWeekDisplay();
+    renderHeaderDays();
+    if (activeGridMode === 'grid') {
+      $('gridDisplayWrap').style.display = 'block';
+      $('agendaDisplayWrap').style.display = 'none';
+      $('dayDisplayWrap').style.display = 'none';
+      renderGridBody();
+    } else if (activeGridMode === 'agenda') {
+      $('gridDisplayWrap').style.display = 'none';
+      $('agendaDisplayWrap').style.display = 'block';
+      $('dayDisplayWrap').style.display = 'none';
+      renderAgendaView();
+    } else if (activeGridMode === 'day') {
+      $('gridDisplayWrap').style.display = 'none';
+      $('agendaDisplayWrap').style.display = 'none';
+      $('dayDisplayWrap').style.display = 'block';
+      renderDayView();
+    }
+  }
+
+  // ==========================================================================
+  // SMART DASHBOARD CONTROLLER (Phase 6 Spec)
+  // ==========================================================================
+  function updateDashboard() {
+    const today = todayKey();
+    const days = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(currentMonday, i));
+    
+    // 1. Total Subjects
+    $('dashSubjCount').textContent = appState.subjects.length;
+
+    // 2. Study hours this week (each slot ~ 1.5h)
+    let totalClassesWeek = 0;
+    for (const d of days) {
+      for (let s = 1; s <= 8; s++) {
+        if (occAt(d, s)) totalClassesWeek++;
+      }
+    }
+    $('dashStudyHours').textContent = `${(totalClassesWeek * 1.5).toFixed(1)}h`;
+
+    // 3. Pending tasks
+    const pendingTasks = appState.tasks.filter(t => !t.completed).length;
+    $('dashPendingTasks').textContent = pendingTasks;
+    $('taskCountBadge').textContent = pendingTasks;
+
+    // 4. Next class calculation
+    const now = new Date();
+    const currentH = now.getHours();
+    const currentM = now.getMinutes();
+    const currentMinTotal = currentH * 60 + currentM;
+
+    let nextClassFound = null;
+    let nextClassSlot = 0;
+
+    for (let s = 1; s <= 8; s++) {
+      const o = occAt(today, s);
+      if (o) {
+        const [startH, startM] = DEFAULT_SLOTS[s - 1][0].split(':').map(Number);
+        const slotStartMin = startH * 60 + startM;
+        if (slotStartMin >= currentMinTotal) {
+          nextClassFound = o;
+          nextClassSlot = s;
+          break;
+        }
+      }
+    }
+
+    if (nextClassFound) {
+      $('dashNextClass').textContent = `${nextClassFound.name} (${DEFAULT_SLOTS[nextClassSlot - 1][0]})`;
+      const [startH, startM] = DEFAULT_SLOTS[nextClassSlot - 1][0].split(':').map(Number);
+      const diffMins = (startH * 60 + startM) - currentMinTotal;
+      $('dashNextCountdown').textContent = diffMins > 0 ? `Bắt đầu sau ${diffMins} phút` : 'Đang diễn ra!';
+    } else {
+      $('dashNextClass').textContent = 'Đã hết tiết hôm nay';
+      $('dashNextCountdown').textContent = 'Nghỉ ngơi thôi!';
+    }
+
+    // 5. Render Today List on Dashboard
+    const todayClasses = [];
+    for (let s = 1; s <= 8; s++) {
+      const o = occAt(today, s);
+      if (o) todayClasses.push(o);
+    }
+    if (todayClasses.length) {
+      $('dashTodayList').innerHTML = todayClasses.map(o => {
+        const sub = subj(o.rule.sid) || {};
+        const slotTime = DEFAULT_SLOTS[o.slot - 1];
+        return `
+          <div class="agenda-item" style="--subj-color: ${sub.color || '#7c3aed'};">
+            <div class="agenda-item-left">
+              <span class="agenda-item-title">${esc(o.name)} · Tiết ${o.slot}</span>
+              <span class="agenda-item-sub">📍 ${esc(o.room || 'Phòng học')}</span>
+            </div>
+            <div class="agenda-item-time">${slotTime[0]} – ${slotTime[1]}</div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      $('dashTodayList').innerHTML = '<p style="color:var(--text-muted); padding:16px 0; text-align:center;">Hôm nay bạn không có lịch học!</p>';
+    }
+
+    // 6. Render Upcoming Deadlines / Exams
+    const upcomingTasks = appState.tasks.filter(t => !t.completed).slice(0, 3);
+    const upcomingExams = appState.exams.slice(0, 3);
+    let upHtml = '';
+    upcomingExams.forEach(e => {
+      upHtml += `
+        <div class="agenda-item" style="--subj-color: #ef4444;">
+          <div class="agenda-item-left">
+            <span class="agenda-item-title">🎯 Thi: ${esc(e.subjectName || 'Môn học')}</span>
+            <span class="agenda-item-sub">📍 Phòng: ${esc(e.room || '--')} ${e.seat ? '· ' + esc(e.seat) : ''}</span>
+          </div>
+          <div class="agenda-item-time">${shown(e.date)} ${e.time}</div>
+        </div>
+      `;
+    });
+    upcomingTasks.forEach(t => {
+      upHtml += `
+        <div class="agenda-item" style="--subj-color: #f59e0b;">
+          <div class="agenda-item-left">
+            <span class="agenda-item-title">📝 ${esc(t.title)}</span>
+            <span class="agenda-item-sub">${t.priority.toUpperCase()} priority</span>
+          </div>
+          <div class="agenda-item-time">${t.deadline ? t.deadline.replace('T', ' ') : 'Sớm'}</div>
+        </div>
+      `;
+    });
+    $('dashUpcomingList').innerHTML = upHtml || '<p style="color:var(--text-muted); padding:16px 0; text-align:center;">Không có deadline hay lịch thi nào sắp tới.</p>';
+  }
+
+  // ==========================================================================
+  // TASKS & ASSIGNMENTS MANAGER
+  // ==========================================================================
+  function renderTasks() {
+    if (!appState.tasks.length) {
+      $('tasksListContainer').innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:30px;">Chưa có bài tập nào. Bấm "+ Thêm bài tập" để tạo mới!</p>';
+      return;
+    }
+    let html = '';
+    appState.tasks.forEach(t => {
+      const sub = subj(t.sid) || {};
+      html += `
+        <div class="task-item ${t.completed ? 'completed' : ''}" data-task-id="${t.id}">
+          <input type="checkbox" class="task-checkbox" ${t.completed ? 'checked' : ''} data-action="toggleTask">
+          <div class="task-content">
+            <div class="task-title">${esc(t.title)}</div>
+            <div class="task-meta">
+              ${sub.name ? `<span>📚 ${esc(sub.name)}</span>` : ''}
+              ${t.deadline ? `<span>⏰ Hạn: ${t.deadline.replace('T', ' ')}</span>` : ''}
+              <span class="task-priority priority-${t.priority}">${t.priority}</span>
+            </div>
+          </div>
+          <button type="button" class="btn danger" style="padding:4px 8px; font-size:12px;" data-action="deleteTask">Xóa</button>
+        </div>
+      `;
+    });
+    $('tasksListContainer').innerHTML = html;
+  }
+
+  // ==========================================================================
+  // EXAMS & DEADLINES TRACKER
+  // ==========================================================================
+  function renderExams() {
+    if (!appState.exams.length) {
+      $('examsListContainer').innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:30px;">Chưa có lịch thi nào. Bấm "+ Thêm lịch thi" để ghi lại!</p>';
+      return;
+    }
+    const today = todayKey();
+    let html = '';
+    appState.exams.forEach(e => {
+      const isPast = e.date < today;
+      html += `
+        <div class="task-item" style="border-left: 4px solid #ef4444;" data-exam-id="${e.id}">
+          <div class="task-content">
+            <div class="task-title">🎯 ${esc(e.subjectName || 'Môn thi')}</div>
+            <div class="task-meta">
+              <span>📅 ${shown(e.date)} lúc ${e.time}</span>
+              ${e.room ? `<span>📍 Phòng: ${esc(e.room)}</span>` : ''}
+              ${e.seat ? `<span>🪑 ${esc(e.seat)}</span>` : ''}
+              ${e.notes ? `<span>📝 ${esc(e.notes)}</span>` : ''}
+              ${isPast ? '<span class="task-priority" style="background:var(--border);">Đã qua</span>' : '<span class="task-priority priority-high">Sắp thi</span>'}
+            </div>
+          </div>
+          <button type="button" class="btn danger" style="padding:4px 8px; font-size:12px;" data-action="deleteExam">Xóa</button>
+        </div>
+      `;
+    });
+    $('examsListContainer').innerHTML = html;
+  }
+
+  // ==========================================================================
+  // SUBJECT MANAGEMENT
+  // ==========================================================================
+  function renderSubjectList() {
+    if (!appState.subjects.length) {
+      $('subjectListContainer').innerHTML = '<p style="color:var(--text-muted); padding:16px;">Chưa có môn học nào.</p>';
+      return;
+    }
+    let html = '';
+    appState.subjects.forEach(s => {
+      const ruleCount = appState.rules.filter(r => r.sid === s.id).length;
+      html += `
+        <div style="display:grid; grid-template-columns: 40px 2fr 1fr 60px auto; gap:8px; align-items:center; background:var(--bg-input); padding:8px 12px; border-radius:var(--radius-sm);" data-id="${s.id}">
+          <input type="color" value="${esc(s.color || '#7c3aed')}" data-act="color" style="padding:0; width:34px; height:34px; border:none; cursor:pointer;">
+          <input type="text" value="${esc(s.name)}" maxlength="80" data-act="name" placeholder="Tên môn" style="font-weight:600;">
+          <input type="text" value="${esc(s.code || '')}" maxlength="20" data-act="code" placeholder="Mã môn">
+          <span style="font-size:11px; color:var(--text-muted);">${ruleCount} lịch</span>
+          <button type="button" class="btn danger" data-act="del" style="padding:4px 8px; font-size:11px;">Xóa</button>
+        </div>
+      `;
+    });
+    $('subjectListContainer').innerHTML = html;
+  }
+
+  // ==========================================================================
+  // FAP TIMETABLE SMART PARSER (Phase 3 & 5 Spec)
+  // ==========================================================================
+  function detectSlot(text) {
+    const m = text.match(/(?:slot|tiết)\s*(\d)/i) || text.match(/^\s*(\d)\s*$/);
+    if (m) return Math.min(8, Math.max(1, +m[1]));
+    const h = text.match(/(\d{1,2}):(\d{2})/);
+    if (h) {
+      const target = pad(+h[1]) + ':' + h[2];
+      const idx = DEFAULT_SLOTS.findIndex(s => s[0] === target);
+      if (idx !== -1) return idx + 1;
+    }
+    return 0;
+  }
+
+  function extractCourseName(td, code, fallback) {
+    const html = td.innerHTML.replace(/<br\s*\/?>|<\/(div|p|li|tr|h\d)>/gi, '\n');
+    const lines = new DOMParser().parseFromString(html, 'text/html').body.textContent
+      .split(/\n+/).map(x => x.trim()).filter(Boolean);
+    const skip = /^(cố định|online|room|phòng|slot|tiết|nhóm|lớp)\b/i;
+    const hit = lines.find(l => !l.includes(code) && !/\d{1,2}:\d{2}/.test(l) && !skip.test(l) && /[A-Za-zÀ-ỹ]{2}/.test(l) && !/[A-Za-z0-9]+_\w+/.test(l));
+    if (hit) return hit;
+    const rest = lines.join(' ').replace(new RegExp(code, 'g'), ' ').replace(/[A-Za-z0-9]+_\w+/g, ' ')
+      .replace(/\d{1,2}:\d{2}/g, ' ').replace(/cố định/gi, ' ').replace(/\s+/g, ' ').replace(/^[\s\-–|:]+|[\s\-–|:]+$/g, '').trim();
+    return (rest.length > 2 && rest.length < 80 && /[A-Za-zÀ-ỹ]{2}/.test(rest)) ? rest : fallback;
+  }
+
+  function parseFapHtmlOrText(content) {
+    const out = [];
+    const seen = new Set();
+    const doc = new DOMParser().parseFromString(content, 'text/html');
+    const tables = doc.querySelectorAll('table');
+
+    if (tables.length > 0) {
+      tables.forEach(tbl => {
+        const colDate = {};
+        [...tbl.rows].forEach(tr => [...tr.cells].forEach((td, ci) => {
+          const t = td.textContent;
+          const iso = t.match(/(\d{4})-(\d{2})-(\d{2})/);
+          const dm = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
+          if (colDate[ci] === undefined && (iso || dm)) {
+            colDate[ci] = iso ? `${iso[1]}-${iso[2]}-${iso[3]}` : `${dm[3] || currentMonday.slice(0, 4)}-${pad(+dm[2])}-${pad(+dm[1])}`;
+          }
+        }));
+
+        [...tbl.rows].forEach(tr => {
+          const rowSlot = detectSlot(tr.cells[0] ? tr.cells[0].textContent : '');
+          [...tr.cells].forEach((td, ci) => {
+            const txt = td.textContent;
+            const cm = txt.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+            const date = colDate[ci];
+            const slot = rowSlot || detectSlot(txt);
+            if (!cm || !date || !slot) return;
+
+            const code = cm[1];
+            const name = extractCourseName(td, code, code);
+            const room = (txt.match(/(?:room|phòng)\s*[:\-]?\s*([\w.\-]+)/i) || [])[1] || '';
+            const key = `${date}|${slot}|${code}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              out.push({ date, slot, code, name, room, selected: true });
+            }
+          });
+        });
+      });
+    }
+
+    // Fallback: If no tables detected or pasted as plain text
+    if (!out.length) {
+      const lines = content.split('\n');
+      let foundDate = currentMonday;
+      lines.forEach(line => {
+        const dMatch = line.match(/(\d{4})-(\d{2})-(\d{2})/) || line.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
+        if (dMatch) {
+          foundDate = dMatch[0].includes('-') ? dMatch[0] : `${dMatch[3] || currentMonday.slice(0, 4)}-${pad(+dMatch[2])}-${pad(+dMatch[1])}`;
+        }
+        const cm = line.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+        const slot = detectSlot(line);
+        if (cm && slot) {
+          const code = cm[1];
+          const roomMatch = line.match(/(?:room|phòng)\s*[:\-]?\s*([\w.\-]+)/i);
+          const room = roomMatch ? roomMatch[1] : '';
+          const name = line.replace(code, '').replace(/tiết\s*\d/i, '').replace(/phòng\s*[\w.\-]+/i, '').trim() || code;
+          const key = `${foundDate}|${slot}|${code}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            out.push({ date: foundDate, slot, code, name, room, selected: true });
+          }
+        }
+      });
+    }
+
+    return out;
+  }
+
+  function renderFapPreview() {
+    if (!fapBatch.length) {
+      $('fapPreviewContainer').style.display = 'none';
+      $('fapExecuteImportBtn').disabled = true;
+      $('fapStatusInfo').textContent = 'Chưa có buổi học nào. Hãy dán lịch hoặc tải file.';
+      return;
+    }
+
+    $('fapPreviewContainer').style.display = 'block';
+    $('fapExecuteImportBtn').disabled = false;
+    $('fapFoundCount').textContent = fapBatch.length;
+
+    let html = '';
+    fapBatch.forEach((item, idx) => {
+      // Check duplicate against current schedule
+      const existing = occAt(item.date, item.slot);
+      let statusBadge = '<span class="badge-status badge-new">Mới</span>';
+      if (existing) {
+        if (existing.code === item.code) {
+          statusBadge = '<span class="badge-status badge-dup">Đã có</span>';
+        } else {
+          statusBadge = '<span class="badge-status badge-clash">Trùng giờ</span>';
+        }
+      }
+
+      html += `
+        <tr>
+          <td><input type="checkbox" data-idx="${idx}" ${item.selected ? 'checked' : ''} class="fap-row-check"></td>
+          <td>${shown(item.date)} (${DAYS_VN[weekdayOf(item.date) - 1]})</td>
+          <td>Tiết ${item.slot}</td>
+          <td><b>${esc(item.code)}</b></td>
+          <td>${esc(item.name)}</td>
+          <td>${esc(item.room || '--')}</td>
+          <td>${statusBadge}</td>
+        </tr>
+      `;
+    });
+    $('fapPreviewTableBody').innerHTML = html;
+    $('fapStatusInfo').textContent = `Đã nhận diện ${fapBatch.length} buổi học. Hãy chọn các buổi muốn đưa vào lịch rồi bấm "Xác nhận nhập vào lịch".`;
+  }
+
+  function executeFapImport() {
+    const selectedItems = fapBatch.filter(i => i.selected);
+    if (!selectedItems.length) {
+      alert('Vui lòng chọn ít nhất một buổi học để nhập vào lịch!');
+      return;
+    }
+
+    const news = [];
+    const findSubj = s => appState.subjects.find(x => (s.code && x.code && x.code.toLowerCase() === s.code.toLowerCase()) || x.name.toLowerCase() === s.name.toLowerCase())
+      || news.find(x => (s.code && x.code === s.code) || x.name.toLowerCase() === s.name.toLowerCase());
+
+    const dates = selectedItems.map(s => s.date).sort();
+    const bFrom = dates[0];
+    const bTo = dates[dates.length - 1];
+
+    const groups = new Map();
+    for (const s of selectedItems) {
+      let sub = findSubj(s);
+      if (!sub) {
+        sub = {
+          id: uid(),
+          name: s.name,
+          code: s.code,
+          color: PALETTE[(appState.subjects.length + news.length) % PALETTE.length]
+        };
+        news.push(sub);
+      } else if (s.code && !sub.code) {
+        sub.code = s.code;
+      }
+      if (sub.name === sub.code && s.name !== s.code) {
+        sub.name = s.name;
+      }
+
+      const wd = weekdayOf(s.date);
+      const groupKey = `${sub.id}|${wd}|${s.slot}|${s.room}`;
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, { sid: sub.id, wd, slot: s.slot, room: s.room, dates: new Set() });
+      }
+      groups.get(groupKey).dates.add(s.date);
+    }
+
+    // Rules creation
+    const newRules = [...groups.values()].map(g => {
+      const skip = [];
+      for (let k = bFrom; k <= bTo; k = addDays(k, 1)) {
+        if (weekdayOf(k) === g.wd && !g.dates.has(k)) skip.push(k);
+      }
+      return {
+        id: uid(),
+        sid: g.sid,
+        wd: g.wd,
+        slot: g.slot,
+        room: g.room,
+        from: null,
+        to: null,
+        skip,
+        moved: {},
+        src: 'imp'
+      };
+    });
+
+    const manualRules = appState.rules.filter(r => r.src !== 'fap' && r.src !== 'imp');
+    const snap = clone(appState);
+    const sids = new Set(newRules.map(r => r.sid));
+
+    appState.subjects.push(...news);
+    appState.subjects.forEach(s => {
+      if (sids.has(s.id)) { s.from = bFrom; s.to = bTo; }
+    });
+    appState.rules = [...manualRules, ...newRules];
+
+    saveStorage();
+    $('fapModal').close();
+    fapBatch = [];
+    renderSchedule();
+    updateDashboard();
+    alert(`Đã nhập thành công ${selectedItems.length} buổi học vào lịch từ ${shown(bFrom)} đến ${shown(bTo)}!`);
+  }
+
+  // ==========================================================================
+  // ICS (iCALENDAR) & BACKUP EXPORT / IMPORT
+  // ==========================================================================
+  function exportToIcs() {
+    if (!appState.rules.length) {
+      alert('Chưa có lịch học để xuất!');
+      return;
+    }
+    const events = [];
+    const fromDate = currentMonday;
+    const toDate = addDays(currentMonday, 7 * 16); // 16 weeks ahead
+
+    appState.rules.forEach(r => {
+      const sub = subj(r.sid) || {};
+      const occs = occurrences(r, fromDate, toDate);
+      occs.forEach(o => {
+        const slotTime = DEFAULT_SLOTS[o.slot - 1];
+        const [sh, sm] = slotTime[0].split(':');
+        const [eh, em] = slotTime[1].split(':');
+        const dStr = o.date.replace(/-/g, '');
+        events.push({
+          uid: `${o.rule.id}-${o.date}`,
+          start: `${dStr}T${sh}${sm}00`,
+          end: `${dStr}T${eh}${em}00`,
+          summary: `${o.name} (${o.code || 'Môn học'})`,
+          location: o.room || '',
+          description: `Tiết ${o.slot} (${slotTime[0]} - ${slotTime[1]})`
+        });
+      });
+    });
+
+    const icsLines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//EduMate//Universal Student Planner LMS 2.0//VI',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH'
+    ];
+    events.forEach(ev => {
+      icsLines.push('BEGIN:VEVENT');
+      icsLines.push(`UID:${ev.uid}@edumate.local`);
+      icsLines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`);
+      icsLines.push(`DTSTART:${ev.start}`);
+      icsLines.push(`DTEND:${ev.end}`);
+      icsLines.push(`SUMMARY:${ev.summary}`);
+      if (ev.location) icsLines.push(`LOCATION:${ev.location}`);
+      if (ev.description) icsLines.push(`DESCRIPTION:${ev.description}`);
+      icsLines.push('END:VEVENT');
+    });
+    icsLines.push('END:VCALENDAR');
+
+    const blob = new Blob([icsLines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `edumate-lich-hoc-${todayKey()}.ics`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function exportJsonBackup() {
+    const jsonStr = JSON.stringify(appState, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `edumate-sao-luu-${todayKey()}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function importJsonBackup(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        if (parsed && Array.isArray(parsed.subjects) && Array.isArray(parsed.rules)) {
+          if (confirm('Nhập bản sao lưu này sẽ cập nhật toàn bộ thời khóa biểu hiện tại. Bạn có chắc chắn muốn tiếp tục?')) {
+            appState = upgradeData(parsed);
+            saveStorage();
+            renderSchedule();
+            updateDashboard();
+            alert('Đã phục hồi dữ liệu sao lưu thành công!');
+          }
+        } else {
+          alert('Tệp sao lưu không đúng định dạng!');
+        }
+      } catch (e) {
+        alert('Lỗi đọc tệp JSON: ' + e.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ==========================================================================
+  // POMODORO FOCUS TIMER
+  // ==========================================================================
+  function updatePomoDisplay() {
+    const m = Math.floor(pomoRemainingSeconds / 60);
+    const s = pomoRemainingSeconds % 60;
+    $('pomoDisplay').textContent = `${pad(m)}:${pad(s)}`;
+  }
+
+  function startPomoTimer() {
+    if (pomoIsRunning) {
+      clearInterval(pomoTimer);
+      pomoIsRunning = false;
+      $('pomoStartBtn').textContent = 'Tiếp tục';
+      return;
+    }
+    pomoIsRunning = true;
+    $('pomoStartBtn').textContent = 'Tạm dừng';
+    pomoTimer = setInterval(() => {
+      if (pomoRemainingSeconds > 0) {
+        pomoRemainingSeconds--;
+        updatePomoDisplay();
+      } else {
+        clearInterval(pomoTimer);
+        pomoIsRunning = false;
+        $('pomoStartBtn').textContent = 'Bắt đầu';
+        playNotificationChime();
+        alert('🎉 Chúc mừng bạn đã hoàn thành phiên tập trung!');
+      }
+    }, 1000);
+  }
+
+  function resetPomoTimer(mins = 25) {
+    clearInterval(pomoTimer);
+    pomoIsRunning = false;
+    pomoRemainingSeconds = mins * 60;
+    $('pomoStartBtn').textContent = 'Bắt đầu';
+    updatePomoDisplay();
+  }
+
+  // ==========================================================================
+  // INITIALIZATION & EVENT LISTENERS
+  // ==========================================================================
+  function init() {
+    loadStorage();
+
+    // Initialize viewing Monday (Asia/Ho_Chi_Minh real-time)
+    currentMonday = mondayKey(todayKey());
+
+    // Apply saved Theme
+    if (appState.settings && appState.settings.theme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      $('themeBtnText').textContent = '☀ Light Mode';
+      $('themeBtnIcon').textContent = '🌙';
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      $('themeBtnText').textContent = '🌙 Dark Mode';
+      $('themeBtnIcon').textContent = '☀';
+    }
+
+    // Auto-advance date ticker (every 60s)
+    let lastDateCheck = todayKey();
+    setInterval(() => {
+      const nowKey = todayKey();
+      if (nowKey !== lastDateCheck) {
+        lastDateCheck = nowKey;
+        if (currentMonday === mondayKey(addDays(nowKey, -1))) {
+          currentMonday = mondayKey(nowKey);
+        }
+        renderSchedule();
+        updateDashboard();
+      }
+    }, 60000);
+
+    // Build Day checkboxes in Add modal
+    $('newDaysCheckboxGroup').innerHTML = DAYS_VN.map((d, i) => `
+      <label><input type="checkbox" value="${i + 1}"> ${d}</label>
+    `).join('');
+
+    // Sidebar View Navigation
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetView = btn.dataset.view;
+        if (targetView === 'fap') {
+          fapBatch = [];
+          $('fapPreviewContainer').style.display = 'none';
+          $('fapErrorMsg').textContent = '';
+          $('fapPasteArea').textContent = '';
+          $('fapModal').showModal();
+          return;
+        }
+        if (targetView === 'subjects') {
+          renderSubjectList();
+          $('subjectModal').showModal();
+          return;
+        }
+
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        document.querySelectorAll('.view-container').forEach(c => c.classList.remove('active'));
+        const container = $(`${targetView}View`);
+        if (container) container.classList.add('active');
+        activeView = targetView;
+
+        if (targetView === 'dashboard') updateDashboard();
+        if (targetView === 'tasks') renderTasks();
+        if (targetView === 'exams') renderExams();
+        if (targetView === 'schedule') renderSchedule();
+
+        // Close mobile drawer if open
+        $('sidebar').classList.remove('open');
+      });
+    });
+
+    // Mobile Hamburger button
+    $('mobileMenuBtn').addEventListener('click', () => {
+      $('sidebar').classList.toggle('open');
+    });
+
+    // Theme Switcher Toggle
+    $('themeToggleBtn').addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      const newTheme = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      appState.settings.theme = newTheme;
+      saveStorage();
+      $('themeBtnText').textContent = newTheme === 'light' ? '☀ Light Mode' : '🌙 Dark Mode';
+      $('themeBtnIcon').textContent = newTheme === 'light' ? '🌙' : '☀';
+    });
+
+    // Week Nav Controls (Phase 4 Spec)
+    $('prevWeekBtn').addEventListener('click', () => {
+      currentMonday = addDays(currentMonday, -7);
+      renderSchedule();
+    });
+    $('currentWeekBtn').addEventListener('click', () => {
+      currentMonday = mondayKey(todayKey());
+      renderSchedule();
+    });
+    $('nextWeekBtn').addEventListener('click', () => {
+      currentMonday = addDays(currentMonday, 7);
+      renderSchedule();
+    });
+    $('datePickerJump').addEventListener('change', e => {
+      if (e.target.value) {
+        currentMonday = mondayKey(e.target.value);
+        renderSchedule();
+      }
+    });
+
+    // View Mode Toggle (Grid | Agenda | Day)
+    document.querySelectorAll('.view-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeGridMode = btn.dataset.mode;
+        renderSchedule();
+      });
+    });
+
+    // Global Search
+    $('globalSearchInput').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase().trim();
+      if (!q) {
+        renderSchedule();
+        return;
+      }
+      document.querySelectorAll('.class-pill').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.opacity = text.includes(q) ? '1' : '0.15';
+      });
+    });
+
+    // Add Class Modal & Dynamic Slot Pickers
+    $('openAddClassBtn').addEventListener('click', openAddModal);
+    $('fabAddBtn').addEventListener('click', openAddModal);
+    $('cancelAddClassBtn').addEventListener('click', () => $('addClassModal').close());
+
+    $('newDaysCheckboxGroup').addEventListener('change', () => {
+      const checkedDays = [...document.querySelectorAll('#newDaysCheckboxGroup input:checked')].map(i => +i.value);
+      $('newSlotPickersGroup').innerHTML = checkedDays.map(w => `
+        <label>Tiết học cho ${DAYS_VN[w - 1]}:
+          <select data-wd="${w}">
+            ${DEFAULT_SLOTS.map((t, i) => `<option value="${i + 1}">Tiết ${i + 1} (${t[0]}–${t[1]})</option>`).join('')}
+          </select>
+        </label>
+      `).join('');
+    });
+
+    $('addClassForm').addEventListener('submit', handleSaveAddClass);
+
+    // Edit Class Modal Actions
+    $('scheduleGridBody').addEventListener('click', handleGridCellClick);
+    $('agendaListContent').addEventListener('click', handleGridCellClick);
+    $('dayListContent').addEventListener('click', handleGridCellClick);
+    $('cancelEditClassBtn').addEventListener('click', () => $('editClassModal').close());
+    $('editClassForm').addEventListener('submit', handleSaveEditClass);
+    $('deleteClassBtn').addEventListener('click', handleDeleteClassOccurrence);
+
+    // FAP Import Actions
+    $('openOfficialFapBtn').addEventListener('click', () => window.open('https://fap.fpt.edu.vn/WeeklyTimetable', '_blank'));
+    $('fapCloseBtn').addEventListener('click', () => $('fapModal').close());
+    $('fapClearBatchBtn').addEventListener('click', () => {
+      fapBatch = [];
+      $('fapPasteArea').textContent = '';
+      renderFapPreview();
+    });
+    $('fapPasteArea').addEventListener('paste', e => {
+      e.preventDefault();
+      const cd = e.clipboardData;
+      const html = cd.getData('text/html') || cd.getData('text/plain');
+      const parsed = parseFapHtmlOrText(html);
+      if (!parsed.length) {
+        $('fapErrorMsg').textContent = 'Không tìm thấy bảng lịch trong nội dung dán. Vui lòng copy cả bảng trên FAP.';
+      } else {
+        $('fapErrorMsg').textContent = '';
+        fapBatch.push(...parsed);
+      }
+      renderFapPreview();
+    });
+    $('fapHtmlFileInput').addEventListener('change', e => {
+      const files = [...e.target.files];
+      files.forEach(f => {
+        const rd = new FileReader();
+        rd.onload = () => {
+          const parsed = parseFapHtmlOrText(rd.result);
+          fapBatch.push(...parsed);
+          renderFapPreview();
+        };
+        rd.readAsText(f);
+      });
+      e.target.value = '';
+    });
+    $('fapSelectAllBtn').addEventListener('click', () => {
+      fapBatch.forEach(i => i.selected = true);
+      renderFapPreview();
+    });
+    $('fapDeselectAllBtn').addEventListener('click', () => {
+      fapBatch.forEach(i => i.selected = false);
+      renderFapPreview();
+    });
+    $('fapPreviewTableBody').addEventListener('change', e => {
+      if (e.target.classList.contains('fap-row-check')) {
+        const idx = +e.target.dataset.idx;
+        fapBatch[idx].selected = e.target.checked;
+      }
+    });
+    $('fapExecuteImportBtn').addEventListener('click', executeFapImport);
+
+    // Subject List Modal Actions
+    $('closeSubjectModalBtn').addEventListener('click', () => $('subjectModal').close());
+    $('subjectListContainer').addEventListener('change', handleSubjectChange);
+    $('subjectListContainer').addEventListener('click', handleSubjectDelete);
+
+    // Tasks Actions
+    $('openAddTaskModalBtn').addEventListener('click', () => {
+      $('taskSubjectSelect').innerHTML = `<option value="">(Không chọn môn)</option>` + 
+        appState.subjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+      $('taskModal').showModal();
+    });
+    $('cancelTaskModalBtn').addEventListener('click', () => $('taskModal').close());
+    $('taskForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const title = $('taskTitleInput').value.trim();
+      if (!title) return;
+      appState.tasks.push({
+        id: uid(),
+        title,
+        sid: $('taskSubjectSelect').value || null,
+        deadline: $('taskDeadlineInput').value || null,
+        priority: $('taskPrioritySelect').value,
+        completed: false,
+        createdAt: new Date().toISOString()
+      });
+      saveStorage();
+      $('taskModal').close();
+      $('taskForm').reset();
+      renderTasks();
+      updateDashboard();
+    });
+    $('tasksListContainer').addEventListener('click', e => {
+      const item = e.target.closest('.task-item');
+      if (!item) return;
+      const tid = item.dataset.taskId;
+      if (e.target.dataset.action === 'toggleTask') {
+        const t = appState.tasks.find(x => x.id === tid);
+        if (t) {
+          t.completed = e.target.checked;
+          if (t.completed) playNotificationChime();
+          saveStorage();
+          renderTasks();
+          updateDashboard();
+        }
+      } else if (e.target.dataset.action === 'deleteTask') {
+        appState.tasks = appState.tasks.filter(x => x.id !== tid);
+        saveStorage();
+        renderTasks();
+        updateDashboard();
+      }
+    });
+
+    // Exams Actions
+    $('openAddExamModalBtn').addEventListener('click', () => {
+      $('examSubjectSelect').innerHTML = appState.subjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+      $('examDateInput').value = todayKey();
+      $('examModal').showModal();
+    });
+    $('cancelExamModalBtn').addEventListener('click', () => $('examModal').close());
+    $('examForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const sid = $('examSubjectSelect').value;
+      const s = subj(sid);
+      appState.exams.push({
+        id: uid(),
+        sid,
+        subjectName: s ? s.name : 'Môn thi',
+        date: $('examDateInput').value,
+        time: $('examTimeInput').value,
+        room: $('examRoomInput').value.trim(),
+        seat: $('examSeatInput').value.trim(),
+        notes: $('examNotesInput').value.trim()
+      });
+      saveStorage();
+      $('examModal').close();
+      $('examForm').reset();
+      renderExams();
+      updateDashboard();
+    });
+    $('examsListContainer').addEventListener('click', e => {
+      const item = e.target.closest('.task-item');
+      if (!item) return;
+      const eid = item.dataset.examId;
+      if (e.target.dataset.action === 'deleteExam') {
+        appState.exams = appState.exams.filter(x => x.id !== eid);
+        saveStorage();
+        renderExams();
+        updateDashboard();
+      }
+    });
+
+    // Pomodoro Controls
+    document.querySelectorAll('.pomo-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.pomo-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        resetPomoTimer(+tab.dataset.mins);
+      });
+    });
+    $('pomoStartBtn').addEventListener('click', startPomoTimer);
+    $('pomoResetBtn').addEventListener('click', () => resetPomoTimer(25));
+
+    // Export & Backup
+    $('quickExportBtn').addEventListener('click', exportJsonBackup);
+    $('exportJsonBtn').addEventListener('click', exportJsonBackup);
+    $('exportIcsBtn').addEventListener('click', exportToIcs);
+    $('importJsonBtn').addEventListener('click', () => $('jsonFileInput').click());
+    $('jsonFileInput').addEventListener('change', e => {
+      importJsonBackup(e.target.files[0]);
+      e.target.value = '';
+    });
+
+    // Settings Form
+    $('settingsForm').addEventListener('submit', e => {
+      e.preventDefault();
+      appState.settings.university = $('setUniversity').value;
+      appState.settings.semester = $('setSemester').value;
+      saveStorage();
+      alert('Đã lưu cấu hình thành công!');
+    });
+    $('wipeDataBtn').addEventListener('click', () => {
+      if (confirm('CẢNH BÁO: Thao tác này sẽ xóa toàn bộ dữ liệu lịch học trên trình duyệt! Bạn có chắc chắn không?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        appState = upgradeData({});
+        renderSchedule();
+        updateDashboard();
+        alert('Đã xóa toàn bộ dữ liệu.');
+      }
+    });
+
+    // Render Initial Schedule
+    renderSchedule();
+    updateDashboard();
+  }
+
+  // --- Handlers for Add Class ---
+  function openAddModal() {
+    $('addClassForm').reset();
+    $('addClassError').textContent = '';
+    $('subjectDatalist').innerHTML = appState.subjects.map(s => `<option value="${esc(s.name)}">`).join('');
+    $('newSlotPickersGroup').innerHTML = '';
+    $('newCourseFrom').value = currentMonday;
+    $('addClassModal').showModal();
+  }
+
+  function handleSaveAddClass(e) {
+    e.preventDefault();
+    const name = $('newCourseName').value.trim();
+    const code = $('newCourseCode').value.trim();
+    const room = $('newCourseRoom').value.trim();
+    const from = $('newCourseFrom').value || currentMonday;
+    const to = $('newCourseTo').value || null;
+
+    const slotPicks = [...document.querySelectorAll('#newSlotPickersGroup select')].map(s => ({
+      wd: +s.dataset.wd,
+      slot: +s.value
+    }));
+
+    if (!name) { $('addClassError').textContent = 'Vui lòng nhập tên môn học.'; return; }
+    if (!slotPicks.length) { $('addClassError').textContent = 'Vui lòng chọn ít nhất một thứ trong tuần.'; return; }
+    if (to && to < from) { $('addClassError').textContent = 'Ngày đến phải sau ngày bắt đầu.'; return; }
+
+    let s = appState.subjects.find(x => (code && x.code && x.code.toLowerCase() === code.toLowerCase()) || x.name.toLowerCase() === name.toLowerCase());
+    const isNew = !s;
+    if (isNew) {
+      s = { id: uid(), name, code, color: PALETTE[appState.subjects.length % PALETTE.length] };
+    }
+
+    const candidates = slotPicks.map(p => ({
+      id: uid(),
+      sid: s.id,
+      wd: p.wd,
+      slot: p.slot,
+      room,
+      from,
+      to,
+      skip: [],
+      moved: {}
+    }));
+
+    const hits = candidates.flatMap(c => clashes(c, from, to || '2028-12-31'));
+    if (hits.length) {
+      $('addClassError').textContent = 'Không thể lưu vì bị trùng tiết:\n' + hits.slice(0, 5).join('\n');
+      return;
+    }
+
+    if (isNew) appState.subjects.push(s);
+    else if (code && !s.code) s.code = code;
+
+    appState.rules.push(...candidates);
+    saveStorage();
+    $('addClassModal').close();
+    renderSchedule();
+    updateDashboard();
+  }
+
+  // --- Handlers for Edit Class ---
+  function handleGridCellClick(e) {
+    const btn = e.target.closest('.class-pill') || e.target.closest('.agenda-item');
+    if (!btn || !btn.dataset.rule) return;
+    openEditModal(btn.dataset.rule, btn.dataset.date);
+  }
+
+  function openEditModal(rid, d) {
+    const r = appState.rules.find(x => x.id === rid);
+    if (!r) return;
+    const sub = subj(r.sid) || {};
+    const o = occOn(r, d) || { slot: r.slot, room: r.room, name: sub.name, code: sub.code };
+    editingClass = { ruleId: rid, date: d };
+
+    $('editModalTitle').textContent = `${o.name || 'Môn học'} · ${DAYS_VN[r.wd - 1]}, ${shown(d)}`;
+    $('editCourseCode').value = o.code || '';
+    $('editCourseName').value = o.name || '';
+    $('editCourseSlot').innerHTML = DEFAULT_SLOTS.map((t, i) => `
+      <option value="${i + 1}" ${i + 1 === o.slot ? 'selected' : ''}>Tiết ${i + 1} (${t[0]}–${t[1]})</option>
+    `).join('');
+    $('editCourseRoom').value = o.room || '';
+    $('editSubjFrom').value = sub.from || '';
+    $('editSubjTo').value = sub.to || '';
+    $('editScopeAllText').textContent = `Tất cả các buổi ${DAYS_VN[r.wd - 1]} của môn này`;
+    document.querySelector('input[name="editScope"][value="one"]').checked = true;
+    $('editClassError').textContent = '';
+    $('editClassModal').showModal();
+  }
+
+  function handleSaveEditClass(e) {
+    e.preventDefault();
+    const r = appState.rules.find(x => x.id === editingClass.ruleId);
+    if (!r) return;
+    const date = editingClass.date;
+    const scope = document.querySelector('input[name="editScope"]:checked').value;
+    const sub = subj(r.sid) || {};
+    const slot = +$('editCourseSlot').value;
+    const room = $('editCourseRoom').value.trim();
+    const name = $('editCourseName').value.trim();
+    const code = $('editCourseCode').value.trim();
+
+    if (!name) { $('editClassError').textContent = 'Tên môn không được để trống.'; return; }
+
+    if (scope === 'one') {
+      r.moved = r.moved || {};
+      r.moved[date] = { slot, room, name, code };
+    } else if (scope === 'all') {
+      const targets = appState.rules.filter(x => x.sid === r.sid && x.slot === r.slot && x.wd === r.wd);
+      targets.forEach(x => {
+        x.slot = slot;
+        x.room = room;
+        x.moved = {};
+      });
+      sub.name = name;
+      sub.code = code;
+    } else {
+      // 'after'
+      r.moved = r.moved || {};
+      r.moved[date] = { slot, room, name, code };
+    }
+
+    saveStorage();
+    $('editClassModal').close();
+    renderSchedule();
+    updateDashboard();
+  }
+
+  function handleDeleteClassOccurrence() {
+    const r = appState.rules.find(x => x.id === editingClass.ruleId);
+    if (!r) return;
+    const date = editingClass.date;
+    const scope = document.querySelector('input[name="editScope"]:checked').value;
+
+    if (!confirm('Bạn có chắc chắn muốn xóa buổi học này không?')) return;
+
+    if (scope === 'one') {
+      r.skip = r.skip || [];
+      r.skip.push(date);
+      if (r.moved && r.moved[date]) delete r.moved[date];
+    } else if (scope === 'all') {
+      appState.rules = appState.rules.filter(x => !(x.sid === r.sid && x.wd === r.wd && x.slot === r.slot));
+    }
+
+    saveStorage();
+    $('editClassModal').close();
+    renderSchedule();
+    updateDashboard();
+  }
+
+  function handleSubjectChange(e) {
+    const act = e.target.dataset.act;
+    const row = e.target.closest('[data-id]');
+    if (!row || !act) return;
+    const s = subj(row.dataset.id);
+    if (!s) return;
+
+    if (act === 'color') s.color = e.target.value;
+    else if (act === 'name') s.name = e.target.value.trim();
+    else if (act === 'code') s.code = e.target.value.trim();
+
+    saveStorage();
+    renderSchedule();
+    updateDashboard();
+  }
+
+  function handleSubjectDelete(e) {
+    if (e.target.dataset.act !== 'del') return;
+    const row = e.target.closest('[data-id]');
+    if (!row) return;
+    const id = row.dataset.id;
+    const s = subj(id);
+    if (!confirm(`Xác nhận xóa môn "${s.name}" cùng toàn bộ lịch học của môn này?`)) return;
+
+    appState.rules = appState.rules.filter(r => r.sid !== id);
+    appState.subjects = appState.subjects.filter(x => x.id !== id);
+    saveStorage();
+    renderSchedule();
+    renderSubjectList();
+    updateDashboard();
+  }
+
+  // Run initial setup on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+</body>
+</html>

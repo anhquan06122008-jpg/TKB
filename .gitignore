@@ -1,0 +1,17 @@
+# Environments & Secrets
+.env
+.env.local
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS & Temp Files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Backups
+*.bak
+

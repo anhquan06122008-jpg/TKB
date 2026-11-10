@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>TKB – QLHT</title>
+<style>
+:root { --bg:#f5f6fa; --fg:#1d2330; --mut:#5b6472; --line:#d5dae4; --card:#ffffff; --acc:#1d4ed8; --bad:#b91c1c; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#0f1218; --fg:#e8ebf2; --mut:#9aa3b2; --line:#2a3140; --card:#171c26; --acc:#5b8cff; --bad:#ff7b7b; }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--fg); }
+header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+h1 { font-size: 20px; margin: 0 8px 0 0; }
+h2 { font-size: 18px; margin: 0; }
+h3 { font-size: 15px; margin: 8px 0 0; }
+.steps { margin: 0; padding-left: 20px; font-size: 14px; display: grid; gap: 6px; }
+#fapInfo { white-space: pre-line; }
+#weekTitle { font-weight: 600; margin: 0 auto 0 4px; }
+main > .hint { padding: 10px 16px 0; }
+button { font: inherit; padding: 7px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--fg); cursor: pointer; }
+button.primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+button.danger { color: var(--bad); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--acc); outline-offset: 2px; }
+.hint { color: var(--mut); font-size: 13px; margin: 0; }
+.empty { color: var(--mut); text-align: center; padding: 24px; }
+.wrap { overflow-x: auto; padding: 12px 16px; }
+table { border-collapse: collapse; width: 100%; min-width: 760px; background: var(--card); }
+th, td { border: 1px solid var(--line); padding: 6px; vertical-align: top; text-align: center; }
+td { width: 13%; height: 62px; }
+th small { color: var(--mut); font-weight: 400; }
+th.today { color: var(--acc); }
+.occ { display: block; width: 100%; text-align: left; padding: 6px 8px; border: 0; border-left: 5px solid var(--c); border-radius: 6px; background: color-mix(in srgb, var(--c) 18%, var(--card)); color: var(--fg); }
+.occ span { display: block; font-size: 12px; color: var(--mut); }
+dialog { width: calc(100% - 24px); max-width: 460px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--fg); }
+dialog::backdrop { background: rgba(0, 0, 0, .4); }
+form { display: grid; gap: 10px; }
+label { display: grid; gap: 4px; font-size: 14px; }
+input, select { font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); }
+input[type="checkbox"], input[type="radio"] { padding: 0; width: auto; }
+fieldset { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+fieldset label, .days label { display: flex; align-items: center; gap: 6px; }
+.days { display: flex; flex-wrap: wrap; gap: 10px; }
+.row { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.err { color: var(--bad); white-space: pre-line; margin: 0; font-size: 14px; }
+.subj { display: grid; grid-template-columns: auto 2fr 1fr auto auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+.paste { min-height: 64px; max-height: 180px; overflow: auto; border: 1px dashed var(--line); border-radius: 8px; padding: 8px; font-size: 13px; background: var(--bg); }
+.paste:empty::before { content: "Bấm vào đây rồi nhấn Ctrl+V để dán lịch đã sao chép từ FAP"; color: var(--mut); }
+a.btn { display: inline-block; padding: 7px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--fg); text-decoration: none; font-size: 14px; }
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+</head>
+<body>
+<header>
+  <h1>TKB – QLHT</h1>
+  <button type="button" id="prev">‹ Tuần trước</button>
+  <button type="button" id="home">Về tuần 45</button>
+  <button type="button" id="next">Tuần sau ›</button>
+  <input type="date" id="jump" aria-label="Đi tới ngày">
+  <span id="weekTitle" aria-live="polite"></span>
+  <button type="button" id="openAdd" class="primary">+ Xếp lịch cố định</button>
+  <button type="button" id="openSubj">Môn học</button>
+  <button type="button" id="openFap">Nhập lịch học</button>
+  <button type="button" id="exportBtn">Xuất sao lưu</button>
+  <button type="button" id="importBtn">Nhập sao lưu</button>
+  <input type="file" id="importFile" accept=".json,application/json" hidden>
+</header>
+
+<main>
+  <p class="hint">Bấm vào một buổi để sửa hoặc xóa. Dữ liệu được lưu trên trình duyệt này, nên hãy xuất sao lưu định kỳ.</p>
+  <p class="empty" id="empty" hidden>Chưa có lịch học. Bấm “+ Xếp lịch cố định” để thêm môn và các thứ học.</p>
+  <div class="wrap"><table id="grid"></table></div>
+</main>
+
+<dialog id="addDlg" aria-labelledby="addTitle">
+  <form id="addForm" novalidate>
+    <h2 id="addTitle">Xếp lịch cố định</h2>
+    <label>Mã ngành
+      <input id="fCode" maxlength="20" placeholder="VD: AIF101">
+    </label>
+    <label>Tên môn học
+      <input id="fName" list="subList" maxlength="60" placeholder="VD: Tiếng Anh">
+    </label>
+    <datalist id="subList"></datalist>
+    <fieldset>
+      <legend>Học vào những thứ nào?</legend>
+      <div class="days" id="fDays"></div>
+    </fieldset>
+    <div id="fSlots"></div>
+    <label>Phòng / nền tảng
+      <input id="fRoom" maxlength="60" placeholder="VD: 415, Zoom">
+    </label>
+    <label>Áp dụng từ ngày <input type="date" id="fFrom"></label>
+    <label>Đến ngày <input type="date" id="fTo"></label>
+    <p class="hint">Để trống “Từ ngày” thì bắt đầu từ 02/11/2026. Để trống “Đến ngày” thì áp dụng đến hết.</p>
+    <p class="err" id="fErr" role="alert"></p>
+    <div class="row">
+      <button type="button" id="fCancel">Hủy</button>
+      <button class="primary">Lưu lịch</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="editDlg" aria-labelledby="editTitle">
+  <form id="editForm">
+    <h2 id="editTitle"></h2>
+    <label>Mã ngành <input id="eCode" maxlength="20"></label>
+    <label>Tên môn học <input id="eName" maxlength="60"></label>
+    <label>Tiết <select id="eSlot"></select></label>
+    <label>Phòng / nền tảng <input id="eRoom" maxlength="60"></label>
+    <fieldset>
+      <legend>Áp dụng cho</legend>
+      <label><input type="radio" name="scope" value="one" checked> Chỉ buổi này</label>
+      <label><input type="radio" name="scope" value="after"> Buổi này và các buổi sau (cùng tiết này)</label>
+      <label><input type="radio" name="scope" value="all"> <span id="lblAll"></span></label>
+    </fieldset>
+    <fieldset>
+      <legend>Khoảng ngày học của môn</legend>
+      <label>Từ ngày <input type="date" id="eFrom"></label>
+      <label>Đến ngày <input type="date" id="eTo"></label>
+      <p class="hint">Áp dụng cho mọi buổi của môn. Để trống nghĩa là không giới hạn. Buổi ngoài khoảng này sẽ ẩn, không bị xóa.</p>
+    </fieldset>
+    <p class="err" id="eErr" role="alert"></p>
+    <div class="row">
+      <button type="button" id="eDel" class="danger" title="Xóa theo phạm vi đã chọn">Xóa</button>
+      <button type="button" id="eCancel">Hủy</button>
+      <button class="primary">Lưu</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="fapDlg" aria-labelledby="fapTitle">
+  <h2 id="fapTitle">Nhập lịch học</h2>
+  <p class="hint">Chọn một cách bên dưới. Đọc xong thì xem danh sách, rồi bấm “Nhập vào lịch”.</p>
+
+  <h3>Cách 1: Lấy từ trang FAP (dễ nhất)</h3>
+  <ol class="steps">
+    <li>Bấm <button type="button" id="openFapSite">Mở trang FAP</button>, đăng nhập, rồi mở trang lịch tuần.</li>
+    <li>Bấm vào trang, nhấn <b>Ctrl + A</b> (chọn tất cả), rồi nhấn <b>Ctrl + C</b> (sao chép).</li>
+    <li>Quay lại đây, bấm vào ô bên dưới, rồi nhấn <b>Ctrl + V</b> (dán).</li>
+  </ol>
+  <div id="fapPaste" class="paste" contenteditable="true" role="textbox" aria-label="Ô dán lịch từ FAP"></div>
+  <p class="hint">Muốn nhập nhiều tuần: trên FAP chuyển sang tuần khác, rồi làm lại bước 2 và 3. Các tuần sẽ được gộp lại.</p>
+  <p class="hint">Hoặc: trên trang FAP nhấn Ctrl + S để lưu thành file .html, rồi chọn file ở đây.</p>
+  <input type="file" id="fapFiles" accept=".html,.htm" multiple>
+
+  <h3>Cách 2: Từ ảnh chụp lịch</h3>
+  <ol class="steps">
+    <li>Chụp ảnh hoặc chụp màn hình cả bảng lịch tuần, có dòng ngày và cột tiết.</li>
+    <li>Chọn ảnh ở đây. Web tự đọc chữ trên ảnh nên có thể đọc sai. Lần đầu cần mạng, mất khoảng nửa phút.</li>
+  </ol>
+  <input type="file" id="imgFiles" accept="image/*" multiple>
+
+  <p class="hint" id="fapInfo"></p>
+  <p class="err" id="fapErr" role="alert"></p>
+  <div class="row">
+    <button type="button" id="fapClear">Xóa danh sách tạm</button>
+    <button type="button" id="fapCancel">Đóng</button>
+    <button type="button" id="fapGo" class="primary" disabled>Nhập vào lịch</button>
+  </div>
+</dialog>
+
+<dialog id="subjDlg" aria-labelledby="subjTitle">
+  <h2 id="subjTitle">Môn học</h2>
+  <p class="hint">Đổi tên hoặc màu sẽ áp dụng cho mọi buổi của môn. Xóa môn sẽ xóa toàn bộ lịch của môn đó.</p>
+  <div id="sList"></div>
+  <div class="row"><button type="button" id="sClose" class="primary">Đóng</button></div>
+</dialog>
+
+<script>
+// StudyFlow – thời khóa biểu cố định. Dữ liệu lưu trong localStorage của trình duyệt.
+const KEY = 'studyflow-tkb-v1';
+const START = '2026-11-02';      // tuần 45 bắt đầu từ Thứ 2 này
+const HORIZON = '2028-12-31';    // giới hạn kiểm tra trùng cho lịch "áp dụng đến hết"
+const DAY = 864e5;
+const DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+const SLOTS = [['07:00', '08:00'], ['08:45', '10:15'], ['10:30', '12:00'], ['12:30', '14:00'],
+               ['14:15', '15:45'], ['16:00', '17:30'], ['17:45', '19:15'], ['19:30', '21:00']];
+const COLORS = ['#2563eb', '#d97706', '#16a34a', '#dc2626', '#7c3aed', '#0891b2', '#db2777', '#57534e'];
+
+let data = { subjects: [], rules: [] };
+let wk = START;       // Thứ 2 của tuần đang xem
+let editing = null;   // buổi đang sửa: { rule, date }
+
+// ---- Ngày: dùng chuỗi YYYY-MM-DD và mốc UTC để tránh lỗi múi giờ ----
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const fromKey = s => new Date(s + 'T00:00:00Z');
+const addDays = (s, n) => new Date(Date.parse(s + 'T00:00:00Z') + n * DAY).toISOString().slice(0, 10);
+const weekdayOf = s => (fromKey(s).getUTCDay() + 6) % 7 + 1;          // 1 = Thứ 2 … 7 = Chủ nhật
+const mondayKey = s => addDays(s, -((fromKey(s).getUTCDay() + 6) % 7));
+const shown = s => s.split('-').reverse().join('/');                 // 2026-11-02 → 02/11/2026
+const todayKey = () => { const t = new Date(); return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`; };
+function isoWeek(s) {
+  const t = fromKey(s);
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / DAY + 1) / 7);
+}
+
+// ---- Tiện ích ----
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const uid = () => Math.random().toString(36).slice(2, 10);
+const clone = o => JSON.parse(JSON.stringify(o));
+const pick = (obj, f) => Object.fromEntries(Object.entries(obj).filter(([k]) => f(k)));
+const subj = id => data.subjects.find(s => s.id === id);
+const checkedVal = name => document.querySelector(`input[name="${name}"]:checked`).value;
+const slotOptions = sel => SLOTS.map((t, i) =>
+  `<option value="${i + 1}"${i + 1 === sel ? ' selected' : ''}>Tiết ${i + 1} (${t[0]}–${t[1]})</option>`).join('');
+const valid = r => r && typeof r.id === 'string' && typeof r.sid === 'string' && r.wd >= 1 && r.wd <= 7 &&
+  r.slot >= 1 && r.slot <= 8 && (!r.from || /^\d{4}-\d{2}-\d{2}$/.test(r.from)) && (!r.to || /^\d{4}-\d{2}-\d{2}$/.test(r.to)) &&
+  Array.isArray(r.skip) && !!r.moved && typeof r.moved === 'object';
+
+// ---- Lịch: một "quy tắc" = một môn vào một thứ trong tuần, lặp hằng tuần trong khoảng ngày.
+//      Buổi bị xóa nằm trong r.skip; buổi đổi tiết nằm trong r.moved[ngày]. ----
+
+// Buổi của quy tắc r vào ngày k (null nếu không có)
+function occOn(r, k) {
+  const sub = subj(r.sid) || {};
+  if ((sub.from && k < sub.from) || (sub.to && k > sub.to)) return null;   // ngoài khoảng ngày của môn
+  if ((r.from && k < r.from) || (r.to && k > r.to) || weekdayOf(k) !== r.wd || r.skip.includes(k)) return null;
+  const m = r.moved[k] || {};
+  return { rule: r, date: k, slot: m.slot ?? r.slot, room: m.room ?? r.room, name: m.name ?? r.name ?? sub.name, code: m.code ?? r.code ?? sub.code };
+}
+
+function occurrences(r, a, b) {
+  const out = [];
+  const end = r.to && r.to < b ? r.to : b;
+  for (let k = r.from > a ? r.from : a; k <= end; k = addDays(k, 1)) {
+    const o = occOn(r, k);
+    if (o) out.push(o);
+  }
+  return out;
+}
+// Buổi của quy tắc cand trong [a, b] bị trùng tiết với môn khác (bỏ qua các quy tắc trong skipIds)
+function clashes(cand, a, b, skipIds = []) {
+  const hits = [];
+  for (const o of occurrences(cand, a, b))
+    for (const other of data.rules) {
+      if (other.id === cand.id || skipIds.includes(other.id)) continue;
+      const p = occOn(other, o.date);
+      if (p && p.slot === o.slot) hits.push(`${shown(o.date)} – tiết ${o.slot}: ${subj(other.sid)?.name ?? '?'}`);
+    }
+  return hits;
+}
+// Khoảng ngày thật sự của một quy tắc: phần chung giữa khoảng của quy tắc và khoảng ngày của môn
+function span(r) {
+  const sub = subj(r.sid) || {};
+  const a = [r.from, sub.from].filter(Boolean).sort().pop() || START;
+  const b = [r.to, sub.to].filter(Boolean).sort()[0] || HORIZON;
+  return [a, b];
+}
+// Các buổi của môn sau khi đổi khoảng ngày có trùng tiết với môn khác không
+function windowClashes(sid) {
+  return data.rules.filter(r => r.sid === sid).flatMap(r => clashes(r, ...span(r)));
+}
+const occAt = (d, s) => {
+  for (const r of data.rules) { const o = occOn(r, d); if (o && o.slot === s) return o; }
+  return null;
+};
+
+// ---- Lưu trữ ----
+// Dữ liệu cũ: lịch nhập từ FAP/ảnh bị cắt ở buổi cuối đã đọc. Nay lịch lặp hằng tuần, khoảng ngày lấy theo môn.
+function upgrade(d) {
+  if (d.v === 2) return d;
+  const spans = {};
+  d.rules.forEach(r => {
+    if (r.src !== 'fap' && r.src !== 'imp') return;
+    const sp = spans[r.sid] || (spans[r.sid] = { from: r.from, to: r.to || r.from });
+    if (r.from < sp.from) sp.from = r.from;
+    if (r.to && r.to > sp.to) sp.to = r.to;
+    r.to = null;
+  });
+  d.subjects.forEach(s => { const sp = spans[s.id]; if (sp && !s.from && !s.to) { s.from = sp.from; s.to = sp.to; } });
+  d.v = 2;
+  return d;
+}
+function load() {
+  let raw;
+  try { raw = localStorage.getItem(KEY); }
+  catch (e) { alert('Trình duyệt chưa cho phép lưu dữ liệu. Bạn vẫn dùng được, nhưng nhớ xuất sao lưu.'); return; }
+  if (!raw) return;
+  let d = null;
+  try { d = JSON.parse(raw); } catch (e) { d = null; }
+  if (d && Array.isArray(d.subjects) && Array.isArray(d.rules) && d.rules.every(valid)) { data = upgrade(d); return; }
+  try { localStorage.setItem(KEY + '-loi', raw); } catch (e) { /* bỏ qua */ }
+  alert('Dữ liệu đã lưu không đúng định dạng. Bản gốc được giữ lại trong trình duyệt để không mất.');
+}
+function save() {
+  data.v = 2;
+  try { localStorage.setItem(KEY, JSON.stringify(data)); }
+  catch (e) { alert('Không lưu được vào trình duyệt (có thể hết bộ nhớ). Hãy bấm “Xuất sao lưu” để giữ dữ liệu.'); }
+}
+
+// ---- Hiển thị lịch tuần ----
+function render() {
+  const days = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(wk, i));
+  const today = todayKey();
+  $('weekTitle').textContent = `Tuần ${isoWeek(wk)} · ${shown(wk).slice(0, 5)} – ${shown(days[6])}`;
+  let h = '<thead><tr><th></th>' + days.map((d, i) =>
+    `<th scope="col"${d === today ? ' class="today"' : ''}>${DAYS[i]}<br><small>${shown(d).slice(0, 5)}</small></th>`
+  ).join('') + '</tr></thead><tbody>';
+  for (let s = 1; s <= 8; s++) {
+    h += `<tr><th scope="row">Tiết ${s}<br><small>${SLOTS[s - 1].join('–')}</small></th>`;
+    for (const d of days) {
+      const o = occAt(d, s);
+      h += `<td>${o ? block(o) : ''}</td>`;
+    }
+    h += '</tr>';
+  }
+  $('grid').innerHTML = h + '</tbody>';
+  $('empty').hidden = data.rules.length > 0;
+}
+function block(o) {
+  const sub = subj(o.rule.sid) || {};
+  const name = o.name || sub.name || o.code || '?';
+  const [a, b] = SLOTS[o.slot - 1];
+  return `<button type="button" class="occ" style="--c:${esc(sub.color || '#57534e')}" data-rule="${o.rule.id}" data-date="${o.date}">` +
+    `<strong>${esc(name)}</strong><span>${o.code ? esc(o.code) + ' · ' : ''}${o.room ? esc(o.room) + ' · ' : ''}${a}–${b}</span></button>`;
+}
+
+// ---- Sửa / xóa một buổi, theo phạm vi ----
+// Chỉ buổi này; buổi này và các buổi sau của cùng tiết (mọi thứ); hoặc tất cả buổi cùng thứ, cùng tiết của môn.
+// Mỗi tiết là một nhóm riêng: đổi hoặc xóa tiết này không ảnh hưởng tiết khác.
+function scopeRules(r, scope) {
+  return data.rules.filter(x => x.sid === r.sid && x.slot === r.slot && (scope === 'after' || x.wd === r.wd));
+}
+// Các ngày từ "từ" đến "đến" của thứ w mà không quy tắc nào trong danh sách có buổi (để đánh dấu nghỉ)
+function gapDays(rules, w, from, to) {
+  const out = [];
+  for (let k = from; k <= to; k = addDays(k, 1)) {
+    if (weekdayOf(k) !== w) continue;
+    if (!rules.some(x => (!x.from || k >= x.from) && (!x.to || k <= x.to) && !x.skip.includes(k))) out.push(k);
+  }
+  return out;
+}
+function openEdit(rid, d) {
+  const r = data.rules.find(x => x.id === rid);
+  if (!r) return;
+  const sub = subj(r.sid) || {};
+  const o = occOn(r, d) || { slot: r.slot, room: r.room, name: sub.name, code: sub.code };
+  editing = { id: rid, date: d };
+  $('editTitle').textContent = `${o.name || '?'}${o.code ? ` (${o.code})` : ''} · ${DAYS[r.wd - 1]}, ${shown(d)}`;
+  $('eCode').value = o.code || '';
+  $('eName').value = o.name || '';
+  $('eSlot').innerHTML = slotOptions(o.slot);
+  $('eRoom').value = o.room || '';
+  $('eFrom').value = sub.from || '';
+  $('eTo').value = sub.to || '';
+  $('lblAll').textContent = `Tất cả buổi ${DAYS[r.wd - 1]}, tiết ${r.slot} của môn này`;
+  document.querySelector('input[name="scope"][value="one"]').checked = true;
+  $('eErr').textContent = '';
+  $('editDlg').showModal();
+}
+function saveEdit(e) {
+  e.preventDefault();
+  const r = data.rules.find(x => x.id === editing.id);
+  if (!r) return;
+  const date = editing.date, scope = checkedVal('scope');
+  const sub = subj(r.sid) || {};
+  const slot = +$('eSlot').value, room = $('eRoom').value.trim();
+  const name = $('eName').value.trim(), code = $('eCode').value.trim();
+  const nf = $('eFrom').value || null, nt = $('eTo').value || null;
+  const fail = msg => { $('eErr').textContent = msg; };
+  if (!name) return fail('Nhập tên môn học.');
+  if (nf && nt && nt < nf) return fail('Ngày “Đến ngày” phải sau ngày “Từ ngày”.');
+  const baseName = name === (sub.name || '') ? undefined : name;   // trùng tên chung của môn thì không ghi riêng
+  const baseCode = code === (sub.code || '') ? undefined : code;
+  const snap = clone(data);
+  const targets = scope === 'one' ? [r] : scopeRules(r, scope);
+  const group = new Set(targets.map(x => x.id));
+  let changed;
+  if (scope === 'one') {
+    r.moved[date] = { slot, room, name, code };
+    changed = [r];
+  } else if (scope === 'all') {
+    targets.forEach(x => { x.slot = slot; x.room = room; x.name = baseName; x.code = baseCode; x.moved = {}; });
+    changed = targets;
+  } else {
+    const wds = [...new Set(targets.filter(x => !x.to || x.to >= date).map(x => x.wd))];
+    const plan = wds.map(w => ({ wd: w, skip: gapDays(targets.filter(x => x.wd === w), w, date, HORIZON) }));
+    targets.forEach(x => {
+      if (x.from && x.from >= date) data.rules = data.rules.filter(y => y !== x);
+      else {
+        if (!x.to || x.to >= date) x.to = addDays(date, -1);
+        x.skip = x.skip.filter(k => k < date);
+        x.moved = pick(x.moved, k => k < date);
+      }
+    });
+    changed = plan.map(p => {
+      const c = { id: uid(), sid: r.sid, wd: p.wd, slot, room, name: baseName, code: baseCode, from: date, to: null, skip: p.skip, moved: {}, src: r.src };
+      data.rules.push(c);
+      return c;
+    });
+  }
+  const winChanged = (nf || '') !== (sub.from || '') || (nt || '') !== (sub.to || '');
+  sub.from = nf; sub.to = nt;
+  changed.forEach(x => group.add(x.id));
+  let hits = changed.flatMap(x => clashes(x, ...(scope === 'one' ? [date, date] : span(x)), [...group]));
+  if (winChanged) hits = hits.concat(windowClashes(r.sid));
+  if (hits.length) { data = snap; return fail('Không lưu vì trùng tiết:\n' + [...new Set(hits)].slice(0, 8).join('\n')); }
+  save(); $('editDlg').close(); render(); renderSubjects();
+}
+function deleteOcc() {
+  const r = data.rules.find(x => x.id === editing.id);
+  if (!r) return;
+  const date = editing.date, scope = checkedVal('scope');
+  const msg = { one: 'Xóa buổi này?', after: `Xóa buổi này và các buổi sau của tiết ${r.slot}?`, all: `Xóa tất cả buổi ${DAYS[r.wd - 1]}, tiết ${r.slot} của môn này?` }[scope];
+  if (!confirm(msg)) return;
+  if (scope === 'one') { r.skip.push(date); delete r.moved[date]; }
+  else if (scope === 'all') { const t = scopeRules(r, 'all'); data.rules = data.rules.filter(x => !t.includes(x)); }
+  else {
+    scopeRules(r, 'after').forEach(x => {
+      if (x.from && x.from >= date) data.rules = data.rules.filter(y => y !== x);
+      else if (!x.to || x.to >= date) { x.to = addDays(date, -1); x.skip = x.skip.filter(k => k < date); x.moved = pick(x.moved, k => k < date); }
+    });
+  }
+  save(); $('editDlg').close(); render(); renderSubjects();
+}
+
+// ---- Xếp lịch cố định (một hoặc nhiều thứ cùng lúc) ----
+function openAdd() {
+  $('addForm').reset();
+  $('fErr').textContent = '';
+  $('subList').innerHTML = data.subjects.map(s => `<option value="${esc(s.name)}">`).join('');
+  $('fDays').innerHTML = DAYS.map((d, i) => `<label><input type="checkbox" value="${i + 1}"> ${d}</label>`).join('');
+  $('fSlots').innerHTML = '';
+  $('addDlg').showModal();
+}
+function buildSlotPickers() {
+  const prev = {};
+  document.querySelectorAll('#fSlots select').forEach(s => { prev[s.dataset.wd] = +s.value; });
+  const days = [...document.querySelectorAll('#fDays input:checked')].map(i => +i.value);
+  $('fSlots').innerHTML = days.map(w =>
+    `<label>Tiết ${DAYS[w - 1]}<select data-wd="${w}">${slotOptions(prev[w] || 1)}</select></label>`).join('');
+}
+function saveAdd(e) {
+  e.preventDefault();
+  const name = $('fName').value.trim();
+  const code = $('fCode').value.trim();
+  const room = $('fRoom').value.trim();
+  const from = $('fFrom').value || START;
+  const to = $('fTo').value;
+  const picks = [...document.querySelectorAll('#fSlots select')].map(s => ({ wd: +s.dataset.wd, slot: +s.value }));
+  let err = '';
+  if (!name) err = 'Nhập tên môn học.';
+  else if (!picks.length) err = 'Chọn ít nhất một thứ trong tuần.';
+  else if (to && to < from) err = 'Ngày "Đến ngày" phải sau ngày "Từ ngày".';
+  if (err) { $('fErr').textContent = err; return; }
+  let s = data.subjects.find(x => (code && x.code && x.code.toLowerCase() === code.toLowerCase()) || x.name.toLowerCase() === name.toLowerCase());
+  const isNew = !s;
+  if (isNew) s = { id: uid(), name, code, color: COLORS[data.subjects.length % COLORS.length] };
+  const cands = picks.map(p => ({ id: uid(), sid: s.id, wd: p.wd, slot: p.slot, room, from, to: to || null, skip: [], moved: {} }));
+  const hits = cands.flatMap(c => clashes(c, from, to || HORIZON));
+  if (hits.length) { $('fErr').textContent = 'Không lưu vì trùng tiết:\n' + hits.slice(0, 8).join('\n'); return; }
+  if (isNew) data.subjects.push(s);
+  else if (code && !s.code) s.code = code;
+  data.rules.push(...cands);
+  save(); $('addDlg').close(); render();
+}
+
+// ---- Môn học: đổi tên, đổi màu, xóa (áp dụng cho mọi buổi của môn) ----
+function renderSubjects() {
+  $('sList').innerHTML = data.subjects.length ? data.subjects.map(s => {
+    const n = data.rules.filter(r => r.sid === s.id).length;
+    return `<div class="subj" data-id="${s.id}">
+      <input type="color" value="${esc(s.color)}" data-act="color" aria-label="Màu của ${esc(s.name)}">
+      <input type="text" value="${esc(s.name)}" maxlength="60" data-act="name" aria-label="Tên môn">
+      <input type="text" value="${esc(s.code || '')}" maxlength="20" data-act="code" placeholder="Mã ngành" aria-label="Mã ngành">
+      <span class="hint">${n} lịch</span>
+      <button type="button" class="danger" data-act="del">Xóa môn</button></div>`;
+  }).join('') : '<p class="hint">Chưa có môn học nào.</p>';
+}
+function onSubjChange(e) {
+  const act = e.target.dataset.act;
+  const s = subj(e.target.closest('.subj')?.dataset.id);
+  if (!s || !act) return;
+  if (act === 'color') s.color = e.target.value;
+  else if (act === 'code') s.code = e.target.value.trim();
+  else if (act === 'name') {
+    const n = e.target.value.trim();
+    if (!n || data.subjects.some(x => x !== s && x.name.toLowerCase() === n.toLowerCase())) {
+      alert('Tên môn không được để trống hoặc trùng với môn khác.');
+      e.target.value = s.name;
+      return;
+    }
+    s.name = n;
+  }
+  save(); render(); renderSubjects();
+}
+function onSubjDelete(e) {
+  if (e.target.dataset.act !== 'del') return;
+  const id = e.target.closest('.subj').dataset.id;
+  if (!confirm(`Xóa môn "${subj(id).name}" và toàn bộ lịch của môn này?`)) return;
+  data.rules = data.rules.filter(r => r.sid !== id);
+  data.subjects = data.subjects.filter(s => s.id !== id);
+  save(); render(); renderSubjects();
+}
+
+// ---- Sao lưu: xuất và nhập file JSON ----
+function exportData() {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  const a = Object.assign(document.createElement('a'), { href: url, download: `studyflow-sao-luu-${todayKey()}.json` });
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function importData(e) {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let d = null;
+    try { d = JSON.parse(reader.result); } catch (err) { d = null; }
+    if (!d || !Array.isArray(d.subjects) || !Array.isArray(d.rules) || !d.rules.every(valid)) {
+      alert('File sao lưu không hợp lệ.');
+      return;
+    }
+    if (!confirm('Nhập file sao lưu sẽ thay thế toàn bộ dữ liệu hiện có. Tiếp tục?')) return;
+    data = upgrade(d); save(); render(); renderSubjects();
+  };
+  reader.readAsText(f);
+}
+
+// ---- Nhập lịch từ FAP: đọc bảng lịch tuần đã lưu (Ctrl+S) hoặc đã sao chép và dán ----
+let fapBatch = [];   // buổi học đã đọc, chờ nhập
+const fapKey = s => `${s.date}|${s.slot}|${s.code}`;
+function slotOf(t) {
+  const m = t.match(/(?:slot|tiết)\s*(\d)/i) || t.match(/^\s*(\d)\s*$/);
+  if (m) return +m[1];
+  const h = t.match(/(\d{1,2}):(\d{2})/);
+  return h ? SLOTS.findIndex(s => s[0] === pad(+h[1]) + ':' + h[2]) + 1 : 0;
+}
+// Tên môn lấy từ ô lịch FAP: dòng chữ không phải mã, giờ hoặc phòng (mã thường ở dòng trên, tên môn ở dòng dưới)
+function courseName(td, code, fallback) {
+  const html = td.innerHTML.replace(/<br\s*\/?>|<\/(div|p|li|tr|h\d)>/gi, '\n');
+  const lines = new DOMParser().parseFromString(html, 'text/html').body.textContent.split(/\n+/).map(x => x.trim()).filter(Boolean);
+  const skip = /^(cố định|online|room|phòng|slot|tiết|nhóm|lớp)\b/i;
+  const hit = lines.find(l => !l.includes(code) && !/\d{1,2}:\d{2}/.test(l) && !skip.test(l) && /[A-Za-zÀ-ỹ]{2}/.test(l) && !/[A-Za-z0-9]+_\w+/.test(l));
+  if (hit) return hit;
+  // Ô ghi mã và tên trên cùng một dòng, ví dụ "AIF101 - AI Literacy": lấy phần chữ còn lại
+  const rest = lines.join(' ').replace(new RegExp(code, 'g'), ' ').replace(/[A-Za-z0-9]+_\w+/g, ' ')
+    .replace(/\d{1,2}:\d{2}/g, ' ').replace(/cố định/gi, ' ').replace(/\s+/g, ' ').replace(/^[\s\-–|:]+|[\s\-–|:]+$/g, '').trim();
+  return rest.length > 2 && rest.length < 80 && /[A-Za-zÀ-ỹ]{2}/.test(rest) ? rest : fallback;
+}
+// Đọc các bảng trong một đoạn HTML (chỉ đọc, không chạy mã trong trang): cột có ngày, hàng có tiết, ô có mã ngành
+function readFapHtml(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const out = [], seen = new Set();
+  doc.querySelectorAll('table').forEach(tbl => {
+    const colDate = {};
+    [...tbl.rows].forEach(tr => [...tr.cells].forEach((td, ci) => {
+      const t = td.textContent;
+      const iso = t.match(/(\d{4})-(\d{2})-(\d{2})/), dm = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
+      if (colDate[ci] === undefined && (iso || dm))
+        colDate[ci] = iso ? `${iso[1]}-${iso[2]}-${iso[3]}` : `${dm[3] || START.slice(0, 4)}-${pad(+dm[2])}-${pad(+dm[1])}`;
+    }));
+    [...tbl.rows].forEach(tr => {
+      const rowSlot = slotOf(tr.cells[0] ? tr.cells[0].textContent : '');
+      [...tr.cells].forEach((td, ci) => {
+        const txt = td.textContent, cm = txt.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+        const date = colDate[ci], slot = rowSlot || slotOf(txt);
+        if (!cm || !date || !slot) return;
+        const tmp = td.cloneNode(true);
+        tmp.querySelectorAll('br').forEach(b => b.replaceWith('\n'));
+        const lines = tmp.textContent.split(/\n+/).map(x => x.trim()).filter(Boolean);
+        const code = cm[1];
+        const name = lines.find(l => !l.includes(code) && !/\d{1,2}:\d{2}/.test(l) && !/^(room|phòng|slot|tiết)/i.test(l) && l.length > 2) || code;
+        const room = (txt.match(/(?:room|phòng)\s*[:\-]?\s*([\w.\-]+)/i) || [])[1] || '';
+        const s = { date, slot, code, name, room };
+        s.name = courseName(td, code, name);
+        if (!seen.has(fapKey(s))) { seen.add(fapKey(s)); out.push(s); }
+      });
+    });
+  });
+  return out;
+}
+function addFap(list) {
+  const keys = new Set(fapBatch.map(fapKey));
+  for (const s of list) if (!keys.has(fapKey(s))) { keys.add(fapKey(s)); fapBatch.push(s); }
+}
+function showFap() {
+  $('fapGo').disabled = !fapBatch.length;
+  if (!fapBatch.length) { $('fapInfo').textContent = 'Chưa có buổi học nào. Hãy làm theo Cách 1 hoặc Cách 2 ở trên.'; return; }
+  const dates = fapBatch.map(s => s.date).sort();
+  const byCode = {};
+  fapBatch.forEach(s => {
+    const k = s.code || s.name;
+    (byCode[k] = byCode[k] || new Set()).add(`${DAYS[weekdayOf(s.date) - 1]} tiết ${s.slot}`);
+  });
+  $('fapInfo').textContent = `Đã đọc ${fapBatch.length} buổi, từ ${shown(dates[0])} đến ${shown(dates[dates.length - 1])}. Kiểm tra các dòng dưới, rồi bấm “Nhập vào lịch”:\n` +
+    Object.entries(byCode).map(([k, v]) => `• ${k}: ${[...v].join(', ')}`).join('\n');
+}
+
+function openFap() {
+  fapBatch = [];
+  $('fapErr').textContent = '';
+  $('fapFiles').value = '';
+  showFap();
+  $('fapDlg').showModal();
+}
+function onFapFiles(e) {
+  const files = [...e.target.files];
+  e.target.value = '';
+  let left = files.length;
+  files.forEach(f => {
+    const rd = new FileReader();
+    rd.onload = () => {
+      const got = readFapHtml(rd.result);
+      if (!got.length) $('fapErr').textContent = `Không thấy lịch trong file "${f.name}". Hãy kiểm tra lại file đã lưu.`;
+      addFap(got);
+      if (--left === 0) showFap();
+    };
+    rd.readAsText(f);
+  });
+}
+function onFapPaste(e) {
+  e.preventDefault();
+  const cd = e.clipboardData;
+  const got = readFapHtml(cd.getData('text/html') || cd.getData('text/plain'));
+  $('fapErr').textContent = got.length ? '' : 'Không thấy bảng lịch trong nội dung vừa dán. Hãy bôi chọn cả bảng lịch rồi nhấn Ctrl+C.';
+  addFap(got);
+  showFap();
+}
+function importFap() {
+  const news = [];
+  const find = s => data.subjects.find(x => (s.code && x.code && x.code.toLowerCase() === s.code.toLowerCase()) || x.name.toLowerCase() === s.name.toLowerCase())
+    || news.find(x => (s.code && x.code === s.code) || x.name.toLowerCase() === s.name.toLowerCase());
+  const dates = fapBatch.map(s => s.date).sort();
+  const bFrom = dates[0], bTo = dates[dates.length - 1];
+  const groups = new Map();
+  for (const s of fapBatch) {
+    let sub = find(s);
+    if (!sub) { sub = { id: uid(), name: s.name, code: s.code, color: COLORS[(data.subjects.length + news.length) % COLORS.length] }; news.push(sub); }
+    else if (s.code && !sub.code) sub.code = s.code;
+    if (sub.name === sub.code && s.name !== s.code) sub.name = s.name;
+    const wd = weekdayOf(s.date), key = `${sub.id}|${wd}|${s.slot}|${s.room}`;
+    if (!groups.has(key)) groups.set(key, { sid: sub.id, wd, slot: s.slot, room: s.room, dates: new Set() });
+    groups.get(key).dates.add(s.date);
+  }
+  // Mỗi nhóm lặp hằng tuần. Trong khoảng đã đọc, ngày nào không có trong FAP/ảnh thì thành buổi đã xóa.
+  const rules = [...groups.values()].map(g => {
+    const skip = [];
+    for (let k = bFrom; k <= bTo; k = addDays(k, 1)) if (weekdayOf(k) === g.wd && !g.dates.has(k)) skip.push(k);
+    return { id: uid(), sid: g.sid, wd: g.wd, slot: g.slot, room: g.room, from: null, to: null, skip, moved: {}, src: 'imp' };
+  });
+  const manual = data.rules.filter(r => r.src !== 'fap' && r.src !== 'imp');
+  const snap = clone(data);
+  const sids = new Set(rules.map(r => r.sid));
+  data.subjects.push(...news);
+  data.subjects.forEach(s => { if (sids.has(s.id)) { s.from = bFrom; s.to = bTo; } });
+  data.rules = [...manual, ...rules];
+  const hits = rules.flatMap(r => clashes(r, ...span(r)));
+  if (hits.length) { data = snap; $('fapErr').textContent = 'Chưa nhập vì trùng với lịch bạn tự thêm:\n' + hits.slice(0, 8).join('\n'); return; }
+  if (!confirm(`Nhập ${fapBatch.length} buổi học từ ${shown(bFrom)} đến ${shown(bTo)}? Lịch đã nhập từ FAP hoặc từ ảnh trước đó sẽ được thay thế; lịch bạn tự thêm vẫn giữ nguyên.`)) { data = snap; return; }
+  save(); $('fapDlg').close(); render(); renderSubjects();
+}
+
+// ---- Đọc lịch từ ảnh: bộ đọc chữ chạy trong trình duyệt. Có thể đọc sai, nên luôn kiểm tra danh sách. ----
+async function onImgFiles(e) {
+  const files = [...e.target.files];
+  e.target.value = '';
+  if (!files.length) return;
+  $('fapErr').textContent = '';
+  if (!window.Tesseract) { $('fapErr').textContent = 'Chưa tải được bộ đọc chữ trên ảnh. Hãy kiểm tra mạng rồi mở lại trang.'; return; }
+  let worker = null;
+  try {
+    worker = await Tesseract.createWorker('vie+eng');
+    for (const f of files) {
+      $('fapInfo').textContent = `Đang đọc ảnh “${f.name}”, vui lòng chờ...`;
+      const { data } = await worker.recognize(f, {}, { blocks: true });
+      const words = data.words || (data.blocks || []).flatMap(b => (b.paragraphs || []).flatMap(p => (p.lines || []).flatMap(l => l.words || [])));
+      const got = readGridWords(words);
+      if (!got.length) $('fapErr').textContent = `Không đọc được lịch trong ảnh “${f.name}”. Hãy chụp rõ hơn, hoặc dùng Cách 1.`;
+      addFap(got);
+    }
+  } catch (err) {
+    $('fapErr').textContent = 'Không đọc được ảnh. Hãy kiểm tra mạng rồi thử lại, hoặc dùng Cách 1.';
+  } finally {
+    if (worker) await worker.terminate();
+    showFap();
+  }
+}
+// Đọc lưới lịch từ các chữ trên ảnh: hàng ngày (dd/mm) ở trên, giờ hoặc số tiết bên trái, mã môn nằm trong ô
+function readGridWords(words) {
+  const W = words.map(w => ({ t: (w.text || '').trim(), x: (w.bbox.x0 + w.bbox.x1) / 2, y: (w.bbox.y0 + w.bbox.y1) / 2, h: w.bbox.y1 - w.bbox.y0 })).filter(w => w.t);
+  const hs = W.map(w => w.h).sort((a, b) => a - b);
+  const tol = (hs[hs.length >> 1] || 20) * 0.8;
+  const dates = W.filter(w => /^\d{1,2}\/\d{1,2}(\/\d{4})?$/.test(w.t));
+  if (!dates.length) return [];
+  // Hàng ngày là hàng ngang có nhiều ngày nhất (bỏ qua dòng tiêu đề chỉ có vài ngày)
+  const countSame = d => dates.filter(e => Math.abs(e.y - d.y) < tol).length;
+  const top = dates.reduce((b, d) => (countSame(d) > countSame(b) ? d : b));
+  const cols = dates.filter(d => Math.abs(d.y - top.y) < tol).sort((a, b) => a.x - b.x).map(d => {
+    const m = d.t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
+    return { x: d.x, date: `${m[3] || START.slice(0, 4)}-${pad(+m[2])}-${pad(+m[1])}` };
+  });
+  const cw = cols.length > 1 ? (cols[cols.length - 1].x - cols[0].x) / (cols.length - 1) : 150;
+  const inGrid = x => cols.some(c => Math.abs(c.x - x) <= cw / 2);
+  // Hàng tiết: giờ bắt đầu (07:00 ...) hoặc số 1 đến 8 nằm bên trái lưới
+  const band = {};
+  W.forEach(w => {
+    if (inGrid(w.x)) return;
+    const m = w.t.match(/^(\d{1,2}):(\d{2})/);
+    const slot = m ? SLOTS.findIndex(s => s[0] === pad(+m[1]) + ':' + m[2]) + 1 : (/^[1-8]$/.test(w.t) ? +w.t : 0);
+    if (slot) (band[slot] = band[slot] || []).push(w.y);
+  });
+  const rows = Object.entries(band).map(([k, ys]) => ({ slot: +k, y: ys.reduce((a, b) => a + b, 0) / ys.length })).sort((a, b) => a.y - b.y);
+  if (!rows.length) return [];
+  const gaps = rows.slice(1).map((r, i) => r.y - rows[i].y).sort((a, b) => a - b);
+  const rh = gaps.length ? gaps[gaps.length >> 1] : 60;
+  const out = [];
+  for (const w of W) {
+    const cm = w.t.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+    if (!cm || !inGrid(w.x)) continue;
+    const col = cols.reduce((b, c) => (Math.abs(c.x - w.x) < Math.abs(b.x - w.x) ? c : b));
+    const row = rows.reduce((b, r) => (Math.abs(r.y - w.y) < Math.abs(b.y - w.y) ? r : b));
+    if (Math.abs(row.y - w.y) > rh / 2) continue;
+    const name = W.filter(v => v !== w && Math.abs(v.x - col.x) <= cw / 2 && Math.abs(v.y - row.y) <= rh / 2
+        && /^[^\d_]*[A-Za-zÀ-ỹ][^\d_]*$/.test(v.t) && !/^(cố|định|online|slot)$/i.test(v.t))
+      .sort((a, b) => a.y - b.y || a.x - b.x).map(v => v.t).join(' ');
+    out.push({ date: col.date, slot: row.slot, code: cm[1], name: name || cm[1], room: '' });
+  }
+  return out;
+}
+
+// ---- Khởi động ----
+function init() {
+  load();
+  wk = mondayKey(START);
+  wk = mondayKey(todayKey() > START ? todayKey() : START);   // chạy theo ngày: mở web là hiện tuần hiện tại (không trước tuần bắt đầu)
+  let dayShown = todayKey();   // khi sang ngày mới trong lúc đang mở web thì tự chuyển sang tuần hiện tại
+  setInterval(() => { if (todayKey() !== dayShown) { dayShown = todayKey(); wk = mondayKey(dayShown > START ? dayShown : START); render(); } }, 60000);
+  $('home').textContent = `Về tuần ${isoWeek(START)}`;
+  $('eSlot').innerHTML = slotOptions(1);
+  $('prev').onclick = () => { wk = addDays(wk, -7); render(); };
+  $('next').onclick = () => { wk = addDays(wk, 7); render(); };
+  $('home').onclick = () => { wk = mondayKey(START); render(); };
+  $('jump').onchange = e => { if (e.target.value) { wk = mondayKey(e.target.value); render(); } };
+  $('openAdd').onclick = openAdd;
+  $('openSubj').onclick = () => { renderSubjects(); $('subjDlg').showModal(); };
+  $('sClose').onclick = () => $('subjDlg').close();
+  $('sList').addEventListener('change', onSubjChange);
+  $('sList').addEventListener('click', onSubjDelete);
+  $('fDays').addEventListener('change', buildSlotPickers);
+  $('addForm').addEventListener('submit', saveAdd);
+  $('fCancel').onclick = () => $('addDlg').close();
+  $('editForm').addEventListener('submit', saveEdit);
+  $('eCancel').onclick = () => $('editDlg').close();
+  $('eDel').onclick = deleteOcc;
+  $('grid').addEventListener('click', e => {
+    const b = e.target.closest('.occ');
+    if (b) openEdit(b.dataset.rule, b.dataset.date);
+  });
+  $('openFap').onclick = openFap;
+  $('openFapSite').onclick = () => window.open('https://fap.fpt.edu.vn/WeeklyTimetable', '_blank');
+  $('fapFiles').addEventListener('change', onFapFiles);
+  $('imgFiles').addEventListener('change', onImgFiles);
+  $('fapPaste').addEventListener('paste', onFapPaste);
+  $('fapClear').onclick = () => { fapBatch = []; $('fapErr').textContent = ''; showFap(); };
+  $('fapCancel').onclick = () => $('fapDlg').close();
+  $('fapGo').onclick = importFap;
+  $('exportBtn').onclick = exportData;
+  $('importBtn').onclick = () => $('importFile').click();
+  $('importFile').addEventListener('change', importData);
+  render();
+}
+init();
+</script>
+</body>
+</html>
