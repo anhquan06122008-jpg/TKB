@@ -1460,33 +1460,65 @@ legend {
 </dialog>
 
 <!-- 3. FAP IMPORT WIZARD MODAL (Phase 3 Spec) -->
-<dialog id="fapModal" style="max-width: 680px;" aria-labelledby="fapModalTitle">
-  <h2 id="fapModalTitle">📥 Nhập thời khóa biểu từ FAP / Tệp tin</h2>
+<dialog id="fapModal" style="max-width: 720px;" aria-labelledby="fapModalTitle">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+    <h2 id="fapModalTitle" style="margin: 0; font-size: 19px;">📥 Nhập thời khóa biểu từ FAP</h2>
+    <span class="btn-pill" style="font-size: 11px; background: var(--success-bg); color: var(--success); font-weight: 700;">100% An toàn & Tự động</span>
+  </div>
+
   <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
-    An toàn 100%: Hệ thống không yêu cầu mật khẩu và không can thiệp trái phép tài khoản FAP.
+    Hỗ trợ lấy lịch tuần (<b>WeeklyTimetable</b>) hoặc toàn bộ lịch cả kỳ (<b>ViewAttendstudent</b>). Không cần nhập mật khẩu!
   </p>
 
-  <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-    <button type="button" class="btn" id="openOfficialFapBtn">🔗 1. Mở trang FAP (WeeklyTimetable)</button>
-    <label class="btn" style="cursor: pointer;">
-      📂 Chọn file HTML/HTM đã lưu (Ctrl+S)
-      <input type="file" id="fapHtmlFileInput" accept=".html,.htm" multiple hidden>
-    </label>
+  <!-- 1-Click Clipboard Receiver Button (Super Prominent) -->
+  <div style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%); border: 2px solid var(--primary); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+    <div>
+      <div style="font-size: 14px; font-weight: 700; color: var(--primary);">📋 CÁCH 1: TỰ ĐỘNG ĐỌC BỘ NHỚ TẠM (1-CLICK)</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+        Sau khi copy trên FAP, bấm nút này để web tự động nạp lịch vào danh sách ngay:
+      </div>
+    </div>
+    <button type="button" class="btn primary" id="fapReadClipboardBtn" style="font-size: 14px; padding: 10px 22px; font-weight: 700; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);">
+      📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD
+    </button>
   </div>
 
+  <!-- Bookmarklet 1-Click for FAP -->
+  <div style="background: var(--bg-input); border: 1px dashed var(--primary); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 14px;">
+    <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+      <span>⭐ CÁCH 2: NÚT THẦN KỲ TRÊN FAP (BOOKMARKLET 1-CLICK)</span>
+    </div>
+    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+      Kéo nút tím bên dưới thả lên thanh Dấu trang (Bookmark Bar) trình duyệt. Khi đang ở trang FAP, chỉ cần <b>bấm nút này 1 cái</b> là toàn bộ lịch FAP sẽ tự động copy vào bộ nhớ máy tính!
+    </p>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <a href="javascript:(function(){var t=document.querySelector('table');if(!t){alert('Vui lòng mở trang WeeklyTimetable trên FAP!');return;}var h=t.outerHTML;navigator.clipboard.writeText(h).then(function(){alert('🎉 ĐÃ COPY TOÀN BỘ LỊCH TỪ FAP THÀNH CÔNG!\n\n👉 Bây giờ hãy quay lại trang EduMate và bấm nút: &quot;📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; (hoặc nhấn phím Ctrl+V) để nạp lịch nhé!');}).catch(function(){var a=document.createElement('textarea');a.value=h;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);alert('🎉 ĐÃ COPY TOÀN BỘ LỊCH TỪ FAP!\n\n👉 Quay lại trang EduMate và bấm nút: &quot;📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; nhé!');});})();" 
+         class="btn primary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-size:12px; cursor:grab;" title="Kéo nút này thả lên thanh Bookmark (Ctrl+Shift+B)">
+        ⭐ Kéo vào Bookmark: [Lấy Lịch FAP]
+      </a>
+      <button type="button" class="btn" id="copyConsoleScriptBtn" style="font-size: 12px;">💻 Copy lệnh FAP Console</button>
+      <button type="button" class="btn" id="openOfficialFapBtn" style="font-size: 12px;">🔗 Mở trang FAP</button>
+    </div>
+  </div>
+
+  <!-- Manual Paste & File Upload -->
   <div style="margin-bottom: 12px;">
-    <label style="font-weight: 600; margin-bottom: 6px; display:block;">
-      Cách nhanh nhất: Bôi đen & copy bảng lịch trên FAP rồi bấm vào đây và nhấn <b>Ctrl + V</b>:
-    </label>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+      <label style="font-weight: 600; font-size: 13px;">Hoặc dán nội dung thủ công vào ô này (Ctrl + V):</label>
+      <label class="btn-pill" style="cursor: pointer; font-size: 11px;">
+        📂 Chọn file HTML/HTM đã lưu (Ctrl+S từ FAP)
+        <input type="file" id="fapHtmlFileInput" accept=".html,.htm" multiple hidden>
+      </label>
+    </div>
     <div id="fapPasteArea" contenteditable="true" 
-         style="min-height: 70px; max-height: 140px; overflow-y: auto; border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 13px; background: var(--bg-input);"
-         placeholder="Dán nội dung thời khóa biểu FAP vào đây (Ctrl+V)..."></div>
+         style="min-height: 60px; max-height: 110px; overflow-y: auto; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 13px; background: var(--bg-input);"
+         placeholder="Bấm vào đây rồi nhấn Ctrl+V để dán lịch từ FAP (hỗ trợ copy bảng hoặc bôi đen toàn trang)..."></div>
   </div>
 
   <div style="margin-bottom: 12px;">
-    <label style="font-size: 13px; color: var(--text-muted);">
+    <label style="font-size: 12px; color: var(--text-muted);">
       Hoặc quét từ ảnh chụp màn hình lịch tuần (OCR qua Tesseract):
-      <input type="file" id="fapImgFileInput" accept="image/*" multiple style="margin-top: 4px;">
+      <input type="file" id="fapImgFileInput" accept="image/*" multiple style="margin-top: 4px; font-size: 12px;">
     </label>
   </div>
 
@@ -2230,13 +2262,21 @@ legend {
   // FAP TIMETABLE SMART PARSER (Phase 3 & 5 Spec)
   // ==========================================================================
   function detectSlot(text) {
+    if (!text) return 0;
     const m = text.match(/(?:slot|tiết)\s*(\d)/i) || text.match(/^\s*(\d)\s*$/);
     if (m) return Math.min(8, Math.max(1, +m[1]));
+
     const h = text.match(/(\d{1,2}):(\d{2})/);
     if (h) {
-      const target = pad(+h[1]) + ':' + h[2];
-      const idx = DEFAULT_SLOTS.findIndex(s => s[0] === target);
-      if (idx !== -1) return idx + 1;
+      const mins = (+h[1]) * 60 + (+h[2]);
+      if (mins >= 420 && mins <= 505) return 1; // 07:00 - 08:25 (Slot 1)
+      if (mins >= 506 && mins <= 590) return 2; // 08:26 - 09:50 (Slot 2, e.g. 08:45, 09:10)
+      if (mins >= 591 && mins <= 685) return 3; // 09:51 - 11:25 (Slot 3, e.g. 10:30, 10:50)
+      if (mins >= 710 && mins <= 805) return 4; // 11:50 - 13:25 (Slot 4, e.g. 12:30, 12:50)
+      if (mins >= 806 && mins <= 925) return 5; // 13:26 - 15:25 (Slot 5, e.g. 14:15, 14:30)
+      if (mins >= 926 && mins <= 1035) return 6; // 15:26 - 17:15 (Slot 6, e.g. 16:00, 16:10)
+      if (mins >= 1036 && mins <= 1135) return 7; // 17:16 - 18:55 (Slot 7, e.g. 17:45, 18:00)
+      if (mins >= 1136 && mins <= 1260) return 8; // 18:56 - 21:00 (Slot 8, e.g. 19:30, 19:40)
     }
     return 0;
   }
@@ -2245,7 +2285,7 @@ legend {
     const html = td.innerHTML.replace(/<br\s*\/?>|<\/(div|p|li|tr|h\d)>/gi, '\n');
     const lines = new DOMParser().parseFromString(html, 'text/html').body.textContent
       .split(/\n+/).map(x => x.trim()).filter(Boolean);
-    const skip = /^(cố định|online|room|phòng|slot|tiết|nhóm|lớp)\b/i;
+    const skip = /^(cố định|online|room|phòng|at|slot|tiết|nhóm|lớp)\b/i;
     const hit = lines.find(l => !l.includes(code) && !/\d{1,2}:\d{2}/.test(l) && !skip.test(l) && /[A-Za-zÀ-ỹ]{2}/.test(l) && !/[A-Za-z0-9]+_\w+/.test(l));
     if (hit) return hit;
     const rest = lines.join(' ').replace(new RegExp(code, 'g'), ' ').replace(/[A-Za-z0-9]+_\w+/g, ' ')
@@ -2254,61 +2294,103 @@ legend {
   }
 
   function parseFapHtmlOrText(content) {
+    if (!content) return [];
     const out = [];
     const seen = new Set();
     const doc = new DOMParser().parseFromString(content, 'text/html');
     const tables = doc.querySelectorAll('table');
 
+    // 1. Phân tích bảng HTML
     if (tables.length > 0) {
       tables.forEach(tbl => {
+        // Kiểm tra xem bảng có định dạng lưới tuần (WeeklyTimetable) không
         const colDate = {};
         [...tbl.rows].forEach(tr => [...tr.cells].forEach((td, ci) => {
           const t = td.textContent;
           const iso = t.match(/(\d{4})-(\d{2})-(\d{2})/);
           const dm = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
           if (colDate[ci] === undefined && (iso || dm)) {
-            colDate[ci] = iso ? `${iso[1]}-${iso[2]}-${iso[3]}` : `${dm[3] || currentMonday.slice(0, 4)}-${pad(+dm[2])}-${pad(+dm[1])}`;
+            const yr = (iso && iso[1]) || (dm && dm[3]) || currentMonday.slice(0, 4);
+            const mo = iso ? iso[2] : pad(+dm[2]);
+            const da = iso ? iso[3] : pad(+dm[1]);
+            colDate[ci] = `${yr}-${mo}-${da}`;
           }
         }));
 
-        [...tbl.rows].forEach(tr => {
-          const rowSlot = detectSlot(tr.cells[0] ? tr.cells[0].textContent : '');
-          [...tr.cells].forEach((td, ci) => {
-            const txt = td.textContent;
-            const cm = txt.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
-            const date = colDate[ci];
-            const slot = rowSlot || detectSlot(txt);
-            if (!cm || !date || !slot) return;
+        const isGrid = Object.keys(colDate).length >= 2;
 
-            const code = cm[1];
-            const name = extractCourseName(td, code, code);
-            const room = (txt.match(/(?:room|phòng)\s*[:\-]?\s*([\w.\-]+)/i) || [])[1] || '';
-            const key = `${date}|${slot}|${code}`;
-            if (!seen.has(key)) {
-              seen.add(key);
-              out.push({ date, slot, code, name, room, selected: true });
+        if (isGrid) {
+          // Định dạng lưới tuần WeeklyTimetable
+          [...tbl.rows].forEach(tr => {
+            const rowSlot = detectSlot(tr.cells[0] ? tr.cells[0].textContent : '');
+            [...tr.cells].forEach((td, ci) => {
+              const txt = td.textContent;
+              const cm = txt.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+              const date = colDate[ci];
+              const slot = rowSlot || detectSlot(txt);
+              if (!cm || !date || !slot) return;
+
+              const code = cm[1];
+              const name = extractCourseName(td, code, code);
+              const roomMatch = td.innerHTML.match(/(?:at|phòng|room)\s*[:\-]?\s*(?:<[^>]+>)*\s*([A-Za-z0-9.\-]+)/i)
+                || txt.match(/(?:at|phòng|room)\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i);
+              const room = roomMatch ? roomMatch[1] : '';
+              const key = `${date}|${slot}|${code}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                out.push({ date, slot, code, name, room, selected: true });
+              }
+            });
+          });
+        } else {
+          // Định dạng danh sách hàng (ViewAttendstudent / Báo cáo lịch cả kỳ)
+          [...tbl.rows].forEach(tr => {
+            const rowText = tr.textContent;
+            const dm = rowText.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/) || rowText.match(/(\d{4})-(\d{2})-(\d{2})/);
+            const cm = rowText.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+            const slot = detectSlot(rowText);
+            if (dm && cm && slot) {
+              const yr = (dm[3] && dm[3].length === 4) ? dm[3] : (dm[1].length === 4 ? dm[1] : currentMonday.slice(0, 4));
+              const mo = dm[1].length === 4 ? dm[2] : pad(+dm[2]);
+              const da = dm[1].length === 4 ? dm[3] : pad(+dm[1]);
+              const date = `${yr}-${mo}-${da}`;
+              const code = cm[1];
+              const roomMatch = tr.innerHTML.match(/(?:at|phòng|room)\s*[:\-]?\s*(?:<[^>]+>)*\s*([A-Za-z0-9.\-]+)/i)
+                || rowText.match(/(?:at|phòng|room)\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i);
+              const room = roomMatch ? roomMatch[1] : '';
+              const name = extractCourseName(tr, code, code);
+              const key = `${date}|${slot}|${code}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                out.push({ date, slot, code, name, room, selected: true });
+              }
             }
           });
-        });
+        }
       });
     }
 
-    // Fallback: If no tables detected or pasted as plain text
+    // 2. Phân tích văn bản thô (khi bôi đen và copy text trên FAP)
     if (!out.length) {
       const lines = content.split('\n');
       let foundDate = currentMonday;
       lines.forEach(line => {
-        const dMatch = line.match(/(\d{4})-(\d{2})-(\d{2})/) || line.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
+        const dMatch = line.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/) || line.match(/(\d{4})-(\d{2})-(\d{2})/);
         if (dMatch) {
-          foundDate = dMatch[0].includes('-') ? dMatch[0] : `${dMatch[3] || currentMonday.slice(0, 4)}-${pad(+dMatch[2])}-${pad(+dMatch[1])}`;
+          if (dMatch[0].includes('-')) {
+            foundDate = dMatch[0];
+          } else {
+            const yr = dMatch[3] || currentMonday.slice(0, 4);
+            foundDate = `${yr}-${pad(+dMatch[2])}-${pad(+dMatch[1])}`;
+          }
         }
         const cm = line.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
         const slot = detectSlot(line);
         if (cm && slot) {
           const code = cm[1];
-          const roomMatch = line.match(/(?:room|phòng)\s*[:\-]?\s*([\w.\-]+)/i);
+          const roomMatch = line.match(/(?:at|phòng|room)\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i);
           const room = roomMatch ? roomMatch[1] : '';
-          const name = line.replace(code, '').replace(/tiết\s*\d/i, '').replace(/phòng\s*[\w.\-]+/i, '').trim() || code;
+          const name = line.replace(code, '').replace(/tiết\s*\d/i, '').replace(/slot\s*\d/i, '').replace(/phòng\s*[\w.\-]+/i, '').replace(/at\s*[\w.\-]+/i, '').trim() || code;
           const key = `${foundDate}|${slot}|${code}`;
           if (!seen.has(key)) {
             seen.add(key);
@@ -2319,6 +2401,35 @@ legend {
     }
 
     return out;
+  }
+
+  function processPastedFapContent(content) {
+    const parsed = parseFapHtmlOrText(content);
+    if (!parsed.length) {
+      $('fapErrorMsg').textContent = 'Chưa nhận diện được buổi học nào trong nội dung này. Vui lòng kiểm tra lại bạn đã copy đúng bảng lịch FAP chưa.';
+    } else {
+      $('fapErrorMsg').textContent = '';
+      parsed.forEach(p => {
+        if (!fapBatch.some(b => b.date === p.date && b.slot === p.slot && b.code === p.code)) {
+          fapBatch.push(p);
+        }
+      });
+      renderFapPreview();
+    }
+  }
+
+  async function readFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text || !text.trim()) {
+        alert('Bộ nhớ tạm (Clipboard) đang trống!\n\nVui lòng sang trang FAP nhấn nút Bookmarklet [Lấy Lịch FAP] (hoặc bôi đen bảng lịch rồi Ctrl+C) trước nhé!');
+        return;
+      }
+      processPastedFapContent(text);
+    } catch (err) {
+      $('fapPasteArea').focus();
+      alert('Trình duyệt cần quyền truy cập Clipboard. Bạn hãy nhấp vào ô dán bên dưới rồi nhấn Ctrl + V nhé!');
+    }
   }
 
   function renderFapPreview() {
@@ -2739,6 +2850,13 @@ legend {
     // FAP Import Actions
     $('openOfficialFapBtn').addEventListener('click', () => window.open('https://fap.fpt.edu.vn/WeeklyTimetable', '_blank'));
     $('fapCloseBtn').addEventListener('click', () => $('fapModal').close());
+    $('fapReadClipboardBtn').addEventListener('click', readFromClipboard);
+    $('copyConsoleScriptBtn').addEventListener('click', () => {
+      const script = `var t=document.querySelector('table');if(!t){alert('Vui lòng mở trang WeeklyTimetable trên FAP!');}else{navigator.clipboard.writeText(t.outerHTML).then(function(){alert('🎉 ĐÃ COPY BẢNG LỊCH FAP! Quay lại EduMate bấm &quot;ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; nhé.');});}`;
+      navigator.clipboard.writeText(script).then(() => {
+        alert('Đã copy mã script Console!\n\nCách dùng:\n1. Mở tab FAP (WeeklyTimetable)\n2. Nhấn phím F12 -> chọn tab Console\n3. Nhấn Ctrl + V rồi nhấn Enter\n4. Quay lại EduMate bấm "ĐỌC TỰ ĐỘNG TỪ CLIPBOARD" là xong!');
+      });
+    });
     $('fapClearBatchBtn').addEventListener('click', () => {
       fapBatch = [];
       $('fapPasteArea').textContent = '';
@@ -2748,23 +2866,14 @@ legend {
       e.preventDefault();
       const cd = e.clipboardData;
       const html = cd.getData('text/html') || cd.getData('text/plain');
-      const parsed = parseFapHtmlOrText(html);
-      if (!parsed.length) {
-        $('fapErrorMsg').textContent = 'Không tìm thấy bảng lịch trong nội dung dán. Vui lòng copy cả bảng trên FAP.';
-      } else {
-        $('fapErrorMsg').textContent = '';
-        fapBatch.push(...parsed);
-      }
-      renderFapPreview();
+      processPastedFapContent(html);
     });
     $('fapHtmlFileInput').addEventListener('change', e => {
       const files = [...e.target.files];
       files.forEach(f => {
         const rd = new FileReader();
         rd.onload = () => {
-          const parsed = parseFapHtmlOrText(rd.result);
-          fapBatch.push(...parsed);
-          renderFapPreview();
+          processPastedFapContent(rd.result);
         };
         rd.readAsText(f);
       });
@@ -2785,6 +2894,19 @@ legend {
       }
     });
     $('fapExecuteImportBtn').addEventListener('click', executeFapImport);
+
+    // Global Paste Listener (Ctrl+V anywhere on page immediately triggers FAP import preview)
+    window.addEventListener('paste', e => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+      const cd = e.clipboardData;
+      if (!cd) return;
+      const html = cd.getData('text/html') || cd.getData('text/plain');
+      if (html && (html.includes('table') || html.includes('Slot') || html.includes('tiết') || /[A-Z]{2,5}\d{3}/.test(html))) {
+        $('fapModal').showModal();
+        processPastedFapContent(html);
+      }
+    });
 
     // Subject List Modal Actions
     $('closeSubjectModalBtn').addEventListener('click', () => $('subjectModal').close());
