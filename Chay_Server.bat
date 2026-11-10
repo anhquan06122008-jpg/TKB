@@ -1,8 +1,8 @@
 @echo off
 chcp 65001 >nul
-title EduMate LMS 2.0 - Khởi Động Máy Chủ Đồng Bộ
+title QLHT 3.9.0 - Khởi Động Máy Chủ Đồng Bộ
 echo ======================================================================
-echo           🚀 KHỞI ĐỘNG HỆ THỐNG EDUMATE CLOUD SYNC 2.0
+echo           🚀 KHỞI ĐỘNG HỆ THỐNG QUẢN LÝ HỌC TẬP (QLHT) 3.9.0
 echo ======================================================================
 echo.
 
@@ -61,7 +61,7 @@ exit /b 1
 :run_app
 cd /d "%~dp0"
 echo [*] Tim thay Python tai: %PYTHON_BIN%
-echo [*] Dang khoi dong EduMate Backend Server...
+echo [*] Dang khoi dong QLHT Backend Server...
 echo.
 
 :: Tu dong mo trinh duyet sau 1 giay

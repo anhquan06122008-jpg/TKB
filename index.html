@@ -3451,7 +3451,11 @@ legend {
           badge.style.color = 'var(--danger)';
         }
       }).catch(() => {
-        badge.textContent = `🔴 Offline`;
+        if (window.location.protocol === 'https:' && base.startsWith('http:')) {
+          badge.innerHTML = `🔴 Offline <span style="font-size:10px; opacity:0.8;">(HTTPS chặn HTTP)</span>`;
+        } else {
+          badge.textContent = `🔴 Offline`;
+        }
         badge.style.color = 'var(--danger)';
       });
     }
@@ -3524,7 +3528,11 @@ legend {
           $('gateLoginError').textContent = data.error || 'Tài khoản hoặc mật khẩu không chính xác.';
         }
       } catch (err) {
-        $('gateLoginError').textContent = `Không thể kết nối máy chủ API tại ${getApiBaseUrl()}. Vui lòng khởi động server (nhấp đúp Chay_Server.bat) hoặc chọn "Dùng thử Ngoại tuyến" bên dưới.`;
+        if (window.location.protocol === 'https:' && getApiBaseUrl().startsWith('http:')) {
+          $('gateLoginError').innerHTML = `⚠️ <b>Bạn đang mở qua link GitHub Pages (HTTPS).</b> Trình duyệt chặn kết nối tới HTTP cục bộ.<br>👉 <b>Để đồng bộ với laptop:</b> Trên điện thoại, mở Safari/Chrome gõ trực tiếp IP laptop: <code>http://${window.location.hostname === 'localhost' ? '192.168.1.22' : '192.168.1.22'}:8080</code> (cùng mạng Wi-Fi).<br>👉 Hoặc bấm <b>"Dùng thử Ngoại tuyến (Khách)"</b> bên dưới để dùng ngay lập tức!`;
+        } else {
+          $('gateLoginError').textContent = `Không thể kết nối máy chủ API tại ${getApiBaseUrl()}. Vui lòng khởi động server (nhấp đúp Chay_Server.bat) hoặc chọn "Dùng thử Ngoại tuyến" bên dưới.`;
+        }
       }
     });
 

@@ -397,13 +397,17 @@ def run_server(port=DEFAULT_PORT):
     local_ip = get_local_ip()
     server_address = ("", port)
     with ThreadedTCPServer(server_address, EduMateHandler) as httpd:
-        print("=" * 65)
-        print("🚀 EduMate LMS 2.0 Cloud Server đã sẵn sàng!")
-        print(f"💻 Truy cập trên Máy tính (Laptop/PC):  http://localhost:{port}")
+        print("=" * 70)
+        print("🚀 HỆ THỐNG QUẢN LÝ HỌC TẬP (QLHT) 3.9.0 - MÁY CHỦ CLOUD SYNC")
+        print("=" * 70)
+        print(f"💻 Trên Máy tính (Laptop):   http://localhost:{port}")
         if local_ip != "127.0.0.1":
-            print(f"📱 Truy cập trên Điện thoại (Chung Wi-Fi): http://{local_ip}:{port}")
-        print("=" * 65)
-        print("💡 Nhấn Ctrl + C để dừng máy chủ.\n")
+            print(f"📱 Trên Điện thoại (cùng Wi-Fi): http://{local_ip}:{port}")
+        print("=" * 70)
+        print("💡 Lưu ý: Trên điện thoại mở Safari/Chrome gõ trực tiếp địa chỉ IP")
+        print(f"   ở dòng trên (http://{local_ip}:{port}) để đồng bộ dữ liệu với laptop!")
+        print("=" * 70)
+        print("Nhấn Ctrl + C để dừng máy chủ.\n")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
