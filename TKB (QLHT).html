@@ -98,24 +98,28 @@
 }
 
 /* ==========================================================================
-   BASE RESET & LAYOUT
+   BASE RESET & UNIFIED LAYOUT
    ========================================================================== */
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* App manages internal scrollbars, eliminating body overflow */
+}
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-main);
   color: var(--text-main);
-  min-height: 100vh;
-  display: flex;
-  overflow-x: hidden;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* App Shell Layout */
+/* App Shell: Single root container */
 #app {
   display: flex;
-  width: 100%;
-  min-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
 }
 
 /* ==========================================================================
@@ -123,13 +127,16 @@ body {
    ========================================================================== */
 .sidebar {
   width: 250px;
+  min-width: 250px;
+  height: 100vh;
   background-color: var(--bg-sidebar);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 24px 16px;
+  padding: 20px 14px;
   flex-shrink: 0;
   z-index: 40;
+  overflow-y: auto;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -245,61 +252,122 @@ body {
 }
 
 /* ==========================================================================
-   MAIN CONTENT WRAPPER
+   UNIFIED MAIN CONTENT ARCHITECTURE (One Page · One Layout · One Design)
+   APP SHELL
+   ├── SIDEBAR
+   └── MAIN CONTENT
+       ├── PAGE HEADER
+       ├── TIMETABLE TOOLBAR
+       └── TIMETABLE GRID
    ========================================================================== */
 .main-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  overflow-y: auto;
   height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-main);
 }
 
-/* Top App Header */
-.topbar {
+/* 1. Page Header (Tier 1) */
+.app-header {
   background-color: var(--bg-sidebar);
   border-bottom: 1px solid var(--border);
-  padding: 12px 24px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  position: sticky;
-  top: 0;
+  gap: 14px;
+  flex-shrink: 0;
   z-index: 30;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.page-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-title-group h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+.sub-title-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .mobile-menu-btn {
   display: none;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 8px;
+  padding: 6px 10px;
   color: var(--text-main);
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
 }
 
-/* Week Navigator Pill Controls */
+/* 2. Timetable Toolbar (Tier 2: Dedicated control strip directly above grid) */
+.timetable-toolbar {
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
 .week-nav-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .btn-pill {
-  padding: 7px 14px;
+  padding: 6px 13px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
   background: var(--bg-card);
   color: var(--text-main);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 .btn-pill:hover {
   background-color: var(--bg-hover);
@@ -317,38 +385,37 @@ body {
 
 .week-indicator {
   display: flex;
-  flex-direction: column;
-  padding: 0 8px;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 4px;
 }
 .week-indicator .relative-label {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 800;
   color: var(--primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 .week-indicator .date-range {
   font-size: 12px;
+  font-weight: 600;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 .search-box {
   position: relative;
-  width: 220px;
+  width: 200px;
 }
 .search-box input {
   width: 100%;
-  padding: 7px 12px 7px 32px;
+  padding: 6px 12px 6px 30px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
   background: var(--bg-input);
   color: var(--text-main);
-  font-size: 13px;
+  font-size: 12.5px;
   outline: none;
   transition: border-color 0.2s;
 }
@@ -357,22 +424,22 @@ body {
 }
 .search-box .search-icon {
   position: absolute;
-  left: 10px;
+  left: 9px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .view-mode-toggle {
   display: flex;
   background: var(--bg-input);
-  padding: 3px;
+  padding: 2px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
 }
 .view-mode-btn {
-  padding: 5px 12px;
+  padding: 5px 11px;
   border-radius: var(--radius-full);
   border: none;
   background: transparent;
@@ -390,47 +457,54 @@ body {
 }
 
 /* ==========================================================================
-   VIEW CONTAINERS
+   VIEW CONTAINERS & SEAMLESS GRID (Tier 3)
    ========================================================================== */
 .view-container {
   display: none;
-  padding: 20px 24px;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px;
 }
 .view-container.active {
-  display: block;
-}
-
-/* ==========================================================================
-   SCHEDULE VIEW: TIMETABLE GRID (Matching Reference Image)
-   ========================================================================== */
-.schedule-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-/* Days Header */
+/* Schedule View: Zero gap between toolbar and grid */
+#scheduleView.view-container {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.grid-wrap-seamless {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+/* Days Header (Fixed at top of schedule view) */
 .schedule-header {
   display: grid;
   grid-template-columns: 80px repeat(7, 1fr);
-  border-bottom: 1px solid var(--border);
   background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 20;
 }
 .time-corner-icon {
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 18px;
+  font-size: 17px;
   border-right: 1px solid var(--border);
 }
 .day-header-cell {
-  padding: 12px 6px;
+  padding: 10px 6px;
   text-align: center;
   border-right: 1px solid var(--border-light);
   display: flex;
@@ -453,7 +527,7 @@ body {
   font-weight: 700;
   color: var(--text-main);
 }
-/* Today highlighted pill matching the screenshot */
+/* Today highlighted pill */
 .day-header-cell.today {
   background: #ffffff !important;
   color: #5b21b6 !important;
@@ -466,14 +540,17 @@ body {
 }
 .day-header-cell.today .day-number {
   color: #4c1d95 !important;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
 }
 
-/* Grid Body */
+/* Scrollable Schedule Body */
 .schedule-body-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   overflow-x: auto;
-  max-height: calc(100vh - 190px);
+  background: var(--bg-card);
 }
 .schedule-body {
   display: grid;
@@ -1026,6 +1103,15 @@ legend {
 /* ==========================================================================
    RESPONSIVE DESIGN (Mobile < 768px)
    ========================================================================== */
+@media (max-width: 960px) {
+  .search-box {
+    width: 150px;
+  }
+  .week-indicator-box {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
@@ -1034,6 +1120,7 @@ legend {
     left: 0;
     transform: translateX(-100%);
     box-shadow: var(--shadow-lg);
+    z-index: 9999;
   }
   .sidebar.open {
     transform: translateX(0);
@@ -1044,8 +1131,11 @@ legend {
   .search-box {
     display: none;
   }
-  .topbar {
-    padding: 10px 14px;
+  .app-header {
+    padding: 8px 14px;
+  }
+  .timetable-toolbar {
+    padding: 8px 12px;
   }
   .view-container {
     padding: 12px;
@@ -1217,69 +1307,77 @@ legend {
     </div>
   </aside>
 
-  <!-- MAIN WRAPPER -->
-  <div class="main-wrapper">
-    <!-- TOPBAR -->
-    <header class="topbar">
-      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Mở menu">☰</button>
-
-      <!-- Relative Week Navigator (Phase 4 Spec) -->
-      <div class="week-nav-bar" id="weekNavBar">
-        <button type="button" class="btn-pill" id="prevWeekBtn" title="Xem tuần trước">‹ Tuần trước</button>
-        <button type="button" class="btn-pill primary" id="currentWeekBtn" title="Về tuần hiện tại">Tuần hiện tại</button>
-        <button type="button" class="btn-pill" id="nextWeekBtn" title="Xem tuần sau">Tuần sau ›</button>
-        <input type="date" id="datePickerJump" class="btn-pill" title="Nhảy tới ngày bất kỳ" style="padding: 4px 8px;">
-
-        <div class="week-indicator">
-          <span class="relative-label" id="relativeWeekLabel">TUẦN HIỆN TẠI</span>
-          <span class="date-range" id="weekDateRange">09/11/2026 — 15/11/2026</span>
+  <!-- MAIN WRAPPER: UNIFIED RIGHT CONTAINER -->
+  <div class="main-wrapper" id="mainContent">
+    <!-- 1. PAGE HEADER (Tier 1: Global branding, search, account pill, and quick add) -->
+    <header class="app-header" id="appHeader">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Mở menu">☰</button>
+        <div class="page-title-group">
+          <h2 id="pageTitleText">📅 Thời khóa biểu</h2>
+          <span class="sub-title-badge" id="headerSemesterBadge">Fall 2026 · ĐH FPT</span>
         </div>
       </div>
 
-      <!-- Topbar Right Actions -->
-      <div class="topbar-right">
+      <div class="header-right">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="globalSearchInput" placeholder="Tìm môn, phòng, task...">
+          <input type="text" id="globalSearchInput" placeholder="Tìm môn, phòng, mã môn...">
         </div>
-
-        <div class="view-mode-toggle" id="viewModeToggle">
-          <button type="button" class="view-mode-btn active" data-mode="grid">Lưới</button>
-          <button type="button" class="view-mode-btn" data-mode="agenda">Danh sách</button>
-          <button type="button" class="view-mode-btn" data-mode="day">Hôm nay</button>
-        </div>
-
         <button type="button" class="btn-pill" id="topAuthBtn" title="Tài khoản cá nhân & Đồng bộ">👤 <span id="topAuthName">Tài khoản</span></button>
         <button type="button" class="btn-pill primary" id="openAddClassBtn">+ Thêm lịch</button>
       </div>
     </header>
 
-    <!-- VIEW 1: TIMETABLE SCHEDULE VIEW (Central Core) -->
-    <main class="view-container active" id="scheduleView">
-      <!-- Grid Mode Display -->
-      <div id="gridDisplayWrap">
-        <div class="schedule-card">
-          <div class="schedule-header" id="scheduleHeader">
-            <div class="time-corner-icon">🕒</div>
-            <!-- Day header columns will be rendered here dynamically -->
+    <!-- 2. TIMETABLE TOOLBAR (Tier 2: Dedicated control strip directly above the grid) -->
+    <div class="timetable-toolbar" id="timetableToolbar">
+      <div class="toolbar-left">
+        <div class="week-nav-bar" id="weekNavBar">
+          <button type="button" class="btn-pill" id="prevWeekBtn" title="Xem tuần trước">‹ Tuần trước</button>
+          <button type="button" class="btn-pill primary" id="currentWeekBtn" title="Về tuần hiện tại">Tuần hiện tại</button>
+          <button type="button" class="btn-pill" id="nextWeekBtn" title="Xem tuần sau">Tuần sau ›</button>
+          <input type="date" id="datePickerJump" class="btn-pill" title="Nhảy tới ngày bất kỳ" style="padding: 4px 8px;">
+
+          <div class="week-indicator">
+            <span class="relative-label" id="relativeWeekLabel">TUẦN HIỆN TẠI</span>
+            <span class="date-range" id="weekDateRange">09/11/2026 — 15/11/2026</span>
           </div>
-          <div class="schedule-body-scroll">
-            <div class="schedule-body" id="scheduleGridBody">
-              <!-- Grid slots and cells rendered here dynamically -->
-            </div>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <div class="view-mode-toggle" id="viewModeToggle">
+          <button type="button" class="view-mode-btn active" data-mode="grid">Lưới</button>
+          <button type="button" class="view-mode-btn" data-mode="agenda">Danh sách</button>
+          <button type="button" class="view-mode-btn" data-mode="day">Hôm nay</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. VIEW 1: TIMETABLE SCHEDULE VIEW (Central Core: Directly connected to toolbar) -->
+    <main class="view-container active" id="scheduleView">
+      <!-- Grid Mode Display (Seamless unified grid) -->
+      <div id="gridDisplayWrap" class="grid-wrap-seamless">
+        <div class="schedule-header" id="scheduleHeader">
+          <div class="time-corner-icon">🕒</div>
+          <!-- Day header columns will be rendered here dynamically -->
+        </div>
+        <div class="schedule-body-scroll" id="scheduleBodyScroll">
+          <div class="schedule-body" id="scheduleGridBody">
+            <!-- Grid slots and cells rendered here dynamically -->
           </div>
         </div>
       </div>
 
       <!-- Agenda / List Mode Display -->
-      <div id="agendaDisplayWrap" style="display: none;">
+      <div id="agendaDisplayWrap" style="display: none; padding: 16px 20px;">
         <div class="agenda-list" id="agendaListContent">
           <!-- Rendered dynamically -->
         </div>
       </div>
 
       <!-- Day View Mode Display -->
-      <div id="dayDisplayWrap" style="display: none;">
+      <div id="dayDisplayWrap" style="display: none; padding: 16px 20px;">
         <div class="agenda-list" id="dayListContent" style="max-width: 650px;">
           <!-- Rendered dynamically -->
         </div>
@@ -1554,17 +1652,22 @@ legend {
       </label>
     </div>
 
-    <fieldset>
-      <legend>Phạm vi áp dụng</legend>
-      <label style="display:flex; align-items:center; gap:8px;">
-        <input type="radio" name="editScope" value="one" checked> Chỉ buổi này
-      </label>
-      <label style="display:flex; align-items:center; gap:8px;">
-        <input type="radio" name="editScope" value="after"> Buổi này và các buổi sau (cùng tiết)
-      </label>
-      <label style="display:flex; align-items:center; gap:8px;">
-        <input type="radio" name="editScope" value="all"> <span id="editScopeAllText">Tất cả các buổi của môn này</span>
-      </label>
+    <fieldset style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--bg-card);">
+      <legend style="font-weight: 700; font-size: 12px; color: var(--primary); padding: 0 6px;">Phạm vi áp dụng (Chỉnh sửa & Xóa)</legend>
+      <div style="display: grid; gap: 8px; margin-top: 4px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+          <input type="radio" name="editScope" value="one" checked>
+          <span id="editScopeOneLabel">Chỉ ngày này</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+          <input type="radio" name="editScope" value="after">
+          <span id="editScopeAfterLabel">Áp dụng cho ngày này và những ngày sau</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+          <input type="radio" name="editScope" value="all">
+          <span id="editScopeAllText">Áp dụng với thứ này cho tất cả các tuần</span>
+        </label>
+      </div>
     </fieldset>
 
     <fieldset>
@@ -2099,6 +2202,26 @@ legend {
     } catch (e) {
       alert('Không thể ghi dữ liệu vào trình duyệt (dung lượng đầy). Vui lòng dùng tính năng Xuất sao lưu.');
     }
+  }
+
+  function showToast(msg, type = 'info') {
+    let container = $('toastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toastContainer';
+      container.style.cssText = 'position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:999999; display:flex; flex-direction:column; gap:8px; pointer-events:none;';
+      document.body.appendChild(container);
+    }
+    const el = document.createElement('div');
+    el.style.cssText = 'background:var(--bg-card); color:var(--text-main); border:1px solid var(--border); box-shadow:var(--shadow-lg); border-radius:var(--radius-full); padding:10px 20px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; pointer-events:auto; transition:all 0.3s ease;';
+    const icon = type === 'error' ? '⚠️' : (type === 'success' ? '✅' : 'ℹ️');
+    el.textContent = `${icon} ${msg}`;
+    container.appendChild(el);
+    setTimeout(() => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(10px)';
+      setTimeout(() => el.remove(), 300);
+    }, 3200);
   }
 
   // ==========================================================================
@@ -2743,6 +2866,17 @@ legend {
         if (container) container.classList.add('active');
         activeView = targetView;
 
+        const viewTitles = {
+          schedule: '📅 Thời khóa biểu',
+          dashboard: '🏠 Dashboard Tổng quan',
+          tasks: '📝 Bài tập & Deadline',
+          exams: '🎯 Lịch thi & Hạn chót',
+          focus: '⏱ Đồng hồ Tập trung (Focus)',
+          settings: '⚙ Cài đặt & Tùy biến'
+        };
+        if ($('pageTitleText')) $('pageTitleText').textContent = viewTitles[targetView] || 'EduMate LMS';
+        if ($('timetableToolbar')) $('timetableToolbar').style.display = (targetView === 'schedule') ? 'flex' : 'none';
+
         if (targetView === 'dashboard') updateDashboard();
         if (targetView === 'tasks') renderTasks();
         if (targetView === 'exams') renderExams();
@@ -2830,6 +2964,9 @@ legend {
     $('cancelEditClassBtn').addEventListener('click', () => $('editClassModal').close());
     $('editClassForm').addEventListener('submit', handleSaveEditClass);
     $('deleteClassBtn').addEventListener('click', handleDeleteClassOccurrence);
+    document.querySelectorAll('input[name="editScope"]').forEach(radio => {
+      radio.addEventListener('change', () => updateDeleteButtonLabel(radio.value));
+    });
 
     // Subject List Modal Actions
     $('closeSubjectModalBtn').addEventListener('click', () => $('subjectModal').close());
@@ -3455,8 +3592,8 @@ legend {
       </label>
     `).join('');
 
-    $('newCourseFrom').value = currentMonday;
-    $('newCourseTo').value = addDays(currentMonday, 7 * 7 - 3);
+    $('newCourseFrom').value = currentMonday || mondayKey(todayKey());
+    $('newCourseTo').value = addDays($('newCourseFrom').value, 7 * 7 - 3);
     $('newCourseColor').value = PALETTE[appState.subjects.length % PALETTE.length];
     
     updateSlotPickersGroup();
@@ -3465,14 +3602,18 @@ legend {
 
   function handleSaveAddClass(e) {
     e.preventDefault();
-    const name = $('newCourseName').value.trim();
-    const code = $('newCourseCode').value.trim().toUpperCase();
+    let name = $('newCourseName').value.trim();
+    let code = $('newCourseCode').value.trim().toUpperCase();
     const room = $('newCourseRoom').value.trim();
     const from = $('newCourseFrom').value;
     const to = $('newCourseTo').value;
     const color = $('newCourseColor') ? $('newCourseColor').value : PALETTE[appState.subjects.length % PALETTE.length];
 
-    if (!name) { $('addClassError').textContent = 'Vui lòng nhập tên môn học.'; return; }
+    // Auto-fallback: If user entered only code or only name, support both seamlessly!
+    if (!name && code) name = code;
+    if (!code && name) code = name.split(/\s+/)[0].toUpperCase();
+
+    if (!name) { $('addClassError').textContent = 'Vui lòng nhập Mã ngành hoặc Tên môn học.'; return; }
     if (!from) { $('addClassError').textContent = 'Vui lòng chọn ngày bắt đầu áp dụng.'; return; }
     if (!to) { $('addClassError').textContent = 'Vui lòng chọn ngày kết thúc áp dụng.'; return; }
     if (to < from) { $('addClassError').textContent = 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.'; return; }
@@ -3499,10 +3640,11 @@ legend {
       s.name = name;
       if (code) s.code = code;
       s.color = color;
-      s.from = from;
-      s.to = to;
-      // Remove any previous rules for this subject to prevent ghost duplicates
-      appState.rules = appState.rules.filter(r => r.sid !== s.id);
+      if (!s.from || from < s.from) s.from = from;
+      if (!s.to || to > s.to) s.to = to;
+      // Filter out overlapping rules for the selected weekdays
+      const pickedWds = slotPicks.map(p => p.wd);
+      appState.rules = appState.rules.filter(r => !(r.sid === s.id && pickedWds.includes(r.wd)));
     }
 
     const newRules = slotPicks.map(p => ({
@@ -3520,8 +3662,14 @@ legend {
     appState.rules.push(...newRules);
     saveStorage();
     $('addClassModal').close();
+
+    // Automatically navigate to the start week of the newly added class
+    if (from) {
+      currentMonday = mondayKey(from);
+    }
     renderSchedule();
     updateDashboard();
+    showToast(`Đã thêm thành công môn "${name}" (${slotPicks.length} buổi/tuần)!`, 'success');
   }
 
   // --- Handlers for Edit Class ---
@@ -3529,6 +3677,18 @@ legend {
     const btn = e.target.closest('.class-pill') || e.target.closest('.agenda-item');
     if (!btn || !btn.dataset.rule) return;
     openEditModal(btn.dataset.rule, btn.dataset.date);
+  }
+
+  function updateDeleteButtonLabel(scope) {
+    const btn = $('deleteClassBtn');
+    if (!btn) return;
+    if (scope === 'one') {
+      btn.textContent = '🗑️ Xóa chỉ ngày này';
+    } else if (scope === 'after') {
+      btn.textContent = '🗑️ Xóa từ ngày này về sau';
+    } else if (scope === 'all') {
+      btn.textContent = '🗑️ Xóa toàn bộ thứ này';
+    }
   }
 
   function openEditModal(rid, d) {
@@ -3539,16 +3699,27 @@ legend {
     editingClass = { ruleId: rid, date: d };
 
     $('editModalTitle').textContent = `${o.name || 'Môn học'} · ${DAYS_VN[r.wd - 1]}, ${shown(d)}`;
-    $('editCourseCode').value = o.code || '';
-    $('editCourseName').value = o.name || '';
+    $('editCourseCode').value = o.code || sub.code || '';
+    $('editCourseName').value = o.name || sub.name || '';
     $('editCourseSlot').innerHTML = DEFAULT_SLOTS.map((t, i) => `
       <option value="${i + 1}" ${i + 1 === o.slot ? 'selected' : ''}>Tiết ${i + 1} (${t[0]}–${t[1]})</option>
     `).join('');
     $('editCourseRoom').value = o.room || '';
-    $('editSubjFrom').value = sub.from || '';
-    $('editSubjTo').value = sub.to || '';
-    $('editScopeAllText').textContent = `Tất cả các buổi ${DAYS_VN[r.wd - 1]} của môn này`;
-    document.querySelector('input[name="editScope"][value="one"]').checked = true;
+    $('editSubjFrom').value = r.from || sub.from || '';
+    $('editSubjTo').value = r.to || sub.to || '';
+
+    // Dynamic scope descriptions for clarity
+    const lblOne = $('editScopeOneLabel');
+    if (lblOne) lblOne.textContent = `Chỉ ngày này (${shown(d)})`;
+    const lblAfter = $('editScopeAfterLabel');
+    if (lblAfter) lblAfter.textContent = `Áp dụng cho ngày này (${shown(d)}) và những ngày sau`;
+    const lblAll = $('editScopeAllText');
+    if (lblAll) lblAll.textContent = `Áp dụng với ${DAYS_VN[r.wd - 1]} này cho tất cả các tuần (${sub.name || 'môn này'})`;
+
+    const radioOne = document.querySelector('input[name="editScope"][value="one"]');
+    if (radioOne) radioOne.checked = true;
+    updateDeleteButtonLabel('one');
+
     $('editClassError').textContent = '';
     $('editClassModal').showModal();
   }
@@ -3563,32 +3734,68 @@ legend {
     const slot = +$('editCourseSlot').value;
     const room = $('editCourseRoom').value.trim();
     const name = $('editCourseName').value.trim();
-    const code = $('editCourseCode').value.trim();
+    const code = $('editCourseCode').value.trim().toUpperCase();
 
     if (!name) { $('editClassError').textContent = 'Tên môn không được để trống.'; return; }
 
     if (scope === 'one') {
+      // 1. Chỉ ngày này
       r.moved = r.moved || {};
       r.moved[date] = { slot, room, name, code };
+    } else if (scope === 'after') {
+      // 2. Ngày này và những ngày sau
+      const prevDate = addDays(date, -1);
+      if (!r.from || date <= r.from) {
+        // Áp dụng từ ngày bắt đầu: cập nhật trực tiếp rule
+        r.slot = slot;
+        r.room = room;
+        if (r.moved) {
+          Object.keys(r.moved).forEach(k => { if (k >= date) delete r.moved[k]; });
+        }
+        if (r.skip) {
+          r.skip = r.skip.filter(k => k < date);
+        }
+      } else {
+        // Tách rule: rule cũ dừng ở prevDate, rule mới bắt đầu từ date
+        const origTo = r.to;
+        r.to = prevDate;
+        if (r.moved) {
+          Object.keys(r.moved).forEach(k => { if (k >= date) delete r.moved[k]; });
+        }
+        if (r.skip) {
+          r.skip = r.skip.filter(k => k <= prevDate);
+        }
+        appState.rules.push({
+          id: uid(),
+          sid: r.sid,
+          wd: r.wd,
+          slot: slot,
+          room: room,
+          from: date,
+          to: origTo,
+          skip: [],
+          moved: {}
+        });
+      }
+      sub.name = name;
+      if (code) sub.code = code;
     } else if (scope === 'all') {
-      const targets = appState.rules.filter(x => x.sid === r.sid && x.slot === r.slot && x.wd === r.wd);
+      // 3. Tất cả các tuần của thứ này
+      const targets = appState.rules.filter(x => x.sid === r.sid && x.wd === r.wd);
       targets.forEach(x => {
         x.slot = slot;
         x.room = room;
         x.moved = {};
       });
       sub.name = name;
-      sub.code = code;
-    } else {
-      // 'after'
-      r.moved = r.moved || {};
-      r.moved[date] = { slot, room, name, code };
+      if (code) sub.code = code;
     }
 
     saveStorage();
     $('editClassModal').close();
     renderSchedule();
     updateDashboard();
+    showToast(`Đã lưu thay đổi cho môn "${name}"!`, 'success');
   }
 
   function handleDeleteClassOccurrence() {
@@ -3596,21 +3803,47 @@ legend {
     if (!r) return;
     const date = editingClass.date;
     const scope = document.querySelector('input[name="editScope"]:checked').value;
+    const sub = subj(r.sid) || {};
 
-    if (!confirm('Bạn có chắc chắn muốn xóa buổi học này không?')) return;
+    let confirmMsg = `Bạn có chắc muốn xóa buổi học ngày ${shown(date)}?`;
+    if (scope === 'after') {
+      confirmMsg = `Bạn có chắc muốn xóa tất cả buổi ${DAYS_VN[r.wd - 1]} từ ngày ${shown(date)} về sau?`;
+    } else if (scope === 'all') {
+      confirmMsg = `Bạn có chắc muốn xóa TOÀN BỘ các buổi ${DAYS_VN[r.wd - 1]} của môn "${sub.name}"?`;
+    }
+
+    if (!confirm(confirmMsg)) return;
 
     if (scope === 'one') {
+      // 1. Chỉ xóa buổi này
       r.skip = r.skip || [];
-      r.skip.push(date);
+      if (!r.skip.includes(date)) r.skip.push(date);
       if (r.moved && r.moved[date]) delete r.moved[date];
+    } else if (scope === 'after') {
+      // 2. Xóa từ ngày này về sau
+      if (!r.from || date <= r.from) {
+        // Xóa toàn bộ rule này
+        appState.rules = appState.rules.filter(x => x.id !== r.id);
+      } else {
+        // Giới hạn rule đến ngày trước date
+        r.to = addDays(date, -1);
+        if (r.moved) {
+          Object.keys(r.moved).forEach(k => { if (k >= date) delete r.moved[k]; });
+        }
+        if (r.skip) {
+          r.skip = r.skip.filter(k => k <= r.to);
+        }
+      }
     } else if (scope === 'all') {
-      appState.rules = appState.rules.filter(x => !(x.sid === r.sid && x.wd === r.wd && x.slot === r.slot));
+      // 3. Xóa toàn bộ các rule của thứ này
+      appState.rules = appState.rules.filter(x => !(x.sid === r.sid && x.wd === r.wd));
     }
 
     saveStorage();
     $('editClassModal').close();
     renderSchedule();
     updateDashboard();
+    showToast('Đã xóa buổi học thành công.', 'info');
   }
 
   function handleSubjectChange(e) {

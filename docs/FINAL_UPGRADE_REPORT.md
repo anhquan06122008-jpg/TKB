@@ -194,6 +194,59 @@ Theo yêu cầu từ **Master Prompt: TKB Website Refinement — 100 AI Battle S
   - `tests/test_slots.py`: Kiểm thử nhận diện 8 tiết học.
 - **Trạng thái:** `12 passed in 0.626s — OK`.
 
+---
+
+## 11. PHIÊN BẢN HỢP NHẤT BỐ CỤC v3.7.0 (UNIFIED SAAS LAYOUT & PRECISION SCOPE ENGINE)
+
+Theo yêu cầu từ **Master Prompt: Unified TKB Website Layout — 100 AI Battle**:
+
+### 1. Hợp nhất Bố cục Toàn trang (Unified App Shell)
+- **Nguyên nhân layout cũ bị rời rạc:**
+  - Header trên cùng (`topbar`) tách biệt với phần dưới bởi khoảng đệm đen 24px của `.view-container`.
+  - Khung thời khóa biểu bị bọc trong một "hòn đảo card" (`.schedule-card`) có viền, bóng và khoảng cách độc lập, tạo cảm giác hai trang web bị ghép thô thiển.
+  - Tồn tại hai thanh cuộn dọc (scrollbar trên `body` và scrollbar trên `.main-wrapper`).
+- **Kiến trúc bố cục mới:**
+  ```text
+  APP SHELL (#app, 100vw x 100vh)
+  ├── SIDEBAR (.sidebar, 250px cố định bên trái, điều hướng đầy đủ, cuộn độc lập)
+  └── MAIN CONTENT (.main-wrapper, chiếm trọn diện tích còn lại)
+      ├── 1. PAGE HEADER (.app-header: Tiêu đề trang, Học kỳ, Tìm kiếm nhanh, User Pill, + Thêm lịch)
+      ├── 2. TIMETABLE TOOLBAR (.timetable-toolbar: Tuần trước/hiện tại/sau, Chọn ngày, Lưới/DS/Hôm nay)
+      └── 3. TIMETABLE GRID (#scheduleView: Gắn liền mạch trực tiếp ngay dưới toolbar, 0px padding)
+          ├── Sticky Day Header (.schedule-header: Cột 🕒 + Thứ 2 -> CN, highlight Ngày hôm nay)
+          └── Scrollable Grid Body (.schedule-body-scroll: 8 Tiết học cuộn mượt mà)
+  ```
+- **Trải nghiệm nhất quán:**
+  - Không còn bất kỳ khoảng trống đen bất thường nào.
+  - Thanh cuộn được quản lý gọn gàng bên trong vùng lưới thời khóa biểu, triệt tiêu hoàn toàn lỗi cuộn kép.
+  - Trên màn hình nhỏ ($\le 768\text{px}$), sidebar tự chuyển thành menu trượt mượt mà (Off-canvas Drawer).
+
+### 2. Sửa lỗi Nhập Môn học & Điều hướng Trực quan
+- Tự động nhận diện linh hoạt: Cho phép người dùng nhập Mã ngành hoặc Tên môn học (tự động điền chéo nếu để trống một trong hai).
+- Ngay sau khi bấm "Lưu", hệ thống tự động chuyển ngay góc nhìn thời khóa biểu đến tuần bắt đầu của môn học đó (`currentMonday = mondayKey(from)`), giải quyết dứt điểm thắc mắc "tôi nhập lịch lên không được" do giao diện đứng ở tuần khác.
+- Hiển thị Toast thông báo trạng thái tức thì (`showToast`).
+
+### 3. Bộ 3 Phạm vi Chỉnh sửa & Xóa Nhanh (Precision Scope Engine)
+Modal sửa môn học (`#editClassModal`) nay áp dụng chuẩn xác cho cả **Lưu thay đổi** và **Xóa nhanh** theo 3 phạm vi:
+1. **Chỉ ngày này (`one`)**:
+   - *Sửa:* Di dời chỉ buổi học này sang tiết khác / phòng khác qua `r.moved[date]`.
+   - *Xóa:* Thêm ngày này vào `r.skip`, các tuần trước và sau vẫn học bình thường. Nút bấm: `🗑️ Xóa chỉ ngày này`.
+2. **Áp dụng cho ngày này và những ngày sau (`after`)**:
+   - *Sửa:* Giữ nguyên lịch cũ trước ngày này, tự động chia tách rule và tạo rule mới từ ngày này trở về sau với tiết/phòng học mới.
+   - *Xóa:* Giới hạn ngày kết thúc của rule đến trước ngày này (`r.to = addDays(date, -1)`). Nút bấm: `🗑️ Xóa từ ngày này về sau`.
+3. **Áp dụng với thứ ... này vào những tuần sau / tất cả các tuần (`all`)**:
+   - *Sửa:* Cập nhật toàn bộ các buổi học cùng thứ của môn sang tiết/phòng mới.
+   - *Xóa:* Xóa toàn bộ các rule cùng thứ của môn học. Nút bấm: `🗑️ Xóa toàn bộ thứ này`.
+
+### 4. Kết quả Kiểm thử Tự động Bộ Mới
+- 16 bài kiểm thử tự động toàn diện đạt 100%:
+  - `tests/test_edit_scope.py`: Kiểm thử chuyên sâu 3 phạm vi sửa và 3 phạm vi xóa (PASS).
+  - `tests/test_pen301_scheduler.py`: Kiểm thử thuật toán PEN301 toàn diện (PASS).
+  - `tests/test_html.py`: Kiểm thử tính hợp lệ HTML5 và kiến trúc header/toolbar mới (PASS).
+  - `tests/test_backend.py`, `tests/test_engine.py`, `tests/test_ics.py`, `tests/test_slots.py`: Tất cả PASS.
+- **Trạng thái:** `16 passed in 0.613s — OK`.
+
+
 
 
 
