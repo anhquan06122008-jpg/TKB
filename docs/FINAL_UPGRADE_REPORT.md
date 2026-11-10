@@ -114,3 +114,13 @@
    - Bấm nút `Tuần hiện tại` để quay về lịch tuần này.
    - Bấm `+ Thêm lịch` hoặc nút tròn `+` ở góc phải dưới để thêm môn mới.
    - Bấm vào bất kỳ ô môn học nào để sửa phòng, đổi giờ hoặc xóa buổi học.
+
+## 8. TRẠNG THÁI GITHUB & XÁC MINH PUSH
+- **Kho lưu trữ từ xa (Remote Repository):** `https://github.com/anhquan06122008-jpg/TKB.git`
+- **Nhánh (Branch):** `main`
+- **Trạng thái Tracking:** `origin/main` (Đồng bộ 100%, Working tree clean)
+- **Commit Hash:** `216ebe2adcd4acf06e9d0e3181fb1ef8bf9ea00d`
+- **Thời gian push thành công:** 10/11/2026
+- **Xác minh:** Lệnh `git branch -vv` và `git status` xác nhận nhánh `main` đã được đẩy lên `origin/main` an toàn, không có lỗi xung đột và bảo toàn toàn bộ lịch sử commit.
+
+
