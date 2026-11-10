@@ -1260,6 +1260,10 @@ legend {
         <span class="icon">📚</span>
         <span>Quản lý Môn học</span>
       </button>
+      <button class="nav-item" data-view="import" id="btnSideImport">
+        <span class="icon">📥</span>
+        <span>Nhập lịch</span>
+      </button>
       <button class="nav-item" data-view="settings">
         <span class="icon">⚙</span>
         <span>Cài đặt & Tùy biến</span>
@@ -1324,6 +1328,7 @@ legend {
           <span class="search-icon">🔍</span>
           <input type="text" id="globalSearchInput" placeholder="Tìm môn, phòng, mã môn...">
         </div>
+        <button type="button" class="btn-pill" id="openImportModalBtn" title="Nhập lịch tự động từ bộ nhớ tạm hoặc file">📥 Nhập lịch</button>
         <button type="button" class="btn-pill" id="topAuthBtn" title="Tài khoản cá nhân & Đồng bộ">👤 <span id="topAuthName">Tài khoản</span></button>
         <button type="button" class="btn-pill primary" id="openAddClassBtn">+ Thêm lịch</button>
       </div>
@@ -1554,6 +1559,111 @@ legend {
 <!-- ==========================================================================
      MODAL DIALOGS
      ========================================================================== -->
+
+<!-- IMPORT TIMETABLE MODAL (NHẬP LỊCH TỰ ĐỘNG) -->
+<dialog id="importModal" style="max-width: 740px; max-height: 88vh; overflow-y: auto;" aria-labelledby="importModalTitle">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <h2 id="importModalTitle" style="margin: 0; font-size: 19px;">📥 Nhập lịch học</h2>
+      <span class="btn-pill" style="font-size: 11px; background: var(--success-bg); color: var(--success); font-weight: 700;">100% An toàn & Tự động</span>
+    </div>
+    <button type="button" class="btn" id="importCloseBtnTop" style="padding: 2px 8px; font-size: 12px;" title="Đóng">✕</button>
+  </div>
+
+  <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+    Hỗ trợ copy bảng lịch từ <b>FAP</b> (FPT) hoặc các cổng đào tạo khác rồi dán trực tiếp vào đây. Không cần mật khẩu!
+  </p>
+
+  <!-- 1-Click Clipboard Receiver Button (Super Prominent) -->
+  <div style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%); border: 2px solid var(--primary); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+    <div>
+      <div style="font-size: 14px; font-weight: 700; color: var(--primary);">📋 CÁCH 1: TỰ ĐỘNG ĐỌC BỘ NHỚ TẠM (1-CLICK)</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+        Sau khi copy trên FAP hoặc trang đào tạo, bấm nút này để web tự động nạp lịch vào danh sách ngay:
+      </div>
+    </div>
+    <button type="button" class="btn primary" id="importReadClipboardBtn" style="font-size: 14px; padding: 10px 22px; font-weight: 700; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);">
+      📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD
+    </button>
+  </div>
+
+  <!-- Bookmarklet 1-Click & Tools -->
+  <div style="background: var(--bg-input); border: 1px dashed var(--primary); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 14px;">
+    <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+      <span>⭐ CÁCH 2: NÚT THẦN KỲ (BOOKMARKLET 1-CLICK)</span>
+    </div>
+    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+      Kéo nút tím bên dưới thả lên thanh Dấu trang (Bookmark Bar) trình duyệt. Khi đang ở trang FAP / cổng đào tạo, chỉ cần <b>bấm nút này 1 cái</b> là toàn bộ lịch sẽ tự động copy vào bộ nhớ máy tính!
+    </p>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <a href="javascript:(function(){var t=document.querySelector('table');if(!t){alert('Vui lòng mở trang WeeklyTimetable trên FAP!');return;}var h=t.outerHTML;navigator.clipboard.writeText(h).then(function(){alert('🎉 ĐÃ COPY TOÀN BỘ LỊCH THÀNH CÔNG!\n\n👉 Bây giờ hãy quay lại trang EduMate và bấm nút: &quot;📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; (hoặc nhấn Ctrl+V) để nạp lịch nhé!');}).catch(function(){var a=document.createElement('textarea');a.value=h;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);alert('🎉 ĐÃ COPY TOÀN BỘ LỊCH!\n\n👉 Quay lại trang EduMate và bấm nút: &quot;📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; nhé!');});})();" 
+         class="btn primary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-size:12px; cursor:grab;" title="Kéo nút này thả lên thanh Bookmark (Ctrl+Shift+B)">
+        ⭐ Kéo vào Bookmark: [Lấy Lịch]
+      </a>
+      <button type="button" class="btn" id="copyConsoleScriptBtn" style="font-size: 12px;">💻 Copy lệnh Console</button>
+      <button type="button" class="btn" id="openOfficialFapBtn" style="font-size: 12px;">🔗 Mở trang FAP</button>
+    </div>
+  </div>
+
+  <!-- Manual Paste & File Upload -->
+  <div style="margin-bottom: 12px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+      <label style="font-weight: 600; font-size: 13px;">Hoặc dán nội dung thủ công vào ô này (Ctrl + V):</label>
+      <label class="btn-pill" style="cursor: pointer; font-size: 11px;">
+        📂 Chọn file HTML/HTM/TXT đã lưu
+        <input type="file" id="importFileInput" accept=".html,.htm,.txt" multiple hidden>
+      </label>
+    </div>
+    <div id="importPasteArea" contenteditable="true" 
+         style="min-height: 60px; max-height: 110px; overflow-y: auto; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 13px; background: var(--bg-input);"
+         data-placeholder="Bấm vào đây rồi nhấn Ctrl+V để dán bảng lịch hoặc văn bản lịch..."></div>
+    <div id="importErrorMsg" style="color: var(--danger); font-size: 12px; margin-top: 4px;"></div>
+  </div>
+
+  <!-- Preview Container (Table of Recognized Classes) -->
+  <div id="importPreviewContainer" style="display: none; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <div style="font-weight: 700; font-size: 13px; color: var(--text-main);">
+        📋 Danh sách các buổi học nhận diện được (<span id="importFoundCount">0</span> buổi):
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <label style="font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+          <input type="checkbox" id="importSelectAllCheck" checked> Chọn tất cả
+        </label>
+      </div>
+    </div>
+
+    <div style="max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+        <thead>
+          <tr style="background: var(--bg-input); border-bottom: 1px solid var(--border);">
+            <th style="padding: 6px 10px; width: 36px;">Chọn</th>
+            <th style="padding: 6px 10px;">Ngày / Thứ</th>
+            <th style="padding: 6px 10px;">Tiết</th>
+            <th style="padding: 6px 10px;">Mã môn</th>
+            <th style="padding: 6px 10px;">Tên môn</th>
+            <th style="padding: 6px 10px;">Phòng</th>
+            <th style="padding: 6px 10px;">Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody id="importPreviewTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="importStatusInfo" style="font-size: 12px; color: var(--text-muted); margin-top: 10px; min-height: 18px;"></div>
+
+  <!-- Modal Action Buttons -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; flex-wrap: wrap; gap: 8px;">
+    <button type="button" class="btn" id="importClearBatchBtn" style="font-size: 12px; color: var(--danger);">🗑 Xóa danh sách tạm</button>
+    <div style="display: flex; gap: 8px;">
+      <button type="button" class="btn" id="importCloseBtn">Đóng</button>
+      <button type="button" class="btn primary" id="importExecuteBtn" disabled style="font-weight: 700;">
+        ✓ Xác nhận nhập vào lịch
+      </button>
+    </div>
+  </div>
+</dialog>
 
 <!-- 1. ADD RECURRING CLASS MODAL -->
 <dialog id="addClassModal" style="max-width: 580px; max-height: 88vh; overflow-y: auto;" aria-labelledby="addModalTitle">
@@ -2858,6 +2968,11 @@ legend {
           return;
         }
 
+        if (targetView === 'import') {
+          openImportModal();
+          return;
+        }
+
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
@@ -2946,7 +3061,117 @@ legend {
       });
     });
 
-    // Add Class Modal & Dynamic Slot Pickers
+    // Import Timetable Modal Actions
+    const openImpBtn = $('openImportModalBtn');
+    if (openImpBtn) openImpBtn.addEventListener('click', openImportModal);
+
+    const btnSideImp = $('btnSideImport');
+    if (btnSideImp) btnSideImp.addEventListener('click', openImportModal);
+
+    const impCloseBtn = $('importCloseBtn');
+    if (impCloseBtn) impCloseBtn.addEventListener('click', () => $('importModal').close());
+
+    const impCloseTop = $('importCloseBtnTop');
+    if (impCloseTop) impCloseTop.addEventListener('click', () => $('importModal').close());
+
+    const impReadClip = $('importReadClipboardBtn');
+    if (impReadClip) impReadClip.addEventListener('click', readFromClipboard);
+
+    const impClearBtn = $('importClearBatchBtn');
+    if (impClearBtn) impClearBtn.addEventListener('click', () => {
+      importBatch = [];
+      if ($('importPasteArea')) $('importPasteArea').innerHTML = '';
+      if ($('importErrorMsg')) $('importErrorMsg').textContent = '';
+      renderImportPreview();
+    });
+
+    const impExecuteBtn = $('importExecuteBtn');
+    if (impExecuteBtn) impExecuteBtn.addEventListener('click', executeImport);
+
+    const copyScriptBtn = $('copyConsoleScriptBtn');
+    if (copyScriptBtn) copyScriptBtn.addEventListener('click', () => {
+      const code = `(function(){var t=document.querySelector('table');if(!t){alert('Vui lòng mở trang Thời khóa biểu!');return;}navigator.clipboard.writeText(t.outerHTML).then(function(){alert('🎉 Đã copy bảng lịch vào bộ nhớ tạm! Quay lại EduMate bấm ĐỌC TỰ ĐỘNG TỪ CLIPBOARD nhé!');});})();`;
+      navigator.clipboard.writeText(code).then(() => {
+        showToast('Đã copy lệnh Console vào bộ nhớ tạm!', 'success');
+      }).catch(() => {
+        prompt('Copy đoạn mã này rồi dán vào Console (F12) trên trang lịch:', code);
+      });
+    });
+
+    const openFapBtn = $('openOfficialFapBtn');
+    if (openFapBtn) openFapBtn.addEventListener('click', () => {
+      window.open('https://fap.fpt.edu.vn', '_blank');
+    });
+
+    const impFileInput = $('importFileInput');
+    if (impFileInput) impFileInput.addEventListener('change', e => {
+      const files = [...e.target.files];
+      if (!files.length) return;
+      files.forEach(f => {
+        const reader = new FileReader();
+        reader.onload = ev => processPastedImportContent(ev.target.result);
+        reader.readAsText(f, 'UTF-8');
+      });
+      e.target.value = '';
+    });
+
+    const impPasteArea = $('importPasteArea');
+    if (impPasteArea) {
+      impPasteArea.addEventListener('paste', e => {
+        e.preventDefault();
+        const htmlText = e.clipboardData.getData('text/html');
+        const plainText = e.clipboardData.getData('text/plain');
+        processPastedImportContent(htmlText || plainText);
+      });
+      impPasteArea.addEventListener('input', () => {
+        const content = impPasteArea.innerHTML || impPasteArea.innerText;
+        if (content && content.length > 20) {
+          processPastedImportContent(content);
+        }
+      });
+    }
+
+    const impPreviewTbl = $('importPreviewTableBody');
+    if (impPreviewTbl) {
+      impPreviewTbl.addEventListener('change', e => {
+        if (e.target.classList.contains('import-row-check')) {
+          const idx = +e.target.dataset.idx;
+          if (importBatch[idx]) {
+            importBatch[idx].selected = e.target.checked;
+          }
+        }
+      });
+    }
+
+    const impSelectAll = $('importSelectAllCheck');
+    if (impSelectAll) {
+      impSelectAll.addEventListener('change', e => {
+        const checked = e.target.checked;
+        importBatch.forEach(i => i.selected = checked);
+        document.querySelectorAll('.import-row-check').forEach(cb => cb.checked = checked);
+      });
+    }
+
+    // Global Paste Listener (Ctrl+V anywhere on window)
+    window.addEventListener('paste', e => {
+      const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea') return;
+      if (document.activeElement && document.activeElement.id === 'importPasteArea') return;
+
+      const htmlText = e.clipboardData.getData('text/html');
+      const plainText = e.clipboardData.getData('text/plain');
+      const content = htmlText || plainText;
+
+      if (content && (detectSlot(content) || /\b[A-Z]{2,5}\d{3}[A-Z]?\b/.test(content))) {
+        e.preventDefault();
+        if (!$('importModal').open) {
+          openImportModal();
+        }
+        processPastedImportContent(content);
+      }
+    });
+
+        // Add Class Modal & Dynamic Slot Pickers
     $('openAddClassBtn').addEventListener('click', openAddModal);
     $('fabAddBtn').addEventListener('click', openAddModal);
     $('cancelAddClassBtn').addEventListener('click', () => $('addClassModal').close());
@@ -3862,6 +4087,321 @@ legend {
     saveStorage();
     renderSchedule();
     updateDashboard();
+  }
+
+  // ==========================================================================
+  // NHẬP LỊCH TỰ ĐỘNG (CLIPBOARD / COPY-PASTE / FILE TIMETABLE IMPORTER)
+  // ==========================================================================
+  let importBatch = [];
+
+  function detectSlot(text) {
+    if (!text) return null;
+    const t = text.toLowerCase();
+    const sm = t.match(/tiết\s*(\d)/i) || t.match(/slot\s*(\d)/i) || t.match(/\bslot\s*:\s*(\d)/i);
+    if (sm) return +sm[1];
+
+    if (/0?7:00|0?7:30/.test(t) && /0?8:30|0?9:00/.test(t)) return 1;
+    if (/0?8:45|0?9:15/.test(t) && /10:15|10:45/.test(t)) return 2;
+    if (/10:30|11:00/.test(t) && /12:00|12:30/.test(t)) return 3;
+    if (/12:30|13:00/.test(t) && /14:00|14:30/.test(t)) return 4;
+    if (/14:15|14:45/.test(t) && /15:45|16:15/.test(t)) return 5;
+    if (/16:00|16:30/.test(t) && /17:30|18:00/.test(t)) return 6;
+    if (/17:45|18:00/.test(t) && /19:15|19:30/.test(t)) return 7;
+    if (/19:30/.test(t) && /21:00/.test(t)) return 8;
+
+    return null;
+  }
+
+  function extractCourseName(node, fallback, code) {
+    if (!node) return fallback;
+    const cloneNode = node.cloneNode ? node.cloneNode(true) : null;
+    if (cloneNode) {
+      cloneNode.querySelectorAll('script, style, .badge, small').forEach(el => el.remove());
+      const rawText = cloneNode.textContent || '';
+      const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+      for (const line of lines) {
+        if (line !== code && !/^(slot|tiết|phòng|room|at\b)/i.test(line) && line.length > 2 && line.length < 80) {
+          if (/[A-Za-zÀ-ỹ]{2}/.test(line)) return line;
+        }
+      }
+    }
+    const lines = (node.textContent || '').split('\n').map(l => l.trim()).filter(Boolean);
+    const rest = lines.join(' ').replace(new RegExp(code, 'g'), ' ').replace(/[A-Za-z0-9]+_\w+/g, ' ')
+      .replace(/\d{1,2}:\d{2}/g, ' ').replace(/cố định/gi, ' ').replace(/\s+/g, ' ').replace(/^[\s\-–|:]+|[\s\-–|:]+$/g, '').trim();
+    return (rest.length > 2 && rest.length < 80 && /[A-Za-zÀ-ỹ]{2}/.test(rest)) ? rest : fallback;
+  }
+
+  function parseImportHtmlOrText(content) {
+    if (!content) return [];
+    const out = [];
+    const seen = new Set();
+    const doc = new DOMParser().parseFromString(content, 'text/html');
+    const tables = doc.querySelectorAll('table');
+
+    // 1. Phân tích bảng HTML (WeeklyTimetable hoặc ViewAttendstudent)
+    if (tables.length > 0) {
+      tables.forEach(tbl => {
+        const colDate = {};
+        [...tbl.rows].forEach(tr => [...tr.cells].forEach((td, ci) => {
+          const t = td.textContent;
+          const iso = t.match(/(\d{4})-(\d{2})-(\d{2})/);
+          const dm = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
+          if (colDate[ci] === undefined && (iso || dm)) {
+            const yr = (iso && iso[1]) || (dm && dm[3]) || currentMonday.slice(0, 4);
+            const mo = iso ? iso[2] : pad(+dm[2]);
+            const da = iso ? iso[3] : pad(+dm[1]);
+            colDate[ci] = `${yr}-${mo}-${da}`;
+          }
+        }));
+
+        if (Object.keys(colDate).length >= 2) {
+          // Bảng dạng lưới tuần (WeeklyTimetable)
+          [...tbl.rows].forEach(tr => {
+            const rowText = tr.textContent;
+            const slot = detectSlot(rowText);
+            if (!slot) return;
+
+            [...tr.cells].forEach((td, ci) => {
+              const date = colDate[ci];
+              if (!date) return;
+              const text = td.textContent.trim();
+              if (!text || text.length < 3) return;
+
+              const codeMatch = text.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+              if (codeMatch) {
+                const code = codeMatch[1];
+                const roomMatch = text.match(/(?:at|phòng|room)\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i);
+                const room = roomMatch ? roomMatch[1] : '';
+                const name = extractCourseName(td, code, code);
+                const key = `${date}|${slot}|${code}`;
+                if (!seen.has(key)) {
+                  seen.add(key);
+                  out.push({ date, slot, code, name, room, selected: true });
+                }
+              }
+            });
+          });
+        } else {
+          // Bảng dạng danh sách hàng (ViewAttendstudent hoặc báo cáo đào tạo)
+          [...tbl.rows].forEach(tr => {
+            const text = tr.textContent;
+            const codeMatch = text.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+            const slot = detectSlot(text);
+            const dMatch = text.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/) || text.match(/(\d{4})-(\d{2})-(\d{2})/);
+
+            if (codeMatch && slot && dMatch) {
+              const code = codeMatch[1];
+              let date = '';
+              if (dMatch[0].includes('-')) {
+                date = dMatch[0];
+              } else {
+                const yr = dMatch[3] || currentMonday.slice(0, 4);
+                date = `${yr}-${pad(+dMatch[2])}-${pad(+dMatch[1])}`;
+              }
+              const roomMatch = text.match(/(?:at|phòng|room)\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i);
+              const room = roomMatch ? roomMatch[1] : '';
+              const name = extractCourseName(tr, code, code);
+              const key = `${date}|${slot}|${code}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                out.push({ date, slot, code, name, room, selected: true });
+              }
+            }
+          });
+        }
+      });
+    }
+
+    // 2. Phân tích văn bản thô (khi bôi đen và copy text từ trình duyệt)
+    if (!out.length) {
+      const lines = content.split('\n');
+      let foundDate = currentMonday;
+      lines.forEach(line => {
+        const dMatch = line.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/) || line.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (dMatch) {
+          if (dMatch[0].includes('-')) {
+            foundDate = dMatch[0];
+          } else {
+            const yr = dMatch[3] || currentMonday.slice(0, 4);
+            foundDate = `${yr}-${pad(+dMatch[2])}-${pad(+dMatch[1])}`;
+          }
+        }
+        const cm = line.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+        const slot = detectSlot(line);
+        if (cm && slot) {
+          const code = cm[1];
+          const roomMatch = line.match(/(?:at|phòng|room)\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i);
+          const room = roomMatch ? roomMatch[1] : '';
+          const name = line.replace(code, '').replace(/tiết\s*\d/i, '').replace(/slot\s*\d/i, '').replace(/phòng\s*[\w.\-]+/i, '').replace(/at\s*[\w.\-]+/i, '').trim() || code;
+          const key = `${foundDate}|${slot}|${code}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            out.push({ date: foundDate, slot, code, name, room, selected: true });
+          }
+        }
+      });
+    }
+
+    return out;
+  }
+
+  function processPastedImportContent(content) {
+    const parsed = parseImportHtmlOrText(content);
+    if (!parsed.length) {
+      if ($('importErrorMsg')) $('importErrorMsg').textContent = 'Chưa nhận diện được buổi học nào trong nội dung này. Vui lòng kiểm tra lại bạn đã copy đúng bảng lịch học chưa.';
+    } else {
+      if ($('importErrorMsg')) $('importErrorMsg').textContent = '';
+      parsed.forEach(p => {
+        if (!importBatch.some(b => b.date === p.date && b.slot === p.slot && b.code === p.code)) {
+          importBatch.push(p);
+        }
+      });
+      renderImportPreview();
+    }
+  }
+
+  async function readFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text || !text.trim()) {
+        alert('Bộ nhớ tạm (Clipboard) đang trống!\n\nVui lòng sang trang FAP / Đào tạo bôi đen bảng lịch rồi Ctrl+C (hoặc bấm Bookmarklet) trước nhé!');
+        return;
+      }
+      processPastedImportContent(text);
+    } catch (err) {
+      if ($('importPasteArea')) $('importPasteArea').focus();
+      alert('Trình duyệt cần quyền truy cập Clipboard. Bạn hãy nhấp vào ô dán bên dưới rồi nhấn Ctrl + V nhé!');
+    }
+  }
+
+  function renderImportPreview() {
+    if (!importBatch.length) {
+      if ($('importPreviewContainer')) $('importPreviewContainer').style.display = 'none';
+      if ($('importExecuteBtn')) $('importExecuteBtn').disabled = true;
+      if ($('importStatusInfo')) $('importStatusInfo').textContent = 'Chưa có buổi học nào. Hãy dán lịch hoặc tải file.';
+      return;
+    }
+
+    if ($('importPreviewContainer')) $('importPreviewContainer').style.display = 'block';
+    if ($('importExecuteBtn')) $('importExecuteBtn').disabled = false;
+    if ($('importFoundCount')) $('importFoundCount').textContent = importBatch.length;
+
+    let html = '';
+    importBatch.forEach((item, idx) => {
+      const existing = occAt(item.date, item.slot);
+      let statusBadge = '<span class="badge-status badge-new">Mới</span>';
+      if (existing) {
+        if (existing.code === item.code) {
+          statusBadge = '<span class="badge-status badge-dup">Đã có</span>';
+        } else {
+          statusBadge = '<span class="badge-status badge-clash">Trùng giờ</span>';
+        }
+      }
+
+      html += `
+        <tr>
+          <td style="padding: 6px 10px;"><input type="checkbox" data-idx="${idx}" ${item.selected ? 'checked' : ''} class="import-row-check"></td>
+          <td style="padding: 6px 10px;">${shown(item.date)} (${DAYS_VN[weekdayOf(item.date) - 1]})</td>
+          <td style="padding: 6px 10px;">Tiết ${item.slot}</td>
+          <td style="padding: 6px 10px;"><b>${esc(item.code)}</b></td>
+          <td style="padding: 6px 10px;">${esc(item.name)}</td>
+          <td style="padding: 6px 10px;">${esc(item.room || '--')}</td>
+          <td style="padding: 6px 10px;">${statusBadge}</td>
+        </tr>
+      `;
+    });
+    if ($('importPreviewTableBody')) $('importPreviewTableBody').innerHTML = html;
+    if ($('importStatusInfo')) $('importStatusInfo').textContent = `Đã nhận diện ${importBatch.length} buổi học. Hãy chọn các buổi muốn đưa vào lịch rồi bấm "Xác nhận nhập vào lịch".`;
+  }
+
+  function executeImport() {
+    const selectedItems = importBatch.filter(i => i.selected);
+    if (!selectedItems.length) {
+      alert('Vui lòng chọn ít nhất một buổi học để nhập vào lịch!');
+      return;
+    }
+
+    const news = [];
+    const findSubj = s => appState.subjects.find(x => (s.code && x.code && x.code.toLowerCase() === s.code.toLowerCase()) || x.name.toLowerCase() === s.name.toLowerCase())
+      || news.find(x => (s.code && x.code === s.code) || x.name.toLowerCase() === s.name.toLowerCase());
+
+    const dates = selectedItems.map(s => s.date).sort();
+    const bFrom = dates[0];
+    const bTo = dates[dates.length - 1];
+
+    const groups = new Map();
+    for (const s of selectedItems) {
+      let sub = findSubj(s);
+      if (!sub) {
+        sub = {
+          id: uid(),
+          name: s.name,
+          code: s.code,
+          color: PALETTE[(appState.subjects.length + news.length) % PALETTE.length]
+        };
+        news.push(sub);
+      } else if (s.code && !sub.code) {
+        sub.code = s.code;
+      }
+      if (sub.name === sub.code && s.name !== s.code) {
+        sub.name = s.name;
+      }
+
+      const wd = weekdayOf(s.date);
+      const groupKey = `${sub.id}|${wd}|${s.slot}|${s.room}`;
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, { sid: sub.id, wd, slot: s.slot, room: s.room, dates: new Set() });
+      }
+      groups.get(groupKey).dates.add(s.date);
+    }
+
+    // Rules creation
+    const newRules = [...groups.values()].map(g => {
+      const skip = [];
+      for (let k = bFrom; k <= bTo; k = addDays(k, 1)) {
+        if (weekdayOf(k) === g.wd && !g.dates.has(k)) skip.push(k);
+      }
+      return {
+        id: uid(),
+        sid: g.sid,
+        wd: g.wd,
+        slot: g.slot,
+        room: g.room,
+        from: null,
+        to: null,
+        skip,
+        moved: {},
+        src: 'imp'
+      };
+    });
+
+    const manualRules = appState.rules.filter(r => r.src !== 'fap' && r.src !== 'imp');
+    const sids = new Set(newRules.map(r => r.sid));
+
+    appState.subjects.push(...news);
+    appState.subjects.forEach(s => {
+      if (sids.has(s.id)) { s.from = bFrom; s.to = bTo; }
+    });
+    appState.rules = [...manualRules, ...newRules];
+
+    saveStorage();
+    $('importModal').close();
+    importBatch = [];
+
+    // Automatically navigate view to the first imported week
+    currentMonday = mondayKey(bFrom);
+
+    renderSchedule();
+    updateDashboard();
+    showToast(`Đã nhập thành công ${selectedItems.length} buổi học vào lịch!`, 'success');
+  }
+
+  function openImportModal() {
+    importBatch = [];
+    if ($('importErrorMsg')) $('importErrorMsg').textContent = '';
+    if ($('importPasteArea')) $('importPasteArea').innerHTML = '';
+    renderImportPreview();
+    $('importModal').showModal();
   }
 
   function handleSubjectDelete(e) {
