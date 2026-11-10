@@ -105,21 +105,6 @@ def upgrade_data(data):
     d["v"] = 3
     return d
 
-def simulate_fap_regex(text):
-    """Test subject code extraction & slot detection"""
-    course_pattern = re.compile(r'\b([A-Z]{2,5}\d{3}[A-Z]?)\b')
-    date_iso_pattern = re.compile(r'(\d{4})-(\d{2})-(\d{2})')
-    date_vn_pattern = re.compile(r'(\d{1,2})/(\d{1,2})(?:/(\d{4}))?')
-    
-    codes = course_pattern.findall(text)
-    dates = []
-    for iso in date_iso_pattern.findall(text):
-        dates.append(f"{iso[0]}-{iso[1]}-{iso[2]}")
-    for vn in date_vn_pattern.findall(text):
-        y = vn[2] if vn[2] else "2026"
-        dates.append(f"{y}-{int(vn[1]):02d}-{int(vn[0]):02d}")
-    return codes, dates
-
 class TestLmsEngine(unittest.TestCase):
     def test_date_and_week_calculations(self):
         # 2026-11-09 is Monday
@@ -181,18 +166,6 @@ class TestLmsEngine(unittest.TestCase):
         self.assertIsInstance(upgraded["exams"], list)
         self.assertIsInstance(upgraded["personalEvents"], list)
         self.assertEqual(upgraded["settings"]["theme"], "dark")
-        
-    def test_fap_regex_patterns(self):
-        sample_fap_text = """
-        Thời khóa biểu tuần từ 09/11/2026 đến 15/11/2026
-        Thứ 2 (09/11): Tiết 2 (08:45-10:15) Phòng BE-302 Môn: AIF101 - AI Literacy
-        Thứ 4 (11/11): Tiết 4 (12:30-14:00) Phòng AL-105 Môn: PRF192 - C Programming
-        """
-        codes, dates = simulate_fap_regex(sample_fap_text)
-        self.assertIn("AIF101", codes)
-        self.assertIn("PRF192", codes)
-        self.assertIn("2026-11-09", dates)
-        self.assertIn("2026-11-11", dates)
 
 if __name__ == "__main__":
     unittest.main()

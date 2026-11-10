@@ -1058,6 +1058,80 @@ legend {
 </head>
 <body>
 
+<!-- ==========================================================================
+     AUTH GATE SCREEN (Màn hình đăng nhập chặn trước khi chưa đăng nhập)
+     ========================================================================== -->
+<div id="authGateScreen" style="display:none; position:fixed; inset:0; z-index:99999; background:radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0f172a 100%); align-items:center; justify-content:center; padding:20px; overflow-y:auto;">
+  <div style="width:100%; max-width:440px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px 28px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+    <div style="text-align:center; margin-bottom:24px;">
+      <div style="font-size:38px; margin-bottom:8px;">📖</div>
+      <h1 style="font-size:22px; font-weight:800; color:var(--text-main); margin:0 0 6px 0;">EduMate LMS</h1>
+      <p style="font-size:13px; color:var(--text-muted); margin:0;">Đăng nhập để xem thời khóa biểu cá nhân của bạn</p>
+    </div>
+
+    <!-- Tabs: Đăng nhập | Đăng ký -->
+    <div style="display:flex; border-bottom:1px solid var(--border); margin-bottom:20px;">
+      <button type="button" class="btn" id="gateTabLogin" style="flex:1; border:none; border-bottom:2px solid var(--primary); font-weight:700; color:var(--primary); background:none; border-radius:0; padding:10px 0; font-size:14px; cursor:pointer;">Đăng nhập</button>
+      <button type="button" class="btn" id="gateTabRegister" style="flex:1; border:none; font-weight:600; color:var(--text-muted); background:none; border-radius:0; padding:10px 0; font-size:14px; cursor:pointer;">Đăng ký tài khoản</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="gateLoginForm" style="display:grid; gap:14px;">
+      <label style="font-size:13px; font-weight:600;">Tên đăng nhập hoặc Email
+        <input type="text" id="gateLoginId" placeholder="VD: anhquan hoặc email@gmail.com" required autocomplete="username" style="width:100%; margin-top:4px;">
+      </label>
+      <label style="font-size:13px; font-weight:600;">Mật khẩu
+        <input type="password" id="gateLoginPassword" placeholder="••••••••" required autocomplete="current-password" style="width:100%; margin-top:4px;">
+      </label>
+      <p id="gateLoginError" style="color:var(--danger); font-size:12px; margin:0; line-height:1.4;"></p>
+      <button type="submit" class="btn primary" id="gateLoginSubmitBtn" style="width:100%; padding:12px; font-weight:700; font-size:14px; margin-top:6px;">
+        Đăng nhập vào Thời khóa biểu
+      </button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="gateRegisterForm" style="display:none; gap:12px;">
+      <label style="font-size:13px; font-weight:600;">Tên đăng nhập
+        <input type="text" id="gateRegUsername" placeholder="VD: anhquan" required autocomplete="username" style="width:100%; margin-top:4px;">
+      </label>
+      <label style="font-size:13px; font-weight:600;">Email cá nhân
+        <input type="email" id="gateRegEmail" placeholder="VD: anhquan@gmail.com" required autocomplete="email" style="width:100%; margin-top:4px;">
+      </label>
+      <label style="font-size:13px; font-weight:600;">Tên hiển thị
+        <input type="text" id="gateRegDisplayName" placeholder="VD: Anh Quân" style="width:100%; margin-top:4px;">
+      </label>
+      <label style="font-size:13px; font-weight:600;">Mật khẩu (Tối thiểu 6 ký tự)
+        <input type="password" id="gateRegPassword" placeholder="••••••••" required autocomplete="new-password" style="width:100%; margin-top:4px;">
+      </label>
+      <label style="font-size:13px; font-weight:600;">Xác nhận mật khẩu
+        <input type="password" id="gateRegConfirmPassword" placeholder="••••••••" required autocomplete="new-password" style="width:100%; margin-top:4px;">
+      </label>
+      <p id="gateRegError" style="color:var(--danger); font-size:12px; margin:0; line-height:1.4;"></p>
+      <button type="submit" class="btn primary" id="gateRegSubmitBtn" style="width:100%; padding:12px; font-weight:700; font-size:14px; margin-top:6px;">
+        Tạo tài khoản mới
+      </button>
+    </form>
+
+    <!-- Server Status & Offline option -->
+    <div style="margin-top:20px; padding-top:14px; border-top:1px solid var(--border); font-size:11.5px; color:var(--text-muted); text-align:center;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span>🌐 Trạng thái máy chủ: <b id="gateApiStatus" style="color:var(--text-muted);">Đang kiểm tra...</b></span>
+        <button type="button" class="btn" id="gateToggleConfigBtn" style="padding:2px 8px; font-size:11px;">⚙️ Đổi IP</button>
+      </div>
+      <div id="gateConfigBox" style="display:none; text-align:left; margin-bottom:10px; background:var(--bg-input); padding:8px; border-radius:var(--radius-sm);">
+        <label style="font-size:11px; display:block; margin-bottom:4px;">Địa chỉ Server API (VD: http://localhost:8080):</label>
+        <div style="display:flex; gap:4px;">
+          <input type="text" id="gateCustomApiUrl" placeholder="http://localhost:8080" style="flex:1; font-size:11px; padding:4px 6px;">
+          <button type="button" class="btn primary" id="gateSaveApiBtn" style="font-size:11px; padding:4px 8px;">Lưu</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;">
+        Chưa có server? <a href="#" id="gateOfflineGuestBtn" style="color:var(--primary); font-weight:600; text-decoration:underline;">Dùng thử Chế độ Ngoại tuyến (Khách)</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="app">
   <!-- SIDEBAR NAVIGATION -->
   <aside class="sidebar" id="sidebar" aria-label="Menu chính">
@@ -1091,14 +1165,6 @@ legend {
       <button class="nav-item" data-view="focus">
         <span class="icon">⏱</span>
         <span>Tập trung (Focus)</span>
-      </button>
-      <button class="nav-item" data-view="fap" id="btnSideFap">
-        <span class="icon">📥</span>
-        <span>Nhập lịch FAP</span>
-      </button>
-      <button class="nav-item" data-view="oldImport" id="btnSideOldImport">
-        <span class="icon">📂</span>
-        <span>Nhập từ web cũ (HTML)</span>
       </button>
       <button class="nav-item" data-view="subjects" id="btnSideSubj">
         <span class="icon">📚</span>
@@ -1183,7 +1249,6 @@ legend {
           <button type="button" class="view-mode-btn" data-mode="day">Hôm nay</button>
         </div>
 
-        <button type="button" class="btn-pill" id="openOldImportTopBtn">📂 Nhập web cũ</button>
         <button type="button" class="btn-pill" id="topAuthBtn" title="Tài khoản cá nhân & Đồng bộ">👤 <span id="topAuthName">Tài khoản</span></button>
         <button type="button" class="btn-pill primary" id="openAddClassBtn">+ Thêm lịch</button>
       </div>
@@ -1335,7 +1400,7 @@ legend {
         <form id="settingsForm" style="display: grid; gap: 16px;">
           <label>Trường / Cơ sở đào tạo
             <select id="setUniversity">
-              <option value="Đại học FPT">Đại học FPT (Tích hợp FAP)</option>
+              <option value="Đại học FPT">Đại học FPT</option>
               <option value="Đại học Bách Khoa">Đại học Bách Khoa</option>
               <option value="Đại học Quốc Gia">Đại học Quốc Gia</option>
               <option value="Đại học Kinh Tế">Đại học Kinh Tế</option>
@@ -1392,51 +1457,76 @@ legend {
      MODAL DIALOGS
      ========================================================================== -->
 
-<!-- 1. ADD RECURRING CLASS MODAL (Phase 2 & 5 Spec) -->
-<dialog id="addClassModal" aria-labelledby="addModalTitle">
-  <form id="addClassForm">
-    <h2 id="addModalTitle">Xếp lịch môn học</h2>
+<!-- 1. ADD RECURRING CLASS MODAL -->
+<dialog id="addClassModal" style="max-width: 580px; max-height: 88vh; overflow-y: auto;" aria-labelledby="addModalTitle">
+  <form id="addClassForm" style="display: grid; gap: 14px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+      <h2 id="addModalTitle" style="margin: 0; font-size: 18px;">📅 Xếp lịch môn học</h2>
+      <button type="button" class="btn" id="closeAddClassBtn" style="padding: 2px 8px; font-size: 12px;">✕</button>
+    </div>
     
+    <!-- Bước 1: Mã môn & Tên môn -->
     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
       <label>Mã ngành / Mã môn
-        <input id="newCourseCode" maxlength="20" placeholder="VD: AIF101, MAE101">
+        <input id="newCourseCode" maxlength="20" placeholder="VD: PEN301, PRN211" required>
       </label>
       <label>Tên môn học
-        <input id="newCourseName" list="subjectDatalist" maxlength="80" placeholder="VD: Trí tuệ nhân tạo" required>
+        <input id="newCourseName" list="subjectDatalist" maxlength="80" placeholder="VD: Tiếng Anh, Lập trình C#" required>
       </label>
     </div>
     <datalist id="subjectDatalist"></datalist>
 
-    <fieldset>
-      <legend>Học vào những thứ nào?</legend>
-      <div class="days-checkboxes" id="newDaysCheckboxGroup">
+    <!-- Bước 2: Thời gian áp dụng (Bắt đầu & Kết thúc) -->
+    <fieldset style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--bg-card);">
+      <legend style="font-weight: 700; font-size: 12px; color: var(--primary); padding: 0 6px;">Thời gian áp dụng</legend>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <label>Áp dụng từ ngày (Bắt đầu)
+          <input type="date" id="newCourseFrom" required style="width: 100%;">
+        </label>
+        <label>Đến ngày (Kết thúc)
+          <input type="date" id="newCourseTo" required style="width: 100%;">
+        </label>
+      </div>
+      <p style="font-size: 11.5px; color: var(--text-muted); margin: 6px 0 0 0;">
+        💡 Hệ thống sẽ tự động tạo lịch học cho tất cả các tuần từ ngày bắt đầu đến ngày kết thúc.
+      </p>
+    </fieldset>
+
+    <!-- Bước 3: Học vào những thứ nào? -->
+    <fieldset style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--bg-card);">
+      <legend style="font-weight: 700; font-size: 12px; color: var(--primary); padding: 0 6px;">Học vào những thứ nào?</legend>
+      <div class="days-checkboxes" id="newDaysCheckboxGroup" style="display: flex; flex-wrap: wrap; gap: 8px;">
         <!-- Rendered dynamically: Thứ 2 -> Chủ nhật -->
       </div>
     </fieldset>
 
-    <div id="newSlotPickersGroup" style="display: grid; gap: 8px;"></div>
+    <!-- Bước 4: Chọn tiết học tương ứng -->
+    <div id="newSlotConfigContainer" style="display: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--bg-card);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span style="font-weight: 700; font-size: 12px; color: var(--primary);">Tiết học theo thứ</span>
+        <label style="font-size: 11.5px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--text-muted);">
+          <input type="checkbox" id="syncSlotsCheckbox" checked> Áp dụng cùng tiết cho mọi thứ đã chọn
+        </label>
+      </div>
+      <div id="newSlotPickersGroup" style="display: grid; gap: 8px;"></div>
+    </div>
 
-    <label>Phòng học / Nền tảng
-      <input id="newCourseRoom" maxlength="60" placeholder="VD: BE-302, Hall A-101, Zoom">
-    </label>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-      <label>Áp dụng từ ngày
-        <input type="date" id="newCourseFrom">
+    <!-- Bước 5: Phòng học & Màu sắc -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+      <label>Phòng học / Nền tảng
+        <input id="newCourseRoom" maxlength="60" placeholder="VD: 327, BE-302, Zoom">
       </label>
-      <label>Đến ngày
-        <input type="date" id="newCourseTo">
+      <label>Màu sắc môn
+        <input type="color" id="newCourseColor" value="#2563eb" style="height: 38px; width: 100%; padding: 2px; cursor: pointer;">
       </label>
     </div>
-    <p style="font-size: 12px; color: var(--text-muted);">
-      Để trống “Từ ngày” thì tính từ tuần hiện tại. Để trống “Đến ngày” thì áp dụng suốt kỳ học.
-    </p>
 
-    <p id="addClassError" style="color: var(--danger); font-size: 13px; white-space: pre-line;"></p>
+    <p id="addClassError" style="color: var(--danger); font-size: 12.5px; white-space: pre-line; margin: 0;"></p>
 
-    <div class="dialog-actions">
+    <!-- Bước 6: Lưu -->
+    <div class="dialog-actions" style="margin-top: 4px;">
       <button type="button" class="btn" id="cancelAddClassBtn">Hủy</button>
-      <button type="submit" class="btn primary">Lưu vào lịch</button>
+      <button type="submit" class="btn primary" style="font-weight: 700; padding: 10px 20px;">Lưu vào lịch học</button>
     </div>
   </form>
 </dialog>
@@ -1493,107 +1583,6 @@ legend {
       <button type="submit" class="btn primary">Lưu thay đổi</button>
     </div>
   </form>
-</dialog>
-
-<!-- 3. FAP IMPORT WIZARD MODAL (Phase 3 Spec) -->
-<dialog id="fapModal" style="max-width: 720px;" aria-labelledby="fapModalTitle">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-    <h2 id="fapModalTitle" style="margin: 0; font-size: 19px;">📥 Nhập thời khóa biểu từ FAP</h2>
-    <span class="btn-pill" style="font-size: 11px; background: var(--success-bg); color: var(--success); font-weight: 700;">100% An toàn & Tự động</span>
-  </div>
-
-  <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
-    Hỗ trợ lấy lịch tuần (<b>WeeklyTimetable</b>) hoặc toàn bộ lịch cả kỳ (<b>ViewAttendstudent</b>). Không cần nhập mật khẩu!
-  </p>
-
-  <!-- 1-Click Clipboard Receiver Button (Super Prominent) -->
-  <div style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%); border: 2px solid var(--primary); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-    <div>
-      <div style="font-size: 14px; font-weight: 700; color: var(--primary);">📋 CÁCH 1: TỰ ĐỘNG ĐỌC BỘ NHỚ TẠM (1-CLICK)</div>
-      <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-        Sau khi copy trên FAP, bấm nút này để web tự động nạp lịch vào danh sách ngay:
-      </div>
-    </div>
-    <button type="button" class="btn primary" id="fapReadClipboardBtn" style="font-size: 14px; padding: 10px 22px; font-weight: 700; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);">
-      📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD
-    </button>
-  </div>
-
-  <!-- Bookmarklet 1-Click for FAP -->
-  <div style="background: var(--bg-input); border: 1px dashed var(--primary); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 14px;">
-    <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-      <span>⭐ CÁCH 2: NÚT THẦN KỲ TRÊN FAP (BOOKMARKLET 1-CLICK)</span>
-    </div>
-    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
-      Kéo nút tím bên dưới thả lên thanh Dấu trang (Bookmark Bar) trình duyệt. Khi đang ở trang FAP, chỉ cần <b>bấm nút này 1 cái</b> là toàn bộ lịch FAP sẽ tự động copy vào bộ nhớ máy tính!
-    </p>
-    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-      <a href="javascript:(function(){var t=document.querySelector('table');if(!t){alert('Vui lòng mở trang WeeklyTimetable trên FAP!');return;}var h=t.outerHTML;navigator.clipboard.writeText(h).then(function(){alert('🎉 ĐÃ COPY TOÀN BỘ LỊCH TỪ FAP THÀNH CÔNG!\n\n👉 Bây giờ hãy quay lại trang EduMate và bấm nút: &quot;📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; (hoặc nhấn phím Ctrl+V) để nạp lịch nhé!');}).catch(function(){var a=document.createElement('textarea');a.value=h;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);alert('🎉 ĐÃ COPY TOÀN BỘ LỊCH TỪ FAP!\n\n👉 Quay lại trang EduMate và bấm nút: &quot;📋 ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; nhé!');});})();" 
-         class="btn primary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-size:12px; cursor:grab;" title="Kéo nút này thả lên thanh Bookmark (Ctrl+Shift+B)">
-        ⭐ Kéo vào Bookmark: [Lấy Lịch FAP]
-      </a>
-      <button type="button" class="btn" id="copyConsoleScriptBtn" style="font-size: 12px;">💻 Copy lệnh FAP Console</button>
-      <button type="button" class="btn" id="openOfficialFapBtn" style="font-size: 12px;">🔗 Mở trang FAP</button>
-    </div>
-  </div>
-
-  <!-- Manual Paste & File Upload -->
-  <div style="margin-bottom: 12px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
-      <label style="font-weight: 600; font-size: 13px;">Hoặc dán nội dung thủ công vào ô này (Ctrl + V):</label>
-      <label class="btn-pill" style="cursor: pointer; font-size: 11px;">
-        📂 Chọn file HTML/HTM đã lưu (Ctrl+S từ FAP)
-        <input type="file" id="fapHtmlFileInput" accept=".html,.htm" multiple hidden>
-      </label>
-    </div>
-    <div id="fapPasteArea" contenteditable="true" 
-         style="min-height: 60px; max-height: 110px; overflow-y: auto; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 13px; background: var(--bg-input);"
-         placeholder="Bấm vào đây rồi nhấn Ctrl+V để dán lịch từ FAP (hỗ trợ copy bảng hoặc bôi đen toàn trang)..."></div>
-  </div>
-
-  <div style="margin-bottom: 12px;">
-    <label style="font-size: 12px; color: var(--text-muted);">
-      Hoặc quét từ ảnh chụp màn hình lịch tuần (OCR qua Tesseract):
-      <input type="file" id="fapImgFileInput" accept="image/*" multiple style="margin-top: 4px; font-size: 12px;">
-    </label>
-  </div>
-
-  <!-- Preview Area with Selective Checkboxes (Phase 3 & 14 Criteria) -->
-  <div id="fapPreviewContainer" style="display: none;">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px;">
-      <h3 style="font-size: 14px; font-weight: 700;">Xem trước danh sách buổi học (<span id="fapFoundCount">0</span> buổi)</h3>
-      <div style="display: flex; gap: 8px;">
-        <button type="button" class="btn-pill" id="fapSelectAllBtn" style="font-size:11px;">Chọn tất cả</button>
-        <button type="button" class="btn-pill" id="fapDeselectAllBtn" style="font-size:11px;">Bỏ chọn</button>
-      </div>
-    </div>
-
-    <div class="fap-preview-wrap">
-      <table class="fap-preview-table" id="fapPreviewTable">
-        <thead>
-          <tr>
-            <th width="30"></th>
-            <th>Ngày / Thứ</th>
-            <th>Tiết</th>
-            <th>Mã môn</th>
-            <th>Tên môn</th>
-            <th>Phòng</th>
-            <th>Trạng thái</th>
-          </tr>
-        </thead>
-        <tbody id="fapPreviewTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <p id="fapStatusInfo" style="font-size: 13px; color: var(--text-muted); margin-top: 8px; white-space: pre-line;"></p>
-  <p id="fapErrorMsg" style="font-size: 13px; color: var(--danger); margin-top: 4px;"></p>
-
-  <div class="dialog-actions">
-    <button type="button" class="btn" id="fapClearBatchBtn">Xóa danh sách tạm</button>
-    <button type="button" class="btn" id="fapCloseBtn">Đóng</button>
-    <button type="button" class="btn primary" id="fapExecuteImportBtn" disabled>Xác nhận nhập vào lịch</button>
-  </div>
 </dialog>
 
 <!-- 4. SUBJECT MANAGEMENT MODAL (Phase 2 Spec) -->
@@ -1781,77 +1770,6 @@ legend {
   </form>
 </dialog>
 
-<!-- 9. OLD WEBSITE HTML / JSON IMPORT MODAL -->
-<dialog id="oldImportModal" style="max-width: 720px;" aria-labelledby="oldImportTitle">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-    <h2 id="oldImportTitle" style="margin:0; font-size:18px;">📂 Nhập thời khóa biểu từ website cũ (QLHT)</h2>
-    <button type="button" class="btn" id="closeOldImportBtn" style="padding:4px 8px; font-size:12px;">✕</button>
-  </div>
-  <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
-    Hỗ trợ chuyển toàn bộ thời khóa biểu cá nhân từ file HTML của website QLHT cũ hoặc file sao lưu JSON sang EduMate 2.0.
-  </p>
-
-  <!-- Drag and drop zone -->
-  <div id="oldDropZone" style="border: 2px dashed var(--primary); border-radius: var(--radius-md); background: var(--bg-input); padding: 26px 20px; text-align: center; cursor: pointer; transition: background 0.2s;">
-    <div style="font-size: 36px; margin-bottom: 8px;">📄</div>
-    <div style="font-weight: 700; font-size: 14px; color: var(--text-main);">Kéo thả file HTML của website cũ vào đây</div>
-    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">hoặc bấm vào đây để chọn file (.html, .htm, .json) từ máy tính của bạn</div>
-    <input type="file" id="oldFileInput" accept=".html,.htm,.json" style="display:none;">
-  </div>
-
-  <div id="oldFileStatus" style="font-size: 13px; color: var(--text-muted); margin-top: 10px;"></div>
-
-  <!-- Preview Container -->
-  <div id="oldPreviewContainer" style="display:none; margin-top:14px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
-      <div style="font-size:13px; font-weight:700;">
-        Đã tìm thấy: <span id="oldPreviewSubjCount" style="color:var(--primary);">0</span> môn học · <span id="oldPreviewClassCount" style="color:var(--primary);">0</span> buổi học
-      </div>
-      <div style="display:flex; gap:6px;">
-        <button type="button" class="btn-pill" id="oldSelectAllBtn" style="font-size:11px;">Chọn tất cả</button>
-        <button type="button" class="btn-pill" id="oldDeselectAllBtn" style="font-size:11px;">Bỏ chọn</button>
-      </div>
-    </div>
-
-    <!-- Mode Selector: Merge vs Replace -->
-    <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:10px; display:flex; gap:16px; flex-wrap:wrap;">
-      <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer; font-weight:600;">
-        <input type="radio" name="oldImportMode" value="merge" checked>
-        ➕ Thêm vào lịch hiện tại (Gộp - An toàn)
-      </label>
-      <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer; font-weight:600; color:var(--danger);">
-        <input type="radio" name="oldImportMode" value="replace">
-        ⚠️ Thay thế toàn bộ lịch hiện tại (Tự động sao lưu)
-      </label>
-    </div>
-
-    <div class="fap-preview-wrap">
-      <table class="fap-preview-table" id="oldPreviewTable">
-        <thead>
-          <tr>
-            <th width="30"></th>
-            <th>Thứ / Ngày</th>
-            <th>Tiết / Giờ</th>
-            <th>Mã môn</th>
-            <th>Tên môn</th>
-            <th>Phòng</th>
-            <th>Trạng thái</th>
-          </tr>
-        </thead>
-        <tbody id="oldPreviewTableBody"></tbody>
-      </table>
-    </div>
-
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px;">
-      <button type="button" class="btn" id="oldRollbackBtn" style="display:none; font-size:12px;">↩ Khôi phục bản sao lưu trước</button>
-      <div style="display:flex; gap:8px; margin-left:auto;">
-        <button type="button" class="btn" id="oldCancelBtn">Hủy</button>
-        <button type="button" class="btn primary" id="oldConfirmBtn">Xác nhận nhập vào lịch</button>
-      </div>
-    </div>
-  </div>
-</dialog>
-
 <!-- ==========================================================================
      CORE APPLICATION JAVASCRIPT
      ========================================================================== -->
@@ -1908,20 +1826,15 @@ legend {
   // Auth & Cloud Sync State
   const AUTH_TOKEN_KEY = 'edumate-auth-token';
   const AUTH_USER_KEY = 'edumate-auth-user';
-  const PRE_REPLACE_KEY = 'edumate-pre-replace-backup';
-  
   let currentUser = null;
   let authToken = null;
   let syncTimer = null;
-  let oldImportBatch = [];
-  let oldImportRawData = null;
 
   // View state
   let currentMonday = '';      // YYYY-MM-DD representing Monday of viewing week
   let activeView = 'schedule';  // schedule | dashboard | tasks | exams | focus | settings
   let activeGridMode = 'grid';  // grid | agenda | day
   let editingClass = null;      // { ruleId, date }
-  let fapBatch = [];            // [{ date, slot, code, name, room, status, selected }]
   let pomoTimer = null;
   let pomoRemainingSeconds = 25 * 60;
   let pomoIsRunning = false;
@@ -1977,23 +1890,7 @@ legend {
   function upgradeData(d) {
     if (!d) return { v: 3, subjects: [], rules: [], tasks: [], exams: [], personalEvents: [], settings: {} };
     
-    // Schema v1 legacy date range check
-    if (d.v === undefined || d.v === 1) {
-      const spans = {};
-      (d.rules || []).forEach(r => {
-        if (r.src !== 'fap' && r.src !== 'imp') return;
-        const sp = spans[r.sid] || (spans[r.sid] = { from: r.from, to: r.to || r.from });
-        if (r.from && sp.from && r.from < sp.from) sp.from = r.from;
-        if (r.to && sp.to && r.to > sp.to) sp.to = r.to;
-        r.to = null;
-      });
-      (d.subjects || []).forEach(s => {
-        const sp = spans[s.id];
-        if (sp && !s.from && !s.to) { s.from = sp.from; s.to = sp.to; }
-      });
-    }
-
-    // Upgrade to v3
+    // Ensure all state arrays are initialized
     d.subjects = Array.isArray(d.subjects) ? d.subjects : [];
     d.rules = Array.isArray(d.rules) ? d.rules : [];
     d.tasks = Array.isArray(d.tasks) ? d.tasks : [];
@@ -2211,8 +2108,14 @@ legend {
 
   function occOn(r, k) {
     const sub = subj(r.sid) || {};
-    if ((sub.from && k < sub.from) || (sub.to && k > sub.to)) return null;
-    if ((r.from && k < r.from) || (r.to && k > r.to) || weekdayOf(k) !== r.wd || r.skip.includes(k)) return null;
+    // Rule date bounds take absolute precedence over subject
+    const fromDate = r.from || sub.from;
+    const toDate = r.to || sub.to;
+    if (fromDate && k < fromDate) return null;
+    if (toDate && k > toDate) return null;
+    if (weekdayOf(k) !== r.wd) return null;
+    if (r.skip && r.skip.includes(k)) return null;
+
     const m = (r.moved && r.moved[k]) || {};
     return {
       rule: r,
@@ -2220,7 +2123,8 @@ legend {
       slot: m.slot ?? r.slot,
       room: m.room ?? r.room,
       name: m.name ?? r.name ?? sub.name,
-      code: m.code ?? r.code ?? sub.code
+      code: m.code ?? r.code ?? sub.code,
+      color: sub.color || '#2563eb'
     };
   }
 
@@ -2240,7 +2144,7 @@ legend {
       for (const other of appState.rules) {
         if (other.id === cand.id || skipIds.includes(other.id)) continue;
         const p = occOn(other, o.date);
-        if (p && p.slot === o.slot) {
+        if (p && p.slot === o.slot && other.sid !== cand.sid) {
           hits.push(`${shown(o.date)} · Tiết ${o.slot}: ${subj(other.sid)?.name || 'Môn khác'}`);
         }
       }
@@ -2647,584 +2551,6 @@ legend {
   }
 
   // ==========================================================================
-  // FAP TIMETABLE SMART PARSER (Phase 3 & 5 Spec)
-  // ==========================================================================
-  function detectSlot(text) {
-    if (!text) return 0;
-    const m = text.match(/(?:slot|tiết)\s*(\d)/i) || text.match(/^\s*(\d)\s*$/);
-    if (m) return Math.min(8, Math.max(1, +m[1]));
-
-    const h = text.match(/(\d{1,2}):(\d{2})/);
-    if (h) {
-      const mins = (+h[1]) * 60 + (+h[2]);
-      if (mins >= 420 && mins <= 505) return 1; // 07:00 - 08:25 (Slot 1)
-      if (mins >= 506 && mins <= 590) return 2; // 08:26 - 09:50 (Slot 2, e.g. 08:45, 09:10)
-      if (mins >= 591 && mins <= 685) return 3; // 09:51 - 11:25 (Slot 3, e.g. 10:30, 10:50)
-      if (mins >= 710 && mins <= 805) return 4; // 11:50 - 13:25 (Slot 4, e.g. 12:30, 12:50)
-      if (mins >= 806 && mins <= 925) return 5; // 13:26 - 15:25 (Slot 5, e.g. 14:15, 14:30)
-      if (mins >= 926 && mins <= 1035) return 6; // 15:26 - 17:15 (Slot 6, e.g. 16:00, 16:10)
-      if (mins >= 1036 && mins <= 1135) return 7; // 17:16 - 18:55 (Slot 7, e.g. 17:45, 18:00)
-      if (mins >= 1136 && mins <= 1260) return 8; // 18:56 - 21:00 (Slot 8, e.g. 19:30, 19:40)
-    }
-    return 0;
-  }
-
-  function extractCourseName(td, code, fallback) {
-    const html = td.innerHTML.replace(/<br\s*\/?>|<\/(div|p|li|tr|h\d)>/gi, '\n');
-    const lines = new DOMParser().parseFromString(html, 'text/html').body.textContent
-      .split(/\n+/).map(x => x.trim()).filter(Boolean);
-    const skip = /^(cố định|online|room|phòng|at|slot|tiết|nhóm|lớp)\b/i;
-    const hit = lines.find(l => !l.includes(code) && !/\d{1,2}:\d{2}/.test(l) && !skip.test(l) && /[A-Za-zÀ-ỹ]{2}/.test(l) && !/[A-Za-z0-9]+_\w+/.test(l));
-    if (hit) return hit;
-    const rest = lines.join(' ').replace(new RegExp(code, 'g'), ' ').replace(/[A-Za-z0-9]+_\w+/g, ' ')
-      .replace(/\d{1,2}:\d{2}/g, ' ').replace(/cố định/gi, ' ').replace(/\s+/g, ' ').replace(/^[\s\-–|:]+|[\s\-–|:]+$/g, '').trim();
-    return (rest.length > 2 && rest.length < 80 && /[A-Za-zÀ-ỹ]{2}/.test(rest)) ? rest : fallback;
-  }
-
-  function parseFapHtmlOrText(content) {
-    if (!content) return [];
-    const out = [];
-    const seen = new Set();
-    const doc = new DOMParser().parseFromString(content, 'text/html');
-    const tables = doc.querySelectorAll('table');
-
-    // 1. Phân tích bảng HTML
-    if (tables.length > 0) {
-      tables.forEach(tbl => {
-        // Kiểm tra xem bảng có định dạng lưới tuần (WeeklyTimetable) không
-        const colDate = {};
-        [...tbl.rows].forEach(tr => [...tr.cells].forEach((td, ci) => {
-          const t = td.textContent;
-          const iso = t.match(/(\d{4})-(\d{2})-(\d{2})/);
-          const dm = t.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
-          if (colDate[ci] === undefined && (iso || dm)) {
-            const yr = (iso && iso[1]) || (dm && dm[3]) || currentMonday.slice(0, 4);
-            const mo = iso ? iso[2] : pad(+dm[2]);
-            const da = iso ? iso[3] : pad(+dm[1]);
-            colDate[ci] = `${yr}-${mo}-${da}`;
-          }
-        }));
-
-        const isGrid = Object.keys(colDate).length >= 2;
-
-        if (isGrid) {
-          // Định dạng lưới tuần WeeklyTimetable
-          [...tbl.rows].forEach(tr => {
-            const rowSlot = detectSlot(tr.cells[0] ? tr.cells[0].textContent : '');
-            [...tr.cells].forEach((td, ci) => {
-              const txt = td.textContent;
-              const cm = txt.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
-              const date = colDate[ci];
-              const slot = rowSlot || detectSlot(txt);
-              if (!cm || !date || !slot) return;
-
-              const code = cm[1];
-              const name = extractCourseName(td, code, code);
-              const roomMatch = td.innerHTML.match(/(?:at|phòng|room)\s*[:\-]?\s*(?:<[^>]+>)*\s*([A-Za-z0-9.\-]+)/i)
-                || txt.match(/(?:at|phòng|room)\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i);
-              const room = roomMatch ? roomMatch[1] : '';
-              const key = `${date}|${slot}|${code}`;
-              if (!seen.has(key)) {
-                seen.add(key);
-                out.push({ date, slot, code, name, room, selected: true });
-              }
-            });
-          });
-        } else {
-          // Định dạng danh sách hàng (ViewAttendstudent / Báo cáo lịch cả kỳ)
-          [...tbl.rows].forEach(tr => {
-            const rowText = tr.textContent;
-            const dm = rowText.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/) || rowText.match(/(\d{4})-(\d{2})-(\d{2})/);
-            const cm = rowText.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
-            const slot = detectSlot(rowText);
-            if (dm && cm && slot) {
-              const yr = (dm[3] && dm[3].length === 4) ? dm[3] : (dm[1].length === 4 ? dm[1] : currentMonday.slice(0, 4));
-              const mo = dm[1].length === 4 ? dm[2] : pad(+dm[2]);
-              const da = dm[1].length === 4 ? dm[3] : pad(+dm[1]);
-              const date = `${yr}-${mo}-${da}`;
-              const code = cm[1];
-              const roomMatch = tr.innerHTML.match(/(?:at|phòng|room)\s*[:\-]?\s*(?:<[^>]+>)*\s*([A-Za-z0-9.\-]+)/i)
-                || rowText.match(/(?:at|phòng|room)\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i);
-              const room = roomMatch ? roomMatch[1] : '';
-              const name = extractCourseName(tr, code, code);
-              const key = `${date}|${slot}|${code}`;
-              if (!seen.has(key)) {
-                seen.add(key);
-                out.push({ date, slot, code, name, room, selected: true });
-              }
-            }
-          });
-        }
-      });
-    }
-
-    // 2. Phân tích văn bản thô (khi bôi đen và copy text trên FAP)
-    if (!out.length) {
-      const lines = content.split('\n');
-      let foundDate = currentMonday;
-      lines.forEach(line => {
-        const dMatch = line.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/) || line.match(/(\d{4})-(\d{2})-(\d{2})/);
-        if (dMatch) {
-          if (dMatch[0].includes('-')) {
-            foundDate = dMatch[0];
-          } else {
-            const yr = dMatch[3] || currentMonday.slice(0, 4);
-            foundDate = `${yr}-${pad(+dMatch[2])}-${pad(+dMatch[1])}`;
-          }
-        }
-        const cm = line.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
-        const slot = detectSlot(line);
-        if (cm && slot) {
-          const code = cm[1];
-          const roomMatch = line.match(/(?:at|phòng|room)\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i);
-          const room = roomMatch ? roomMatch[1] : '';
-          const name = line.replace(code, '').replace(/tiết\s*\d/i, '').replace(/slot\s*\d/i, '').replace(/phòng\s*[\w.\-]+/i, '').replace(/at\s*[\w.\-]+/i, '').trim() || code;
-          const key = `${foundDate}|${slot}|${code}`;
-          if (!seen.has(key)) {
-            seen.add(key);
-            out.push({ date: foundDate, slot, code, name, room, selected: true });
-          }
-        }
-      });
-    }
-
-    return out;
-  }
-
-  function processPastedFapContent(content) {
-    const parsed = parseFapHtmlOrText(content);
-    if (!parsed.length) {
-      $('fapErrorMsg').textContent = 'Chưa nhận diện được buổi học nào trong nội dung này. Vui lòng kiểm tra lại bạn đã copy đúng bảng lịch FAP chưa.';
-    } else {
-      $('fapErrorMsg').textContent = '';
-      parsed.forEach(p => {
-        if (!fapBatch.some(b => b.date === p.date && b.slot === p.slot && b.code === p.code)) {
-          fapBatch.push(p);
-        }
-      });
-      renderFapPreview();
-    }
-  }
-
-  async function readFromClipboard() {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (!text || !text.trim()) {
-        alert('Bộ nhớ tạm (Clipboard) đang trống!\n\nVui lòng sang trang FAP nhấn nút Bookmarklet [Lấy Lịch FAP] (hoặc bôi đen bảng lịch rồi Ctrl+C) trước nhé!');
-        return;
-      }
-      processPastedFapContent(text);
-    } catch (err) {
-      $('fapPasteArea').focus();
-      alert('Trình duyệt cần quyền truy cập Clipboard. Bạn hãy nhấp vào ô dán bên dưới rồi nhấn Ctrl + V nhé!');
-    }
-  }
-
-  function renderFapPreview() {
-    if (!fapBatch.length) {
-      $('fapPreviewContainer').style.display = 'none';
-      $('fapExecuteImportBtn').disabled = true;
-      $('fapStatusInfo').textContent = 'Chưa có buổi học nào. Hãy dán lịch hoặc tải file.';
-      return;
-    }
-
-    $('fapPreviewContainer').style.display = 'block';
-    $('fapExecuteImportBtn').disabled = false;
-    $('fapFoundCount').textContent = fapBatch.length;
-
-    let html = '';
-    fapBatch.forEach((item, idx) => {
-      // Check duplicate against current schedule
-      const existing = occAt(item.date, item.slot);
-      let statusBadge = '<span class="badge-status badge-new">Mới</span>';
-      if (existing) {
-        if (existing.code === item.code) {
-          statusBadge = '<span class="badge-status badge-dup">Đã có</span>';
-        } else {
-          statusBadge = '<span class="badge-status badge-clash">Trùng giờ</span>';
-        }
-      }
-
-      html += `
-        <tr>
-          <td><input type="checkbox" data-idx="${idx}" ${item.selected ? 'checked' : ''} class="fap-row-check"></td>
-          <td>${shown(item.date)} (${DAYS_VN[weekdayOf(item.date) - 1]})</td>
-          <td>Tiết ${item.slot}</td>
-          <td><b>${esc(item.code)}</b></td>
-          <td>${esc(item.name)}</td>
-          <td>${esc(item.room || '--')}</td>
-          <td>${statusBadge}</td>
-        </tr>
-      `;
-    });
-    $('fapPreviewTableBody').innerHTML = html;
-    $('fapStatusInfo').textContent = `Đã nhận diện ${fapBatch.length} buổi học. Hãy chọn các buổi muốn đưa vào lịch rồi bấm "Xác nhận nhập vào lịch".`;
-  }
-
-  function executeFapImport() {
-    const selectedItems = fapBatch.filter(i => i.selected);
-    if (!selectedItems.length) {
-      alert('Vui lòng chọn ít nhất một buổi học để nhập vào lịch!');
-      return;
-    }
-
-    const news = [];
-    const findSubj = s => appState.subjects.find(x => (s.code && x.code && x.code.toLowerCase() === s.code.toLowerCase()) || x.name.toLowerCase() === s.name.toLowerCase())
-      || news.find(x => (s.code && x.code === s.code) || x.name.toLowerCase() === s.name.toLowerCase());
-
-    const dates = selectedItems.map(s => s.date).sort();
-    const bFrom = dates[0];
-    const bTo = dates[dates.length - 1];
-
-    const groups = new Map();
-    for (const s of selectedItems) {
-      let sub = findSubj(s);
-      if (!sub) {
-        sub = {
-          id: uid(),
-          name: s.name,
-          code: s.code,
-          color: PALETTE[(appState.subjects.length + news.length) % PALETTE.length]
-        };
-        news.push(sub);
-      } else if (s.code && !sub.code) {
-        sub.code = s.code;
-      }
-      if (sub.name === sub.code && s.name !== s.code) {
-        sub.name = s.name;
-      }
-
-      const wd = weekdayOf(s.date);
-      const groupKey = `${sub.id}|${wd}|${s.slot}|${s.room}`;
-      if (!groups.has(groupKey)) {
-        groups.set(groupKey, { sid: sub.id, wd, slot: s.slot, room: s.room, dates: new Set() });
-      }
-      groups.get(groupKey).dates.add(s.date);
-    }
-
-    // Rules creation
-    const newRules = [...groups.values()].map(g => {
-      const skip = [];
-      for (let k = bFrom; k <= bTo; k = addDays(k, 1)) {
-        if (weekdayOf(k) === g.wd && !g.dates.has(k)) skip.push(k);
-      }
-      return {
-        id: uid(),
-        sid: g.sid,
-        wd: g.wd,
-        slot: g.slot,
-        room: g.room,
-        from: null,
-        to: null,
-        skip,
-        moved: {},
-        src: 'imp'
-      };
-    });
-
-    const manualRules = appState.rules.filter(r => r.src !== 'fap' && r.src !== 'imp');
-    const snap = clone(appState);
-    const sids = new Set(newRules.map(r => r.sid));
-
-    appState.subjects.push(...news);
-    appState.subjects.forEach(s => {
-      if (sids.has(s.id)) { s.from = bFrom; s.to = bTo; }
-    });
-    appState.rules = [...manualRules, ...newRules];
-
-    saveStorage();
-    $('fapModal').close();
-    fapBatch = [];
-    renderSchedule();
-    updateDashboard();
-    alert(`Đã nhập thành công ${selectedItems.length} buổi học vào lịch từ ${shown(bFrom)} đến ${shown(bTo)}!`);
-  }
-
-  // ==========================================================================
-  // OLD QLHT WEBSITE (HTML / JSON) IMPORTER (Yêu cầu 2 Spec)
-  // ==========================================================================
-  function parseOldWebsiteFile(text) {
-    const out = {
-      source: 'unknown',
-      subjects: [],
-      rules: [],
-      occurrences: []
-    };
-
-    // 1. Kiểm tra JSON trực tiếp
-    try {
-      const d = JSON.parse(text);
-      if (d && Array.isArray(d.subjects) && Array.isArray(d.rules)) {
-        out.source = 'json_backup';
-        out.subjects = d.subjects;
-        out.rules = d.rules;
-        return out;
-      }
-    } catch (e) {}
-
-    // 2. Phân tích HTML bằng DOMParser
-    const doc = new DOMParser().parseFromString(text, 'text/html');
-
-    // 2.1 Kiểm tra script chứa state JSON nhúng
-    const scripts = doc.querySelectorAll('script');
-    for (const sc of scripts) {
-      const content = sc.textContent || '';
-      const m = content.match(/data\s*=\s*(\{.*?subjects.*?rules.*?\});/s) || content.match(/\{["']v["']\s*:\s*[123].*?subjects.*?rules.*?\}/s);
-      if (m) {
-        try {
-          const parsed = JSON.parse(m[1] || m[0]);
-          if (parsed && Array.isArray(parsed.subjects) && Array.isArray(parsed.rules)) {
-            out.source = 'embedded_json';
-            out.subjects = parsed.subjects;
-            out.rules = parsed.rules;
-            return out;
-          }
-        } catch (err) {}
-      }
-    }
-
-    // 2.2 Trích xuất môn học từ danh sách <div class="subj" data-id="...">
-    const subjDivs = doc.querySelectorAll('.subj[data-id]');
-    subjDivs.forEach(div => {
-      const sid = div.dataset.id;
-      const nameInp = div.querySelector('input[data-act="name"]');
-      const codeInp = div.querySelector('input[data-act="code"]');
-      const colorInp = div.querySelector('input[data-act="color"]');
-      const name = (nameInp ? nameInp.value : '') || div.textContent.trim() || 'Môn học';
-      const code = codeInp ? codeInp.value.trim() : '';
-      const color = colorInp ? colorInp.value : PALETTE[out.subjects.length % PALETTE.length];
-      if (!out.subjects.some(s => s.id === sid)) {
-        out.subjects.push({ id: sid, name, code, color });
-      }
-    });
-
-    // 2.3 Trích xuất buổi học từ <button class="occ"> (Dấu hiệu đặc trưng web QLHT cũ)
-    const occBtns = doc.querySelectorAll('.occ');
-    if (occBtns.length > 0) {
-      out.source = 'old_qlht_html';
-      occBtns.forEach(btn => {
-        const rid = btn.dataset.rule || uid();
-        const dateStr = btn.dataset.date || '';
-        const strong = btn.querySelector('strong');
-        const span = btn.querySelector('span');
-        const name = strong ? strong.textContent.trim() : 'Môn học';
-        const spanText = span ? span.textContent.trim() : '';
-
-        const parts = spanText.split('·').map(p => p.trim());
-        let code = '';
-        let room = '';
-        let timePart = '';
-        if (parts.length >= 3) {
-          code = parts[0];
-          room = parts[1];
-          timePart = parts[2];
-        } else if (parts.length === 2) {
-          if (parts[1].includes(':')) {
-            code = parts[0];
-            timePart = parts[1];
-          } else {
-            code = parts[0];
-            room = parts[1];
-          }
-        }
-
-        const slot = detectSlot(timePart) || 1;
-        const color = btn.style.getPropertyValue('--c') || PALETTE[out.occurrences.length % PALETTE.length];
-
-        out.occurrences.push({
-          ruleId: rid,
-          date: dateStr,
-          name,
-          code,
-          room,
-          slot,
-          color,
-          selected: true
-        });
-      });
-    }
-
-    // 2.4 Nếu không có .occ, thử đọc bảng thông qua FAP / Generic table parser
-    if (!out.occurrences.length && !out.rules.length) {
-      const generic = parseFapHtmlOrText(text);
-      if (generic.length > 0) {
-        out.source = 'generic_table';
-        out.occurrences = generic;
-      }
-    }
-
-    return out;
-  }
-
-  function renderOldImportPreview() {
-    if (!oldImportBatch.length && !oldImportRawData) {
-      $('oldPreviewContainer').style.display = 'none';
-      $('oldFileStatus').textContent = 'Chưa nhận diện được dữ liệu thời khóa biểu trong file này.';
-      return;
-    }
-
-    $('oldPreviewContainer').style.display = 'block';
-    
-    const subjNames = new Set();
-    if (oldImportRawData && oldImportRawData.subjects) {
-      oldImportRawData.subjects.forEach(s => subjNames.add(s.name));
-    }
-    oldImportBatch.forEach(o => subjNames.add(o.name));
-
-    $('oldPreviewSubjCount').textContent = subjNames.size;
-    $('oldPreviewClassCount').textContent = oldImportBatch.length || (oldImportRawData ? oldImportRawData.rules.length : 0);
-
-    let html = '';
-    oldImportBatch.forEach((item, idx) => {
-      const wd = item.date ? weekdayOf(item.date) : 1;
-      const dayLabel = item.date ? `${shown(item.date)} (${DAYS_VN[wd - 1]})` : 'Hàng tuần';
-      const slotTime = DEFAULT_SLOTS[item.slot - 1] || ['07:00', '08:30'];
-      
-      const existing = item.date ? occAt(item.date, item.slot) : null;
-      let badge = '<span class="badge-status badge-new">Mới</span>';
-      if (existing) {
-        badge = (existing.code === item.code) ? '<span class="badge-status badge-dup">Đã có</span>' : '<span class="badge-status badge-clash">Trùng giờ</span>';
-      }
-
-      html += `
-        <tr>
-          <td><input type="checkbox" data-idx="${idx}" ${item.selected ? 'checked' : ''} class="old-row-check"></td>
-          <td>${dayLabel}</td>
-          <td>Tiết ${item.slot} (${slotTime.join('–')})</td>
-          <td><b>${esc(item.code || '--')}</b></td>
-          <td>${esc(item.name)}</td>
-          <td>${esc(item.room || '--')}</td>
-          <td>${badge}</td>
-        </tr>
-      `;
-    });
-
-    if (!html && oldImportRawData) {
-      html = `<tr><td colspan="7" style="text-align:center; padding:12px;">Đã tìm thấy bản sao lưu đầy đủ gồm ${oldImportRawData.subjects.length} môn học và ${oldImportRawData.rules.length} quy tắc xếp lịch.</td></tr>`;
-    }
-
-    $('oldPreviewTableBody').innerHTML = html;
-    
-    const preBackup = localStorage.getItem(PRE_REPLACE_KEY);
-    $('oldRollbackBtn').style.display = preBackup ? 'inline-block' : 'none';
-  }
-
-  function executeOldImport() {
-    const mode = document.querySelector('input[name="oldImportMode"]:checked').value;
-    
-    if (mode === 'replace') {
-      if (!confirm('BẠN ĐANG CHỌN THAY THẾ TOÀN BỘ LỊCH:\n\nToàn bộ lịch học hiện tại sẽ được tự động sao lưu dự phòng trước khi thay thế. Bạn có chắc chắn muốn tiếp tục không?')) {
-        return;
-      }
-      localStorage.setItem(PRE_REPLACE_KEY, JSON.stringify(appState));
-    }
-
-    if (oldImportRawData && (oldImportRawData.source === 'json_backup' || oldImportRawData.source === 'embedded_json')) {
-      if (mode === 'replace') {
-        appState.subjects = clone(oldImportRawData.subjects);
-        appState.rules = clone(oldImportRawData.rules);
-      } else {
-        const existingSids = new Set(appState.subjects.map(s => s.id));
-        oldImportRawData.subjects.forEach(s => {
-          if (!existingSids.has(s.id)) appState.subjects.push(s);
-        });
-        const existingRids = new Set(appState.rules.map(r => r.id));
-        oldImportRawData.rules.forEach(r => {
-          if (!existingRids.has(r.id)) appState.rules.push(r);
-        });
-      }
-    } else {
-      const selectedItems = oldImportBatch.filter(i => i.selected);
-      if (!selectedItems.length) {
-        alert('Vui lòng chọn ít nhất một buổi học để nhập!');
-        return;
-      }
-
-      if (mode === 'replace') {
-        appState.subjects = [];
-        appState.rules = [];
-      }
-
-      const dates = selectedItems.map(s => s.date).filter(Boolean).sort();
-      const bFrom = dates.length ? dates[0] : currentMonday;
-      const bTo = dates.length ? dates[dates.length - 1] : addDays(currentMonday, 7 * 16);
-
-      const findSubj = item => appState.subjects.find(x => 
-        (item.code && x.code && x.code.toLowerCase() === item.code.toLowerCase()) || 
-        x.name.toLowerCase() === item.name.toLowerCase()
-      );
-
-      const groups = new Map();
-      for (const s of selectedItems) {
-        let sub = findSubj(s);
-        if (!sub) {
-          sub = {
-            id: uid(),
-            name: s.name,
-            code: s.code || '',
-            color: s.color || PALETTE[appState.subjects.length % PALETTE.length],
-            from: bFrom,
-            to: bTo
-          };
-          appState.subjects.push(sub);
-        }
-        const wd = s.date ? weekdayOf(s.date) : 1;
-        const key = `${sub.id}|${wd}|${s.slot}|${s.room}`;
-        if (!groups.has(key)) {
-          groups.set(key, { sid: sub.id, wd, slot: s.slot, room: s.room, dates: new Set() });
-        }
-        if (s.date) groups.get(key).dates.add(s.date);
-      }
-
-      const newRules = [...groups.values()].map(g => {
-        const skip = [];
-        if (g.dates.size > 0) {
-          for (let k = bFrom; k <= bTo; k = addDays(k, 1)) {
-            if (weekdayOf(k) === g.wd && !g.dates.has(k)) skip.push(k);
-          }
-        }
-        return {
-          id: uid(),
-          sid: g.sid,
-          wd: g.wd,
-          slot: g.slot,
-          room: g.room || '',
-          from: bFrom,
-          to: bTo,
-          skip,
-          moved: {},
-          src: 'old_qlht'
-        };
-      });
-
-      appState.rules.push(...newRules);
-    }
-
-    saveStorage();
-    $('oldImportModal').close();
-    renderSchedule();
-    updateDashboard();
-    alert('🎉 ĐÃ NHẬP TOÀN BỘ LỊCH TỪ WEBSITE CŨ THÀNH CÔNG!\n\nDữ liệu đã được cập nhật và đồng bộ an toàn.');
-  }
-
-  function executeRollback() {
-    const preBackup = localStorage.getItem(PRE_REPLACE_KEY);
-    if (!preBackup) return;
-    if (confirm('Khôi phục lại toàn bộ lịch học trước thời điểm bạn thực hiện thao tác thay thế?')) {
-      try {
-        appState = upgradeData(JSON.parse(preBackup));
-        saveStorage();
-        renderSchedule();
-        updateDashboard();
-        $('oldImportModal').close();
-        alert('Đã khôi phục thành công bản sao lưu trước đó!');
-      } catch (e) {
-        alert('Lỗi khôi phục: ' + e.message);
-      }
-    }
-  }
-
-  // ==========================================================================
   // ICS (iCALENDAR) & BACKUP EXPORT / IMPORT
   // ==========================================================================
   function exportToIcs() {
@@ -3402,18 +2728,7 @@ legend {
     document.querySelectorAll('.nav-item').forEach(btn => {
       btn.addEventListener('click', () => {
         const targetView = btn.dataset.view;
-        if (targetView === 'fap') {
-          fapBatch = [];
-          $('fapPreviewContainer').style.display = 'none';
-          $('fapErrorMsg').textContent = '';
-          $('fapPasteArea').textContent = '';
-          $('fapModal').showModal();
-          return;
-        }
-        if (targetView === 'oldImport') {
-          openOldImportModal();
-          return;
-        }
+
         if (targetView === 'subjects') {
           renderSubjectList();
           $('subjectModal').showModal();
@@ -3502,16 +2817,9 @@ legend {
     $('fabAddBtn').addEventListener('click', openAddModal);
     $('cancelAddClassBtn').addEventListener('click', () => $('addClassModal').close());
 
-    $('newDaysCheckboxGroup').addEventListener('change', () => {
-      const checkedDays = [...document.querySelectorAll('#newDaysCheckboxGroup input:checked')].map(i => +i.value);
-      $('newSlotPickersGroup').innerHTML = checkedDays.map(w => `
-        <label>Tiết học cho ${DAYS_VN[w - 1]}:
-          <select data-wd="${w}">
-            ${DEFAULT_SLOTS.map((t, i) => `<option value="${i + 1}">Tiết ${i + 1} (${t[0]}–${t[1]})</option>`).join('')}
-          </select>
-        </label>
-      `).join('');
-    });
+    const closeAddBtn = $('closeAddClassBtn');
+    if (closeAddBtn) closeAddBtn.addEventListener('click', () => $('addClassModal').close());
+    $('newDaysCheckboxGroup').addEventListener('change', updateSlotPickersGroup);
 
     $('addClassForm').addEventListener('submit', handleSaveAddClass);
 
@@ -3522,67 +2830,6 @@ legend {
     $('cancelEditClassBtn').addEventListener('click', () => $('editClassModal').close());
     $('editClassForm').addEventListener('submit', handleSaveEditClass);
     $('deleteClassBtn').addEventListener('click', handleDeleteClassOccurrence);
-
-    // FAP Import Actions
-    $('openOfficialFapBtn').addEventListener('click', () => window.open('https://fap.fpt.edu.vn/WeeklyTimetable', '_blank'));
-    $('fapCloseBtn').addEventListener('click', () => $('fapModal').close());
-    $('fapReadClipboardBtn').addEventListener('click', readFromClipboard);
-    $('copyConsoleScriptBtn').addEventListener('click', () => {
-      const script = `var t=document.querySelector('table');if(!t){alert('Vui lòng mở trang WeeklyTimetable trên FAP!');}else{navigator.clipboard.writeText(t.outerHTML).then(function(){alert('🎉 ĐÃ COPY BẢNG LỊCH FAP! Quay lại EduMate bấm &quot;ĐỌC TỰ ĐỘNG TỪ CLIPBOARD&quot; nhé.');});}`;
-      navigator.clipboard.writeText(script).then(() => {
-        alert('Đã copy mã script Console!\n\nCách dùng:\n1. Mở tab FAP (WeeklyTimetable)\n2. Nhấn phím F12 -> chọn tab Console\n3. Nhấn Ctrl + V rồi nhấn Enter\n4. Quay lại EduMate bấm "ĐỌC TỰ ĐỘNG TỪ CLIPBOARD" là xong!');
-      });
-    });
-    $('fapClearBatchBtn').addEventListener('click', () => {
-      fapBatch = [];
-      $('fapPasteArea').textContent = '';
-      renderFapPreview();
-    });
-    $('fapPasteArea').addEventListener('paste', e => {
-      e.preventDefault();
-      const cd = e.clipboardData;
-      const html = cd.getData('text/html') || cd.getData('text/plain');
-      processPastedFapContent(html);
-    });
-    $('fapHtmlFileInput').addEventListener('change', e => {
-      const files = [...e.target.files];
-      files.forEach(f => {
-        const rd = new FileReader();
-        rd.onload = () => {
-          processPastedFapContent(rd.result);
-        };
-        rd.readAsText(f);
-      });
-      e.target.value = '';
-    });
-    $('fapSelectAllBtn').addEventListener('click', () => {
-      fapBatch.forEach(i => i.selected = true);
-      renderFapPreview();
-    });
-    $('fapDeselectAllBtn').addEventListener('click', () => {
-      fapBatch.forEach(i => i.selected = false);
-      renderFapPreview();
-    });
-    $('fapPreviewTableBody').addEventListener('change', e => {
-      if (e.target.classList.contains('fap-row-check')) {
-        const idx = +e.target.dataset.idx;
-        fapBatch[idx].selected = e.target.checked;
-      }
-    });
-    $('fapExecuteImportBtn').addEventListener('click', executeFapImport);
-
-    // Global Paste Listener (Ctrl+V anywhere on page immediately triggers FAP import preview)
-    window.addEventListener('paste', e => {
-      const tag = (e.target && e.target.tagName) || '';
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
-      const cd = e.clipboardData;
-      if (!cd) return;
-      const html = cd.getData('text/html') || cd.getData('text/plain');
-      if (html && (html.includes('table') || html.includes('Slot') || html.includes('tiết') || /[A-Z]{2,5}\d{3}/.test(html))) {
-        $('fapModal').showModal();
-        processPastedFapContent(html);
-      }
-    });
 
     // Subject List Modal Actions
     $('closeSubjectModalBtn').addEventListener('click', () => $('subjectModal').close());
@@ -3718,9 +2965,178 @@ legend {
     });
 
     // ========================================================================
-    // AUTH & CLOUD SYNC EVENT HANDLERS
+    // AUTH GATE & CLOUD SYNC EVENT HANDLERS (Yêu cầu 1 Spec)
     // ========================================================================
-    initAuth();
+    function checkGateApiHealth() {
+      const base = getApiBaseUrl();
+      const badge = $('gateApiStatus');
+      if (!badge) return;
+      badge.textContent = '🔄 Đang kiểm tra...';
+      fetch(`${base}/api/health`).then(r => r.json()).then(data => {
+        if (data.status === 'online') {
+          badge.textContent = `🟢 Online (${base})`;
+          badge.style.color = 'var(--success)';
+        } else {
+          badge.textContent = `🔴 Offline`;
+          badge.style.color = 'var(--danger)';
+        }
+      }).catch(() => {
+        badge.textContent = `🔴 Offline`;
+        badge.style.color = 'var(--danger)';
+      });
+    }
+
+    function initAuthGate() {
+      authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      const rawUser = localStorage.getItem(AUTH_USER_KEY);
+      try {
+        if (rawUser) currentUser = JSON.parse(rawUser);
+      } catch (e) {
+        currentUser = null;
+      }
+
+      if (authToken && currentUser) {
+        // User is logged in: Hide Gate, Show Main App!
+        $('authGateScreen').style.display = 'none';
+        $('app').style.display = 'grid';
+        updateAuthUI();
+        pullCloudSync();
+      } else {
+        // User is NOT logged in: Show Auth Gate Screen, Hide App!
+        $('authGateScreen').style.display = 'flex';
+        $('app').style.display = 'none';
+        checkGateApiHealth();
+      }
+    }
+
+    // Gate tab switching
+    $('gateTabLogin').addEventListener('click', () => {
+      $('gateTabLogin').style.borderBottom = '2px solid var(--primary)';
+      $('gateTabLogin').style.color = 'var(--primary)';
+      $('gateTabRegister').style.borderBottom = 'none';
+      $('gateTabRegister').style.color = 'var(--text-muted)';
+      $('gateLoginForm').style.display = 'grid';
+      $('gateRegisterForm').style.display = 'none';
+    });
+
+    $('gateTabRegister').addEventListener('click', () => {
+      $('gateTabRegister').style.borderBottom = '2px solid var(--primary)';
+      $('gateTabRegister').style.color = 'var(--primary)';
+      $('gateTabLogin').style.borderBottom = 'none';
+      $('gateTabLogin').style.color = 'var(--text-muted)';
+      $('gateLoginForm').style.display = 'none';
+      $('gateRegisterForm').style.display = 'grid';
+    });
+
+    // Gate Login Form Submit
+    $('gateLoginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('gateLoginError').textContent = '';
+      const loginId = $('gateLoginId').value.trim();
+      const password = $('gateLoginPassword').value.trim();
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login: loginId, password })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+          authToken = data.token;
+          currentUser = data.user;
+          localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
+          $('authGateScreen').style.display = 'none';
+          $('app').style.display = 'grid';
+          updateAuthUI();
+          pullCloudSync();
+        } else {
+          $('gateLoginError').textContent = data.error || 'Tài khoản hoặc mật khẩu không chính xác.';
+        }
+      } catch (err) {
+        $('gateLoginError').textContent = `Không thể kết nối máy chủ API tại ${getApiBaseUrl()}. Vui lòng khởi động server (nhấp đúp Chay_Server.bat) hoặc chọn "Dùng thử Ngoại tuyến" bên dưới.`;
+      }
+    });
+
+    // Gate Register Form Submit
+    $('gateRegisterForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('gateRegError').textContent = '';
+      const username = $('gateRegUsername').value.trim();
+      const email = $('gateRegEmail').value.trim();
+      const displayName = $('gateRegDisplayName').value.trim() || username;
+      const password = $('gateRegPassword').value.trim();
+      const confirmPwd = $('gateRegConfirmPassword').value.trim();
+
+      if (password !== confirmPwd) {
+        $('gateRegError').textContent = 'Mật khẩu xác nhận không khớp.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, displayName, password })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+          authToken = data.token;
+          currentUser = data.user;
+          localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
+          $('authGateScreen').style.display = 'none';
+          $('app').style.display = 'grid';
+          updateAuthUI();
+          pushCloudSync();
+        } else {
+          $('gateRegError').textContent = data.error || 'Đăng ký không thành công.';
+        }
+      } catch (err) {
+        $('gateRegError').textContent = `Không thể kết nối máy chủ API tại ${getApiBaseUrl()}. Vui lòng nhấp đúp Chay_Server.bat hoặc chọn "Dùng thử Ngoại tuyến" bên dưới.`;
+      }
+    });
+
+    // Gate Offline Guest Mode
+    $('gateOfflineGuestBtn').addEventListener('click', e => {
+      e.preventDefault();
+      const name = prompt('Nhập tên của bạn để bắt đầu:', 'Học viên');
+      if (name === null) return;
+      currentUser = {
+        id: 'guest_' + Date.now(),
+        username: 'khach',
+        displayName: name.trim() || 'Học viên',
+        isOffline: true
+      };
+      authToken = 'offline_guest_token';
+      localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
+      $('authGateScreen').style.display = 'none';
+      $('app').style.display = 'grid';
+      updateAuthUI();
+      renderSchedule();
+      updateDashboard();
+    });
+
+    // Gate API URL Toggle & Save
+    $('gateToggleConfigBtn').addEventListener('click', () => {
+      const box = $('gateConfigBox');
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+      if (box.style.display === 'block') {
+        $('gateCustomApiUrl').value = getApiBaseUrl();
+      }
+    });
+
+    $('gateSaveApiBtn').addEventListener('click', () => {
+      const url = $('gateCustomApiUrl').value.trim();
+      if (url) {
+        localStorage.setItem('edumate_custom_api_url', url);
+        checkGateApiHealth();
+        alert(`Đã lưu URL máy chủ: ${url}`);
+      }
+    });
+
+    initAuthGate();
 
     async function checkApiHealth(customUrl) {
       const base = (customUrl || getApiBaseUrl()).replace(/\/+$/, '');
@@ -3989,163 +3405,119 @@ legend {
       }
     });
 
-    // ========================================================================
-    // OLD QLHT WEBSITE IMPORT HANDLERS (Yêu cầu 2)
-    // ========================================================================
-    function openOldImportModal() {
-      oldImportBatch = [];
-      oldImportRawData = null;
-      $('oldPreviewContainer').style.display = 'none';
-      $('oldFileStatus').textContent = '';
-      const preBackup = localStorage.getItem(PRE_REPLACE_KEY);
-      $('oldRollbackBtn').style.display = preBackup ? 'inline-block' : 'none';
-      $('oldImportModal').showModal();
-    }
-
-    $('btnSideOldImport').addEventListener('click', openOldImportModal);
-    $('openOldImportTopBtn').addEventListener('click', openOldImportModal);
-    $('closeOldImportBtn').addEventListener('click', () => $('oldImportModal').close());
-    $('oldCancelBtn').addEventListener('click', () => $('oldImportModal').close());
-
-    // Drag and Drop Zone
-    const dropZone = $('oldDropZone');
-    dropZone.addEventListener('click', () => $('oldFileInput').click());
-    dropZone.addEventListener('dragover', e => {
-      e.preventDefault();
-      dropZone.style.background = 'var(--bg-hover)';
-      dropZone.style.borderColor = 'var(--accent)';
-    });
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.style.background = 'var(--bg-input)';
-      dropZone.style.borderColor = 'var(--primary)';
-    });
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.style.background = 'var(--bg-input)';
-      dropZone.style.borderColor = 'var(--primary)';
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        processOldWebsiteFile(e.dataTransfer.files[0]);
-      }
-    });
-    $('oldFileInput').addEventListener('change', e => {
-      if (e.target.files && e.target.files[0]) {
-        processOldWebsiteFile(e.target.files[0]);
-      }
-      e.target.value = '';
-    });
-
-    function processOldWebsiteFile(file) {
-      $('oldFileStatus').textContent = `Đang đọc file: ${file.name}...`;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const res = parseOldWebsiteFile(reader.result);
-          if (res.source === 'json_backup' || res.source === 'embedded_json') {
-            oldImportRawData = res;
-            oldImportBatch = [];
-            const occurrences = [];
-            res.rules.forEach(r => {
-              const sub = res.subjects.find(s => s.id === r.sid) || {};
-              occurrences.push({
-                date: r.from || currentMonday,
-                slot: r.slot,
-                code: sub.code || '',
-                name: sub.name || '',
-                room: r.room || '',
-                selected: true
-              });
-            });
-            oldImportBatch = occurrences;
-          } else {
-            oldImportRawData = null;
-            oldImportBatch = res.occurrences || [];
-          }
-          $('oldFileStatus').textContent = `Đã phân tích thành công: ${file.name} (Phương thức: ${res.source})`;
-          renderOldImportPreview();
-        } catch (err) {
-          $('oldFileStatus').textContent = 'Lỗi phân tích file: ' + err.message;
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    $('oldSelectAllBtn').addEventListener('click', () => {
-      oldImportBatch.forEach(i => i.selected = true);
-      renderOldImportPreview();
-    });
-    $('oldDeselectAllBtn').addEventListener('click', () => {
-      oldImportBatch.forEach(i => i.selected = false);
-      renderOldImportPreview();
-    });
-    $('oldPreviewTableBody').addEventListener('change', e => {
-      if (e.target.classList.contains('old-row-check')) {
-        const idx = +e.target.dataset.idx;
-        if (oldImportBatch[idx]) oldImportBatch[idx].selected = e.target.checked;
-      }
-    });
-    $('oldConfirmBtn').addEventListener('click', executeOldImport);
-    $('oldRollbackBtn').addEventListener('click', executeRollback);
-
     // Render Initial Schedule
     renderSchedule();
     updateDashboard();
   }
 
   // --- Handlers for Add Class ---
+  function updateSlotPickersGroup() {
+    const checkedDays = [...document.querySelectorAll('#newDaysCheckboxGroup input:checked')].map(i => +i.value);
+    const container = $('newSlotConfigContainer');
+    const group = $('newSlotPickersGroup');
+    if (!checkedDays.length) {
+      if (container) container.style.display = 'none';
+      if (group) group.innerHTML = '';
+      return;
+    }
+    if (container) container.style.display = 'block';
+
+    const currentPrimarySlot = group.querySelector('select')?.value || '3';
+    group.innerHTML = checkedDays.map(w => `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:6px 10px; border-radius:var(--radius-sm);">
+        <span style="font-weight:600; font-size:12.5px;">${DAYS_VN[w - 1]}:</span>
+        <select data-wd="${w}" style="font-size:12.5px; padding:4px 8px;">
+          ${DEFAULT_SLOTS.map((t, i) => `<option value="${i + 1}" ${i + 1 === +currentPrimarySlot ? 'selected' : ''}>Tiết ${i + 1} (${t[0]}–${t[1]})</option>`).join('')}
+        </select>
+      </div>
+    `).join('');
+
+    group.querySelectorAll('select').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const syncCheck = $('syncSlotsCheckbox');
+        if (syncCheck && syncCheck.checked) {
+          const val = sel.value;
+          group.querySelectorAll('select').forEach(other => other.value = val);
+        }
+      });
+    });
+  }
+
   function openAddModal() {
     $('addClassForm').reset();
     $('addClassError').textContent = '';
     $('subjectDatalist').innerHTML = appState.subjects.map(s => `<option value="${esc(s.name)}">`).join('');
-    $('newSlotPickersGroup').innerHTML = '';
+    
+    // Render 7 weekday checkboxes: Thứ 2 (1) to Chủ nhật (7)
+    $('newDaysCheckboxGroup').innerHTML = DAYS_VN.map((dayName, idx) => `
+      <label style="display:flex; align-items:center; gap:5px; font-size:12.5px; background:var(--bg-input); padding:6px 10px; border-radius:var(--radius-sm); cursor:pointer;">
+        <input type="checkbox" value="${idx + 1}" ${idx < 5 ? 'checked' : ''}> ${dayName}
+      </label>
+    `).join('');
+
     $('newCourseFrom').value = currentMonday;
+    $('newCourseTo').value = addDays(currentMonday, 7 * 7 - 3);
+    $('newCourseColor').value = PALETTE[appState.subjects.length % PALETTE.length];
+    
+    updateSlotPickersGroup();
     $('addClassModal').showModal();
   }
 
   function handleSaveAddClass(e) {
     e.preventDefault();
     const name = $('newCourseName').value.trim();
-    const code = $('newCourseCode').value.trim();
+    const code = $('newCourseCode').value.trim().toUpperCase();
     const room = $('newCourseRoom').value.trim();
-    const from = $('newCourseFrom').value || currentMonday;
-    const to = $('newCourseTo').value || null;
+    const from = $('newCourseFrom').value;
+    const to = $('newCourseTo').value;
+    const color = $('newCourseColor') ? $('newCourseColor').value : PALETTE[appState.subjects.length % PALETTE.length];
+
+    if (!name) { $('addClassError').textContent = 'Vui lòng nhập tên môn học.'; return; }
+    if (!from) { $('addClassError').textContent = 'Vui lòng chọn ngày bắt đầu áp dụng.'; return; }
+    if (!to) { $('addClassError').textContent = 'Vui lòng chọn ngày kết thúc áp dụng.'; return; }
+    if (to < from) { $('addClassError').textContent = 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.'; return; }
 
     const slotPicks = [...document.querySelectorAll('#newSlotPickersGroup select')].map(s => ({
       wd: +s.dataset.wd,
       slot: +s.value
     }));
 
-    if (!name) { $('addClassError').textContent = 'Vui lòng nhập tên môn học.'; return; }
-    if (!slotPicks.length) { $('addClassError').textContent = 'Vui lòng chọn ít nhất một thứ trong tuần.'; return; }
-    if (to && to < from) { $('addClassError').textContent = 'Ngày đến phải sau ngày bắt đầu.'; return; }
-
-    let s = appState.subjects.find(x => (code && x.code && x.code.toLowerCase() === code.toLowerCase()) || x.name.toLowerCase() === name.toLowerCase());
-    const isNew = !s;
-    if (isNew) {
-      s = { id: uid(), name, code, color: PALETTE[appState.subjects.length % PALETTE.length] };
+    if (!slotPicks.length) {
+      $('addClassError').textContent = 'Vui lòng chọn ít nhất một thứ trong tuần có lịch học.';
+      return;
     }
 
-    const candidates = slotPicks.map(p => ({
+    let s = appState.subjects.find(x => 
+      (code && x.code && x.code.toUpperCase() === code) || 
+      (x.name && x.name.toLowerCase() === name.toLowerCase())
+    );
+
+    if (!s) {
+      s = { id: uid(), name, code, color, from, to };
+      appState.subjects.push(s);
+    } else {
+      s.name = name;
+      if (code) s.code = code;
+      s.color = color;
+      s.from = from;
+      s.to = to;
+      // Remove any previous rules for this subject to prevent ghost duplicates
+      appState.rules = appState.rules.filter(r => r.sid !== s.id);
+    }
+
+    const newRules = slotPicks.map(p => ({
       id: uid(),
       sid: s.id,
       wd: p.wd,
       slot: p.slot,
-      room,
-      from,
-      to,
+      room: room || '',
+      from: from,
+      to: to,
       skip: [],
       moved: {}
     }));
 
-    const hits = candidates.flatMap(c => clashes(c, from, to || '2028-12-31'));
-    if (hits.length) {
-      $('addClassError').textContent = 'Không thể lưu vì bị trùng tiết:\n' + hits.slice(0, 5).join('\n');
-      return;
-    }
-
-    if (isNew) appState.subjects.push(s);
-    else if (code && !s.code) s.code = code;
-
-    appState.rules.push(...candidates);
+    appState.rules.push(...newRules);
     saveStorage();
     $('addClassModal').close();
     renderSchedule();

@@ -142,5 +142,58 @@
 - **Nhánh (Branch):** `main`
 - **Trạng thái Tracking:** `origin/main` (Đồng bộ 100%, Working tree clean)
 
+---
+
+## 10. PHIÊN BẢN TINH CHỈNH v3.2.0 (REFINEMENT & PEN301 RECURRING SCHEDULER FIX)
+
+Theo yêu cầu từ **Master Prompt: TKB Website Refinement — 100 AI Battle System**, toàn bộ các tinh chỉnh sau đã được hoàn tất và kiểm thử nghiêm ngặt:
+
+### 1. Sửa triệt để lỗi thuật toán tạo TKB lặp tuần (Lỗi môn PEN301)
+- **Nguyên nhân cốt lõi (Root Cause):**
+  - Trong hàm `occOn(r, k)` ban đầu: `if ((sub.from && k < sub.from) || (sub.to && k > sub.to)) return null;`
+  - Quá trình import trước đây đã ghi cố định mốc `from: "2026-11-09"` và `to: "2026-11-14"` trực tiếp vào đối tượng môn học `PEN301` trong cơ sở dữ liệu.
+  - Khi người dùng vào form thêm lịch xếp PEN301 từ `02/11/2026` đến `17/12/2026` (7 tuần), quy tắc (`rule`) được lưu đúng khoảng ngày nhưng hàm hiển thị `occOn` lại bị giới hạn bởi `sub.from` và `sub.to` (chỉ 1 tuần duy nhất).
+- **Giải pháp tối ưu đã triển khai:**
+  - Cập nhật hàm `occOn(r, k)` để khoảng ngày tại quy tắc (`r.from`, `r.to`) luôn được ưu tiên tuyệt đối:
+    ```js
+    const fromDate = r.from || sub.from;
+    const toDate = r.to || sub.to;
+    if (fromDate && k < fromDate) return null;
+    if (toDate && k > toDate) return null;
+    ```
+  - Cập nhật logic lưu môn (`handleSaveAddClass`) để tự động mở rộng biên `sub.from` và `sub.to` tương ứng với khoảng ngày của quy tắc mới, đồng thời dọn dẹp các quy tắc cũ xung đột của môn.
+  - Chạy script dọn dẹp database SQLite loại bỏ triệt để kẹp ngày cứng cũ trên môn PEN301.
+  - **Kết quả nghiệm thu:** Toàn bộ 34 buổi học của PEN301 từ `02/11/2026` đến `17/12/2026` (Thứ 2 đến Thứ 6 hàng tuần, Tiết 3) hiển thị chính xác 100%. Các ngày `25/11/2026` và `26/11/2026` đều có lịch đầy đủ. Ngày `18/12/2026` (vượt quá ngày kết thúc) và các ngày Thứ 7, Chủ nhật không có lịch.
+
+### 2. Thiết lập Màn hình Đăng nhập Chặn Trước (Auth Gate Screen)
+- Bổ sung màn hình `#authGateScreen` chiếm toàn trang, ngăn người dùng chưa đăng nhập tiếp cận giao diện thời khóa biểu.
+- Người dùng có thể đăng nhập hoặc đăng ký tài khoản EduMate Cloud ngay tại màn hình này.
+- Khi người dùng đăng nhập thành công, token được lưu vào `authToken` và `edumate_current_user` trong `localStorage`, màn hình Auth Gate tự động ẩn đi và vào thẳng thời khóa biểu.
+- Mỗi lần mở web, hệ thống kiểm tra token hợp lệ: nếu đã có phiên, bỏ qua ngay màn hình đăng nhập. Khi bấm Đăng xuất, phiên bị hủy và màn hình Auth Gate xuất hiện trở lại ngay lập tức.
+- Bổ sung nút "Dùng tạm Offline / Chế độ Khách" dành cho người dùng muốn sử dụng nhanh mà không cần tạo tài khoản.
+
+### 3. Loại bỏ hoàn toàn các tính năng thừa theo yêu cầu người dùng
+- Đã gỡ bỏ toàn bộ modal `#fapModal`, nút đọc clipboard tự động, nút kéo Bookmarklet, nút copy console script, nút mở trang FAP, và nút chọn file HTML/HTM từ FAP.
+- Đã gỡ bỏ toàn bộ modal `#oldImportModal`, khung kéo thả dropzone, parser HTML web cũ, bảng preview và cơ chế rollback web cũ.
+- Đã xóa sạch các nút liên quan trên Sidebar và Topbar (`btnSideFap`, `btnSideOldImport`, `openOldImportTopBtn`).
+- Đã xóa hơn 1,000 dòng code JavaScript và regex không còn sử dụng trong `index.html`.
+
+### 4. Tinh gọn Modal Nhập Môn học (`#addClassModal`)
+- Thiết kế cuộn dọc linh hoạt (`max-height: 88vh; overflow-y: auto`), không bị tràn màn hình trên mọi kích thước.
+- Đưa trường **"Áp dụng từ ngày"** và **"Đến ngày"** lên ngay đầu sau Mã môn & Tên môn.
+- Cho phép chọn nhiều thứ trong tuần linh hoạt qua các checkbox trực quan.
+- Tùy chọn bật/tắt **"Áp dụng cùng tiết cho mọi thứ đã chọn"** giúp thao tác nhanh chỉ trong 1 cú click.
+
+### 5. Kết quả Kiểm thử Tự động (Automated Test Suite)
+- Đã chạy bộ 12 ca kiểm thử tự động toàn diện qua `unittest`:
+  - `tests/test_pen301_scheduler.py`: Kiểm thử độc lập thuật toán lịch tuần PEN301 (34 buổi, kiểm tra ngày 25/11, 26/11, biên tháng 11-12, biên năm 2026-2027, một ngày duy nhất).
+  - `tests/test_backend.py`: Kiểm thử API đăng ký, đăng nhập, phân quyền, cô lập dữ liệu người dùng.
+  - `tests/test_engine.py`: Kiểm thử logic tuần, năm nhuận, chuyển đổi ngày.
+  - `tests/test_html.py`: Kiểm thử cấu trúc HTML5 nghiêm ngặt, đảm bảo không có thẻ lỗi và xác nhận đã xóa modal FAP/Old Import.
+  - `tests/test_ics.py`: Kiểm thử xuất lịch iCalendar chuẩn RFC 5545.
+  - `tests/test_slots.py`: Kiểm thử nhận diện 8 tiết học.
+- **Trạng thái:** `12 passed in 0.626s — OK`.
+
+
 
 
