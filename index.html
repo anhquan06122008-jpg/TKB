@@ -3976,6 +3976,21 @@ legend {
 
     if (!name) { $('editClassError').textContent = 'Tên môn không được để trống.'; return; }
 
+    const newFrom = $('editSubjFrom').value.trim();
+    const newTo = $('editSubjTo').value.trim();
+    if (newFrom && newTo && newFrom > newTo) {
+      $('editClassError').textContent = 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.';
+      return;
+    }
+    if (newFrom) sub.from = newFrom;
+    if (newTo) sub.to = newTo;
+    if (newFrom || newTo) {
+      appState.rules.filter(x => x.sid === r.sid).forEach(x => {
+        if (newFrom) x.from = newFrom;
+        if (newTo) x.to = newTo;
+      });
+    }
+
     if (scope === 'one') {
       // 1. Chỉ ngày này
       r.moved = r.moved || {};
@@ -4024,7 +4039,16 @@ legend {
         x.slot = slot;
         x.room = room;
         x.moved = {};
+        if (newFrom) x.from = newFrom;
+        if (newTo) x.to = newTo;
       });
+      // Cập nhật cả các rule khác của môn này nếu thay đổi ngày bắt đầu/kết thúc
+      if (newFrom || newTo) {
+        appState.rules.filter(x => x.sid === r.sid).forEach(x => {
+          if (newFrom) x.from = newFrom;
+          if (newTo) x.to = newTo;
+        });
+      }
       sub.name = name;
       if (code) sub.code = code;
     }
@@ -4107,18 +4131,24 @@ legend {
 
   function detectSlot(text) {
     if (!text) return null;
-    const t = text.toLowerCase();
-    const sm = t.match(/(?:tiết|slot)\s*:?\s*(\d)/i);
+    const t = text.toLowerCase().trim();
+
+    // 1. Khớp từ khóa: Slot 1, Tiết 1, Ca 1, Slot: 1, Ca: 1, hoặc số đứng đầu dạng 1 (07:30-09:00)
+    const sm = t.match(/\b(?:tiết|slot|ca)\s*:?\s*(\d)\b/i) || t.match(/^(\d)\s*\([0-2]?\d:[0-5]\d/i) || t.match(/\b(\d)\s*\([0-2]?\d:[0-5]\d/i);
     if (sm) return +sm[1];
 
-    if (/0?7:00|0?7:30/.test(t) && /0?8:30|0?9:00/.test(t)) return 1;
-    if (/0?8:45|0?9:15/.test(t) && /10:15|10:45/.test(t)) return 2;
-    if (/10:30|11:00/.test(t) && /12:00|12:30/.test(t)) return 3;
-    if (/12:30|13:00/.test(t) && /14:00|14:30/.test(t)) return 4;
-    if (/14:15|14:45/.test(t) && /15:45|16:15/.test(t)) return 5;
-    if (/16:00|16:30/.test(t) && /17:30|18:00/.test(t)) return 6;
-    if (/17:45|18:00/.test(t) && /19:15|19:30/.test(t)) return 7;
-    if (/19:30/.test(t) && /21:00/.test(t)) return 8;
+    // 2. Dòng chỉ chứa duy nhất 1 chữ số từ 1 đến 8
+    if (/^[1-8]$/.test(t)) return +t;
+
+    // 3. Khung giờ thực tế của các cơ sở FPT (Hà Nội, Hòa Lạc, TP.HCM, Đà Nẵng, Cần Thơ, Quy Nhơn, Poly)
+    if (/0?7:00|0?7:15|0?7:30/.test(t) && /0?8:30|0?8:45|0?9:00|0?9:15/.test(t)) return 1;
+    if (/0?8:45|0?9:00|0?9:15|0?9:30/.test(t) && /10:15|10:45|11:00|11:30/.test(t)) return 2;
+    if (/10:30|11:00|11:15/.test(t) && /12:00|12:30|12:45/.test(t)) return 3;
+    if (/12:30|12:45|13:00/.test(t) && /14:00|14:15|14:30|15:00/.test(t)) return 4;
+    if (/14:15|14:30|14:45|15:15/.test(t) && /15:45|16:00|16:15|17:15/.test(t)) return 5;
+    if (/16:00|16:15|16:30/.test(t) && /17:30|17:45|18:00|19:30/.test(t)) return 6;
+    if (/17:45|18:00|19:45/.test(t) && /19:15|19:30|21:00|21:45/.test(t)) return 7;
+    if (/19:30|19:45|20:00/.test(t) && /21:00|21:15|21:30/.test(t)) return 8;
 
     return null;
   }
@@ -4128,11 +4158,11 @@ legend {
     const rawText = (typeof node === 'string') ? node : (node.textContent || '');
     const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
     for (const line of lines) {
-      if (line !== code && !/^(slot|tiết|phòng|room|at\b|\(attend\)|\(absent\))/i.test(line) && line.length > 2 && line.length < 80) {
+      if (line !== code && !/^(slot|tiết|ca|phòng|room|at\b|\(attend\)|\(absent\)|\(not yet\))/i.test(line) && line.length > 2 && line.length < 80) {
         if (/[A-Za-zÀ-ỹ]{2}/.test(line)) return line;
       }
     }
-    const rest = lines.join(' ').replace(new RegExp(code, 'g'), ' ').replace(/[A-Za-z0-9]+_\w+/g, ' ')
+    const rest = lines.join(' ').replace(new RegExp(code, 'gi'), ' ').replace(/[A-Za-z0-9]+_\w+/g, ' ')
       .replace(/\d{1,2}:\d{2}/g, ' ').replace(/cố định/gi, ' ').replace(/\s+/g, ' ').replace(/^[\s\-–|:]+|[\s\-–|:]+$/g, '').trim();
     return (rest.length > 2 && rest.length < 80 && /[A-Za-zÀ-ỹ]{2}/.test(rest)) ? rest : fallback;
   }
@@ -4143,7 +4173,27 @@ legend {
     const seen = new Set();
     const currentYear = currentMonday.slice(0, 4);
 
-    // 1. Phân tích bảng HTML bằng ma trận 2D (Grid honoring rowspan & colspan)
+    // Xác định 7 ngày trong tuần hiện tại (Thứ 2 -> Chủ nhật)
+    let baseMonday = currentMonday;
+    const wm = content.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\s*(?:to|đến|-)\s*(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/i);
+    if (wm) {
+      const yr = wm[3] || currentYear;
+      baseMonday = `${yr}-${pad(+wm[2])}-${pad(+wm[1])}`;
+    } else {
+      const firstDm = content.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\b/);
+      if (firstDm && !firstDm[0].includes('2.0')) {
+        const yr = firstDm[3] || currentYear;
+        baseMonday = `${yr}-${pad(+firstDm[2])}-${pad(+firstDm[1])}`;
+      }
+    }
+    const weekDates = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(baseMonday, i));
+
+    // Regex mã môn học linh hoạt: hỗ trợ cả viết thường và đuôi c/m (VD: PRF192, SWE201c, SSL101c, VOV114)
+    const codeRegex = /\b([A-Za-z]{2,5}\d{3}[A-Za-z]?)(?:[\-_][A-Za-z0-9_\-]+)?\b/;
+
+    // =========================================================================
+    // 1. Phân tích bảng HTML (Grid matrix 2D honoring rowspan & colspan)
+    // =========================================================================
     if (content.includes('<table') || content.includes('<tr') || content.includes('<td') || content.includes('<th')) {
       const doc = new DOMParser().parseFromString(content, 'text/html');
       const tables = doc.querySelectorAll('table');
@@ -4153,7 +4203,6 @@ legend {
         const rows = tbl.querySelectorAll('tr');
         if (!rows.length) return;
 
-        // Xây dựng ma trận 2D hỗ trợ rowspan và colspan
         const grid = {};
         let maxC = 0;
         rows.forEach((tr, r) => {
@@ -4176,7 +4225,6 @@ legend {
           });
         });
 
-        // Tìm cột ngày tương ứng (bỏ qua dropdown Year/Week)
         const colDates = {};
         for (let r = 0; r < rows.length; r++) {
           for (let c = 0; c < maxC; c++) {
@@ -4200,7 +4248,6 @@ legend {
           }
         }
 
-        // 1A. Định dạng lưới tuần (Weekly Timetable)
         if (Object.keys(colDates).length >= 2) {
           for (let r = 0; r < rows.length; r++) {
             const slotItem = grid[`${r},0`];
@@ -4209,18 +4256,18 @@ legend {
             if (!slot) continue;
 
             for (let c = 1; c < maxC; c++) {
-              const date = colDates[c];
+              const date = colDates[c] || weekDates[c - 1];
               if (!date) continue;
               const cellItem = grid[`${r},${c}`];
               if (!cellItem) continue;
               const text = cellItem.text;
               if (!text || text === '-' || text.length < 3) continue;
 
-              const codeMatch = text.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+              const codeMatch = text.match(codeRegex);
               if (codeMatch) {
-                const code = codeMatch[1];
+                const code = codeMatch[1].toUpperCase();
                 const roomMatch = text.match(/\b(?:at|phòng|room)\b\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i) || text.match(/\b([A-Z]{1,3}-\d{2,4}[A-Za-z]?|[A-Z]{1,2}\d{3}|\d{3,4})\b/);
-                const room = roomMatch ? roomMatch[1] : '';
+                const room = (roomMatch && roomMatch[1] !== code) ? roomMatch[1] : '';
                 const name = extractCourseName(cellItem.cell, code, code);
                 const key = `${date}|${slot}|${code}`;
                 if (!seen.has(key)) {
@@ -4231,19 +4278,19 @@ legend {
             }
           }
         } else {
-          // 1B. Định dạng danh sách điểm danh / kỳ học (ViewAttendstudent)
+          // List / Attendance table (ViewAttendstudent)
           rows.forEach((tr, r) => {
             let rowText = '';
             for (let c = 0; c < maxC; c++) {
               const item = grid[`${r},${c}`];
               if (item) rowText += ' ' + item.text;
             }
-            const codeMatch = rowText.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+            const codeMatch = rowText.match(codeRegex);
             const slot = detectSlot(rowText);
             const dm = rowText.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\b/) || rowText.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
 
             if (codeMatch && slot && dm) {
-              const code = codeMatch[1];
+              const code = codeMatch[1].toUpperCase();
               let date = '';
               if (dm[0].includes('-')) {
                 date = dm[0];
@@ -4252,7 +4299,7 @@ legend {
                 date = `${yr}-${pad(+dm[2])}-${pad(+dm[1])}`;
               }
               const roomMatch = rowText.match(/\b(?:at|phòng|room)\b\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i) || rowText.match(/\b([A-Z]{1,3}-\d{2,4}[A-Za-z]?|[A-Z]{1,2}\d{3}|\d{3,4})\b/);
-              const room = roomMatch ? roomMatch[1] : '';
+              const room = (roomMatch && roomMatch[1] !== code) ? roomMatch[1] : '';
               const name = code;
               const key = `${date}|${slot}|${code}`;
               if (!seen.has(key)) {
@@ -4265,58 +4312,117 @@ legend {
       });
     }
 
-    // 2. Phân tích văn bản thô (khi bôi đen copy từ trình duyệt)
+    // =========================================================================
+    // 2. Phân tích văn bản thô (Plain Text - Copy từ FAP hoặc các website)
+    // =========================================================================
     if (!out.length) {
-      // 2A. Bảng phân tách bởi tab (\t)
-      const tabLines = content.split('\n').filter(l => l.includes('\t')).map(l => l.split('\t').map(c => c.trim()));
-      if (tabLines.length > 0) {
-        const colDates = {};
-        tabLines.forEach(row => {
-          row.forEach((cell, ci) => {
-            if (!colDates[ci]) {
-              const dm = cell.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\b/);
-              if (dm && !cell.toLowerCase().includes('to ')) {
-                const yr = dm[3] || currentYear;
-                colDates[ci] = `${yr}-${pad(+dm[2])}-${pad(+dm[1])}`;
+      // 2A. Phân tích theo cấu trúc phân đoạn Slot của FAP (Slot 1..8 x 7 ngày Thứ 2..Chủ nhật)
+      const slotMatches = [...content.matchAll(/(?:^|\n)\s*(?:Slot|Tiết|Ca)\s*(\d)[^\n]*/gi)];
+      if (slotMatches.length > 0) {
+        slotMatches.forEach((m, idx) => {
+          const slotNum = parseInt(m[1]);
+          const secStart = m.index + m[0].length;
+          const secEnd = (idx + 1 < slotMatches.length) ? slotMatches[idx + 1].index : content.length;
+          const secText = content.substring(secStart, secEnd);
+
+          const rawLines = secText.split('\n').map(l => l.trim()).filter(Boolean);
+          const cleanLines = rawLines.filter(l => !l.match(/^\(?[0-2]?\d:[0-5]\d\s*[-–]\s*[0-2]?\d:[0-5]\d\)?$/));
+
+          // Nhóm các dòng thành từng ô của 7 ngày (phân tách bởi '-' hoặc khi gặp mã môn mới)
+          const entries = [];
+          let curEntry = [];
+          cleanLines.forEach(l => {
+            if (l === '-' || l === '- -' || l === '—') {
+              if (curEntry.length > 0) {
+                entries.push(curEntry.join(' '));
+                curEntry = [];
+              }
+              entries.push('-');
+            } else if (codeRegex.test(l) && curEntry.length > 0) {
+              entries.push(curEntry.join(' '));
+              curEntry = [l];
+            } else {
+              curEntry.push(l);
+            }
+          });
+          if (curEntry.length > 0) entries.push(curEntry.join(' '));
+
+          // Ánh xạ từng ô vào 7 ngày trong tuần
+          entries.slice(0, 7).forEach((ent, dayIdx) => {
+            const cm = ent.match(codeRegex);
+            if (cm) {
+              const code = cm[1].toUpperCase();
+              const date = weekDates[dayIdx] || weekDates[0];
+              let room = '';
+              const tokens = ent.split(/\s+/);
+              for (const tok of tokens) {
+                if (tok.toUpperCase() !== code && tok.match(/^([A-Z]{1,3}-\d{2,4}[A-Za-z]?|[A-Z]{1,2}\d{3}|\d{3,4})$/i)) {
+                  room = tok;
+                  break;
+                }
+              }
+              const key = `${date}|${slotNum}|${code}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                out.push({ date, slot: slotNum, code, name: code, room, selected: true });
               }
             }
           });
         });
+      }
 
-        if (Object.keys(colDates).length >= 2) {
+      // 2B. Bảng phân tách bởi tab (\t)
+      if (!out.length) {
+        const tabLines = content.split('\n').filter(l => l.includes('\t')).map(l => l.split('\t').map(c => c.trim()));
+        if (tabLines.length > 0) {
+          const colDates = {};
           tabLines.forEach(row => {
-            const slot = detectSlot(row[0]);
-            if (!slot) return;
-            for (let ci = 1; ci < row.length; ci++) {
-              const date = colDates[ci];
-              if (!date) continue;
-              const cell = row[ci];
-              const codeMatch = cell.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
-              if (codeMatch) {
-                const code = codeMatch[1];
-                const roomMatch = cell.match(/\b(?:at|phòng|room)\b\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i) || cell.match(/\b([A-Z]{1,3}-\d{2,4}[A-Za-z]?|[A-Z]{1,2}\d{3}|\d{3,4})\b/);
-                const room = roomMatch ? roomMatch[1] : '';
-                const name = extractCourseName(cell, code, code);
-                const key = `${date}|${slot}|${code}`;
-                if (!seen.has(key)) {
-                  seen.add(key);
-                  out.push({ date, slot, code, name, room, selected: true });
+            row.forEach((cell, ci) => {
+              if (!colDates[ci]) {
+                const dm = cell.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\b/);
+                if (dm && !cell.toLowerCase().includes('to ')) {
+                  const yr = dm[3] || currentYear;
+                  colDates[ci] = `${yr}-${pad(+dm[2])}-${pad(+dm[1])}`;
                 }
               }
-            }
+            });
           });
+
+          if (Object.keys(colDates).length >= 2) {
+            tabLines.forEach(row => {
+              const slot = detectSlot(row[0]);
+              if (!slot) return;
+              for (let ci = 1; ci < row.length; ci++) {
+                const date = colDates[ci] || weekDates[ci - 1];
+                if (!date) continue;
+                const cell = row[ci];
+                const codeMatch = cell.match(codeRegex);
+                if (codeMatch) {
+                  const code = codeMatch[1].toUpperCase();
+                  const roomMatch = cell.match(/\b(?:at|phòng|room)\b\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i) || cell.match(/\b([A-Z]{1,3}-\d{2,4}[A-Za-z]?|[A-Z]{1,2}\d{3}|\d{3,4})\b/);
+                  const room = (roomMatch && roomMatch[1] !== code) ? roomMatch[1] : '';
+                  const name = extractCourseName(cell, code, code);
+                  const key = `${date}|${slot}|${code}`;
+                  if (!seen.has(key)) {
+                    seen.add(key);
+                    out.push({ date, slot, code, name, room, selected: true });
+                  }
+                }
+              }
+            });
+          }
         }
       }
 
-      // 2B. Khối văn bản liên tiếp hoặc dòng đơn lẻ
+      // 2C. Quét dòng tuần tự & khối ngữ cảnh (Contextual scanner)
       if (!out.length) {
         const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
-        let curDate = currentMonday;
+        let curDate = baseMonday;
         let curSlot = null;
 
         lines.forEach((line, i) => {
           const dm = line.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\b/) || line.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
-          if (dm && !line.toLowerCase().includes('to ')) {
+          if (dm && !line.toLowerCase().includes('to ') && !line.includes('2.0')) {
             if (dm[0].includes('-')) curDate = dm[0];
             else {
               const yr = dm[3] || currentYear;
@@ -4327,20 +4433,17 @@ legend {
           const s = detectSlot(line);
           if (s) curSlot = s;
 
-          const codeMatch = line.match(/\b([A-Z]{2,5}\d{3}[A-Z]?)\b/);
+          const codeMatch = line.match(codeRegex);
           if (codeMatch) {
-            const code = codeMatch[1];
+            const code = codeMatch[1].toUpperCase();
             const contextText = lines.slice(Math.max(0, i - 2), Math.min(lines.length, i + 3)).join(' ');
-            const slot = s || curSlot || detectSlot(contextText);
-            if (slot) {
-              const roomMatch = contextText.match(/\b(?:at|phòng|room)\b\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i) || contextText.match(/\b([A-Z]{1,3}-\d{2,4}[A-Za-z]?|[A-Z]{1,2}\d{3}|\d{3,4})\b/);
-              const room = roomMatch ? roomMatch[1] : '';
-              const name = code;
-              const key = `${curDate}|${slot}|${code}`;
-              if (!seen.has(key)) {
-                seen.add(key);
-                out.push({ date: curDate, slot, code, name, room, selected: true });
-              }
+            const slot = s || curSlot || detectSlot(contextText) || 1;
+            const roomMatch = contextText.match(/\b(?:at|phòng|room)\b\s*[:\-]?\s*([A-Za-z0-9.\-]+)/i) || contextText.match(/\b([A-Z]{1,3}-\d{2,4}[A-Za-z]?|[A-Z]{1,2}\d{3}|\d{3,4})\b/);
+            const room = (roomMatch && roomMatch[1] !== code) ? roomMatch[1] : '';
+            const key = `${curDate}|${slot}|${code}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              out.push({ date: curDate, slot, code, name: code, room, selected: true });
             }
           }
         });
@@ -4349,6 +4452,9 @@ legend {
 
     return out;
   }
+
+  // Expose to window for external scripts/testing
+  window.parseImportHtmlOrText = parseImportHtmlOrText;
 
   function processPastedImportContent(content) {
     if (!content || !content.trim()) return;
@@ -4377,7 +4483,6 @@ legend {
 
   async function readFromClipboard() {
     let content = '';
-    // Thử đọc HTML từ clipboard (nếu trình duyệt hỗ trợ)
     if (navigator.clipboard && navigator.clipboard.read) {
       try {
         const items = await navigator.clipboard.read();
@@ -4391,7 +4496,6 @@ legend {
       } catch (e) {}
     }
 
-    // Fallback sang readText()
     if (!content && navigator.clipboard && navigator.clipboard.readText) {
       try {
         content = await navigator.clipboard.readText();
@@ -4507,8 +4611,8 @@ legend {
         wd: g.wd,
         slot: g.slot,
         room: g.room,
-        from: null,
-        to: null,
+        from: bFrom,
+        to: bTo,
         skip,
         moved: {},
         src: 'imp'
