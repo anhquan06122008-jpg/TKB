@@ -3135,7 +3135,7 @@ legend {
       if (authToken && currentUser) {
         // User is logged in: Hide Gate, Show Main App!
         $('authGateScreen').style.display = 'none';
-        $('app').style.display = 'grid';
+        $('app').style.display = 'flex';
         updateAuthUI();
         pullCloudSync();
       } else {
@@ -3184,7 +3184,7 @@ legend {
           localStorage.setItem(AUTH_TOKEN_KEY, authToken);
           localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
           $('authGateScreen').style.display = 'none';
-          $('app').style.display = 'grid';
+          $('app').style.display = 'flex';
           updateAuthUI();
           pullCloudSync();
         } else {
@@ -3223,7 +3223,7 @@ legend {
           localStorage.setItem(AUTH_TOKEN_KEY, authToken);
           localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
           $('authGateScreen').style.display = 'none';
-          $('app').style.display = 'grid';
+          $('app').style.display = 'flex';
           updateAuthUI();
           pushCloudSync();
         } else {
@@ -3249,7 +3249,7 @@ legend {
       localStorage.setItem(AUTH_TOKEN_KEY, authToken);
       localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
       $('authGateScreen').style.display = 'none';
-      $('app').style.display = 'grid';
+      $('app').style.display = 'flex';
       updateAuthUI();
       renderSchedule();
       updateDashboard();
@@ -3493,7 +3493,9 @@ legend {
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(AUTH_USER_KEY);
         updateAuthUI();
-        alert('Đã đăng xuất.');
+        $('authGateScreen').style.display = 'flex';
+        $('app').style.display = 'none';
+        showToast('Đã đăng xuất tài khoản thành công.');
       }
     }
     $('userLogoutBtn').addEventListener('click', logoutUser);
