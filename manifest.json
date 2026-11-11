@@ -1,0 +1,19 @@
+{
+  "name": "QLHT — Quản Lý Thời Khóa Biểu & Học Tập",
+  "short_name": "QLHT",
+  "description": "Ứng dụng quản lý thời khóa biểu, lịch học và công việc cá nhân chạy ngoại tuyến 24/7 không cần server.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

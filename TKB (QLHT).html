@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="QLHT">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.json">
 <title>QLHT — Hệ Thống Quản Lý Thời Khóa Biểu & Học Tập</title>
 <!-- OCR Engine CDN (Client-side only, optional for image scanning) -->
 <script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
@@ -1259,8 +1265,16 @@ legend {
           <button type="button" class="btn primary" id="gateSaveApiBtn" style="font-size:11px; padding:4px 8px;">Lưu</button>
         </div>
       </div>
+      <div style="margin-top:12px; display:grid; gap:6px; text-align:center;">
+        <button type="button" class="btn" id="gateStandaloneBtn" style="width:100%; padding:10px 12px; font-weight:700; font-size:13px; background:rgba(16,185,129,0.14); border:1px solid var(--success); color:var(--success); justify-content:center; gap:6px; border-radius:var(--radius-sm);">
+          📱 Vào xem TKB ngay (Không cần bật Server)
+        </button>
+        <div style="font-size:11px; color:var(--text-muted); line-height:1.4;">
+          Lưu trực tiếp trên điện thoại / trình duyệt, xem được 24/7 kể cả khi tắt laptop.
+        </div>
+      </div>
       <div style="margin-top:8px;">
-        Chưa có server? <a href="#" id="gateOfflineGuestBtn" style="color:var(--primary); font-weight:600; text-decoration:underline;">Dùng thử Chế độ Ngoại tuyến (Khách)</a>
+        Hoặc đặt tên riêng: <a href="#" id="gateOfflineGuestBtn" style="color:var(--primary); font-weight:600; text-decoration:underline;">Dùng thử Chế độ Ngoại tuyến (Khách)</a>
       </div>
     </div>
   </div>
@@ -1336,6 +1350,9 @@ legend {
         <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-top: 2px;">
           <span id="syncStatusBadge" style="color: var(--success); font-weight: 600;">🟢 Đã đồng bộ</span>
           <button type="button" id="manualSyncBtn" title="Đồng bộ ngay" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 11px; font-weight: 600;">🔄 Sync</button>
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 4px;">
+          <button type="button" class="btn" id="openPhoneSyncSidebarBtn" style="flex: 1; font-size: 11px; padding: 5px 6px; border-color: var(--primary); color: var(--primary); font-weight: 700;" title="Tạo link hoặc mã QR để xem lịch 24/7 trên điện thoại mà không cần bật laptop">📱 Chuyển sang ĐT</button>
         </div>
         <div style="display: flex; gap: 6px; margin-top: 4px;">
           <button type="button" class="btn" id="openChangePwdBtn" style="flex: 1; font-size: 11px; padding: 4px 6px;">Đổi pass</button>
@@ -1571,8 +1588,9 @@ legend {
           </label>
 
           <fieldset>
-            <legend>Sao lưu & Đồng bộ lịch ngoài</legend>
+            <legend>Sao lưu &amp; Đồng bộ lịch ngoài</legend>
             <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:8px;">
+              <button type="button" class="btn primary" id="openPhoneSyncSettingsBtn">📱 Chuyển lịch sang Điện thoại (Không cần Server)</button>
               <button type="button" class="btn" id="exportIcsBtn">📅 Xuất ra Google/Apple Calendar (.ics)</button>
               <button type="button" class="btn" id="exportJsonBtn">💾 Xuất sao lưu JSON</button>
               <button type="button" class="btn" id="importJsonBtn">📂 Nhập sao lưu JSON</button>
@@ -2038,6 +2056,34 @@ legend {
   </form>
 </dialog>
 
+<!-- 9. PHONE ZERO-SERVER TRANSFER MODAL (URL HASH / QR SYNC) -->
+<dialog id="phoneSyncModal" style="max-width: 480px;" aria-labelledby="phoneSyncModalTitle">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+    <h2 id="phoneSyncModalTitle" style="margin:0; font-size:18px;">📱 Chuyển lịch sang Điện thoại</h2>
+    <button type="button" class="btn" id="closePhoneSyncTopBtn" style="padding:2px 8px; font-size:12px;" title="Đóng">✕</button>
+  </div>
+  <p style="font-size:13px; color:var(--text-muted); margin:0 0 12px 0; line-height:1.5;">
+    Dữ liệu thời khóa biểu được nén thẳng vào đường link bên dưới. Mở link trên <b>iPhone / Android</b> sẽ tự động lưu lịch vào máy — <b>xem được 24/7 ngay cả khi đã tắt laptop!</b>
+  </p>
+  <div id="phoneSyncInfo" style="padding:10px 12px; border-radius:var(--radius-sm); background:rgba(16,185,129,0.1); border:1px solid var(--success); font-size:12.5px; color:var(--text-main); margin-bottom:12px;">
+    ⏳ Đang tạo mã đồng bộ...
+  </div>
+  <div id="phoneSyncQrWrap" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px; background:#ffffff; border-radius:var(--radius-md); margin-bottom:12px;">
+    <img id="phoneSyncQrImg" alt="Mã QR đồng bộ sang điện thoại" style="width:184px; height:184px; display:block; border-radius:6px;">
+    <div id="phoneSyncQrNote" style="font-size:11px; color:#334155; margin-top:6px; font-weight:600; text-align:center;">Quét bằng Camera iPhone để mở ngay</div>
+  </div>
+  <label style="font-size:12px; font-weight:600; display:block; margin-bottom:10px;">Link đồng bộ (tự mở trên GitHub Pages HTTPS):
+    <input type="text" id="phoneSyncUrlInput" readonly style="width:100%; margin-top:4px; font-size:11.5px; font-family:monospace;">
+  </label>
+  <div style="font-size:11.5px; color:var(--text-muted); line-height:1.5; background:var(--bg-input); padding:8px 10px; border-radius:var(--radius-sm); margin-bottom:12px;">
+    💡 <b>Mẹo iPhone:</b> Bấm <b>Copy Link</b> → tự gửi qua <b>Zalo / Messenger</b> → mở bằng <b>Safari</b> → bấm nút <b>Chia sẻ (□↑) → Thêm vào MH chính</b> để dùng như app ngay cả khi mất Wi-Fi!
+  </div>
+  <div class="dialog-actions" style="display:flex; gap:8px; justify-content:flex-end;">
+    <button type="button" class="btn" id="closePhoneSyncBtn">Đóng</button>
+    <button type="button" class="btn primary" id="copyPhoneSyncBtn">📋 Copy Link gửi sang ĐT</button>
+  </div>
+</dialog>
+
 <!-- ==========================================================================
      CORE APPLICATION JAVASCRIPT
      ========================================================================== -->
@@ -2228,8 +2274,106 @@ legend {
     return 'http://localhost:8080';
   }
 
+  const PUBLIC_PAGES_URL = 'https://anhquan06122008-jpg.github.io/TKB/';
+
+  function isOfflineSession() {
+    return !!(
+      (currentUser && currentUser.isOffline) ||
+      (authToken && String(authToken).startsWith('offline_'))
+    );
+  }
+
+  function bytesToBase64Url(bytes) {
+    let bin = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function base64UrlToBytes(b64url) {
+    let b64 = String(b64url).replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  async function encodeSyncPayload(obj) {
+    const jsonBytes = new TextEncoder().encode(JSON.stringify(obj));
+    if (typeof CompressionStream === 'function') {
+      try {
+        const cs = new CompressionStream('deflate-raw');
+        const writer = cs.writable.getWriter();
+        writer.write(jsonBytes);
+        writer.close();
+        const compressed = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+        return 'z1.' + bytesToBase64Url(compressed);
+      } catch (e) {
+        // Fall through to uncompressed base64url
+      }
+    }
+    return 'u1.' + bytesToBase64Url(jsonBytes);
+  }
+
+  async function decodeSyncPayload(token) {
+    if (!token || typeof token !== 'string') {
+      throw new Error('Mã đồng bộ trống.');
+    }
+    if (token.startsWith('z1.')) {
+      if (typeof DecompressionStream !== 'function') {
+        throw new Error('Trình duyệt quá cũ, không hỗ trợ giải nén z1.');
+      }
+      const bytes = base64UrlToBytes(token.slice(3));
+      const ds = new DecompressionStream('deflate-raw');
+      const writer = ds.writable.getWriter();
+      writer.write(bytes);
+      writer.close();
+      const plain = new Uint8Array(await new Response(ds.readable).arrayBuffer());
+      return JSON.parse(new TextDecoder().decode(plain));
+    }
+    if (token.startsWith('u1.')) {
+      const bytes = base64UrlToBytes(token.slice(3));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+    return JSON.parse(new TextDecoder().decode(base64UrlToBytes(token)));
+  }
+
+  function getPhoneSyncBaseUrl() {
+    const host = window.location.hostname || '';
+    const isPrivateOrLocal = !window.location.protocol.startsWith('http') ||
+      /^(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)$/i.test(host);
+    if (isPrivateOrLocal) {
+      return PUBLIC_PAGES_URL;
+    }
+    return window.location.origin + window.location.pathname;
+  }
+
+  function activateOfflineSession(displayName) {
+    const safeName = (displayName && String(displayName).trim()) || 'Học viên';
+    currentUser = {
+      id: 'offline_' + Date.now(),
+      username: 'offline',
+      displayName: safeName,
+      isOffline: true
+    };
+    authToken = 'offline_local_token';
+    localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
+    $('authGateScreen').style.display = 'none';
+    $('app').style.display = 'flex';
+    updateAuthUI();
+    renderSchedule();
+    updateDashboard();
+  }
+
   function queueCloudSync() {
-    if (!authToken) return;
+    if (!authToken || isOfflineSession()) {
+      if (isOfflineSession()) updateAuthUI();
+      return;
+    }
     const badge = $('syncStatusBadge');
     if (badge) {
       badge.textContent = '🔄 Đang đồng bộ...';
@@ -2241,6 +2385,14 @@ legend {
 
   async function pushCloudSync() {
     if (!authToken) return;
+    if (isOfflineSession()) {
+      const badge = $('syncStatusBadge');
+      if (badge) {
+        badge.textContent = '💾 Lưu tại máy (Offline)';
+        badge.style.color = 'var(--success)';
+      }
+      return;
+    }
     try {
       const res = await fetch(`${getApiBaseUrl()}/api/sync/push`, {
         method: 'POST',
@@ -2271,6 +2423,13 @@ legend {
   async function pullCloudSync() {
     if (!authToken) return;
     const badge = $('syncStatusBadge');
+    if (isOfflineSession()) {
+      if (badge) {
+        badge.textContent = '💾 Lưu tại máy (Offline)';
+        badge.style.color = 'var(--success)';
+      }
+      return;
+    }
     if (badge) {
       badge.textContent = '🔄 Đang tải...';
       badge.style.color = 'var(--warning)';
@@ -2309,12 +2468,12 @@ legend {
       $('userLoggedOutView').style.display = 'none';
       $('userLoggedInView').style.display = 'flex';
       if (currentUser.isOffline) {
-        $('userDisplayNameText').textContent = (currentUser.displayName || currentUser.username) + ' (Cục bộ)';
-        $('userEmailText').textContent = 'Hồ sơ thiết bị (Ngoại tuyến)';
+        $('userDisplayNameText').textContent = (currentUser.displayName || currentUser.username) + ' (Tại máy)';
+        $('userEmailText').textContent = 'Không cần Server · Lưu 24/7';
         const badge = $('syncStatusBadge');
         if (badge) {
-          badge.textContent = '💾 Cục bộ (Offline)';
-          badge.style.color = 'var(--text-muted)';
+          badge.textContent = '💾 Lưu tại máy (Offline)';
+          badge.style.color = 'var(--success)';
         }
       } else {
         $('userDisplayNameText').textContent = currentUser.displayName || currentUser.username;
@@ -2754,7 +2913,7 @@ legend {
         <div class="agenda-item" style="--subj-color: #f59e0b;">
           <div class="agenda-item-left">
             <span class="agenda-item-title">📝 ${esc(t.title)}</span>
-            <span class="agenda-item-sub">${t.priority.toUpperCase()} priority</span>
+            <span class="agenda-item-sub">${(t.priority || 'medium').toUpperCase()} priority</span>
           </div>
           <div class="agenda-item-time">${t.deadline ? t.deadline.replace('T', ' ') : 'Sớm'}</div>
         </div>
@@ -3042,8 +3201,58 @@ legend {
 
   // INITIALIZATION & EVENT LISTENERS
   // ==========================================================================
-  function init() {
+  async function handleUrlSyncImport() {
+    const hash = window.location.hash || '';
+    const match = hash.match(/^#sync=([^&]+)/);
+    if (!match) return false;
+    let token = match[1];
+    try {
+      token = decodeURIComponent(token);
+    } catch (e) { /* keep raw token */ }
+    try {
+      const decoded = await decodeSyncPayload(token);
+      const rawState = decoded && decoded.data ? decoded.data : decoded;
+      if (!rawState || !Array.isArray(rawState.subjects) || !Array.isArray(rawState.rules)) {
+        throw new Error('Dữ liệu đồng bộ không hợp lệ.');
+      }
+      appState = upgradeData(rawState);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+
+      const displayName = (decoded && typeof decoded.u === 'string' && decoded.u.trim())
+        ? decoded.u.trim()
+        : ((currentUser && currentUser.displayName) || 'Học viên');
+
+      currentUser = {
+        id: 'offline_sync_' + Date.now(),
+        username: 'offline_sync',
+        displayName: displayName,
+        isOffline: true
+      };
+      authToken = 'offline_sync_token';
+      localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
+
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      } else {
+        window.location.hash = '';
+      }
+      showToast(`Đã nạp ${appState.subjects.length} môn (${appState.rules.length} lịch) vào máy này! Dùng được ngay kể cả khi tắt laptop.`, 'success');
+      return true;
+    } catch (err) {
+      console.error('URL sync import error:', err);
+      showToast('Link đồng bộ không hợp lệ hoặc bị cắt bớt: ' + (err.message || err), 'error');
+      return false;
+    }
+  }
+
+  async function init() {
     loadStorage();
+    await handleUrlSyncImport();
+
+    if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
 
     // Initialize viewing Monday (Asia/Ho_Chi_Minh real-time)
     currentMonday = mondayKey(todayKey());
@@ -3601,25 +3810,21 @@ legend {
       }
     });
 
+    // Gate Standalone Mode (Instant 1-click zero-server entry)
+    if ($('gateStandaloneBtn')) {
+      $('gateStandaloneBtn').addEventListener('click', () => {
+        const savedName = (currentUser && currentUser.displayName) || 'Cá nhân';
+        activateOfflineSession(savedName);
+        showToast('Đã vào chế độ Lưu tại máy. Dùng được 24/7 không cần bật server!', 'success');
+      });
+    }
+
     // Gate Offline Guest Mode
     $('gateOfflineGuestBtn').addEventListener('click', e => {
       e.preventDefault();
       const name = prompt('Nhập tên của bạn để bắt đầu:', 'Học viên');
       if (name === null) return;
-      currentUser = {
-        id: 'guest_' + Date.now(),
-        username: 'khach',
-        displayName: name.trim() || 'Học viên',
-        isOffline: true
-      };
-      authToken = 'offline_guest_token';
-      localStorage.setItem(AUTH_TOKEN_KEY, authToken);
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
-      $('authGateScreen').style.display = 'none';
-      $('app').style.display = 'flex';
-      updateAuthUI();
-      renderSchedule();
-      updateDashboard();
+      activateOfflineSession(name);
     });
 
     // Gate API URL Toggle & Save
@@ -3739,15 +3944,7 @@ legend {
       const name = prompt('Nhập tên hiển thị của bạn (Ví dụ: Anh Quân):', (currentUser && currentUser.displayName) || 'Anh Quân');
       if (name === null) return;
       const displayName = name.trim() || 'Học viên';
-      currentUser = {
-        id: 'local_' + Date.now(),
-        username: 'local_user',
-        email: 'local@device',
-        displayName: displayName,
-        isOffline: true
-      };
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
-      updateAuthUI();
+      activateOfflineSession(displayName);
       $('authModal').close();
       alert(`Đã kích hoạt Hồ sơ Cục bộ cho "${displayName}". Mọi dữ liệu lịch học sẽ được lưu an toàn trên máy của bạn.`);
     });
@@ -3849,7 +4046,7 @@ legend {
     // Logout Function
     function logoutUser() {
       if (confirm('Bạn có chắc chắn muốn đăng xuất không? Dữ liệu lịch trên máy vẫn được giữ nguyên.')) {
-        if (authToken) {
+        if (authToken && !isOfflineSession()) {
           fetch(`${getApiBaseUrl()}/api/auth/logout`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${authToken}` }
@@ -3868,12 +4065,116 @@ legend {
     $('userLogoutBtn').addEventListener('click', logoutUser);
 
     $('manualSyncBtn').addEventListener('click', () => {
+      if (isOfflineSession()) {
+        showToast('Đang ở chế độ Lưu tại máy (Offline). Bấm "📱 Chuyển sang ĐT" nếu muốn đưa lịch sang điện thoại!', 'info');
+        return;
+      }
       pullCloudSync();
       pushCloudSync();
     });
 
+    // Phone Zero-Server Sync Modal Handlers
+    async function openPhoneSyncModal() {
+      const modal = $('phoneSyncModal');
+      const info = $('phoneSyncInfo');
+      const urlInput = $('phoneSyncUrlInput');
+      const qrImg = $('phoneSyncQrImg');
+      const qrWrap = $('phoneSyncQrWrap');
+      const qrNote = $('phoneSyncQrNote');
+      if (!modal || !info || !urlInput) return;
+
+      info.style.borderColor = 'var(--success)';
+      info.style.background = 'rgba(16,185,129,0.1)';
+      info.innerHTML = '⏳ Đang nén dữ liệu thời khóa biểu...';
+      urlInput.value = '';
+      if (qrWrap) qrWrap.style.display = 'flex';
+      modal.showModal();
+
+      const subjectsCount = (appState && Array.isArray(appState.subjects)) ? appState.subjects.length : 0;
+      const rulesCount = (appState && Array.isArray(appState.rules)) ? appState.rules.length : 0;
+      const payload = {
+        v: 3,
+        u: (currentUser && (currentUser.displayName || currentUser.username)) || 'Học viên',
+        data: appState
+      };
+
+      const token = await encodeSyncPayload(payload);
+      const syncUrl = getPhoneSyncBaseUrl() + '#sync=' + token;
+      urlInput.value = syncUrl;
+
+      if (subjectsCount === 0 && rulesCount === 0) {
+        info.style.borderColor = 'var(--warning)';
+        info.style.background = 'rgba(245,158,11,0.12)';
+        info.innerHTML = `⚠️ Hiện đang có <b>0 môn học</b>. Hãy chắc chắn bạn đang thấy đủ thời khóa biểu trên màn hình trước khi gửi sang điện thoại nhé!`;
+      } else {
+        info.style.borderColor = 'var(--success)';
+        info.style.background = 'rgba(16,185,129,0.1)';
+        info.innerHTML = `✅ Đã đóng gói <b>${subjectsCount} môn học</b> (${rulesCount} lịch học) · Độ dài link: <b>${syncUrl.length}</b> ký tự.`;
+      }
+
+      if (qrImg && qrWrap) {
+        if (syncUrl.length <= 2400 && navigator.onLine !== false) {
+          qrImg.style.display = 'block';
+          qrImg.onload = () => {
+            if (qrNote) qrNote.textContent = 'Quét bằng Camera iPhone để mở ngay';
+          };
+          qrImg.onerror = () => {
+            qrImg.style.display = 'none';
+            if (qrNote) qrNote.textContent = 'Không tải được ảnh QR (do mất mạng). Hãy dùng nút Copy Link bên dưới.';
+          };
+          qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=' + encodeURIComponent(syncUrl);
+        } else {
+          qrImg.style.display = 'none';
+          if (qrNote) {
+            qrNote.textContent = syncUrl.length > 2400
+              ? 'Lịch hơi dài để tạo QR — hãy bấm "Copy Link" gửi qua Zalo để mở trên điện thoại nhé!'
+              : 'Đang ngoại tuyến — hãy bấm "Copy Link" gửi sang điện thoại.';
+          }
+        }
+      }
+    }
+
+    if ($('openPhoneSyncSidebarBtn')) $('openPhoneSyncSidebarBtn').addEventListener('click', openPhoneSyncModal);
+    if ($('openPhoneSyncSettingsBtn')) $('openPhoneSyncSettingsBtn').addEventListener('click', openPhoneSyncModal);
+    if ($('closePhoneSyncBtn')) $('closePhoneSyncBtn').addEventListener('click', () => $('phoneSyncModal').close());
+    if ($('closePhoneSyncTopBtn')) $('closePhoneSyncTopBtn').addEventListener('click', () => $('phoneSyncModal').close());
+    if ($('copyPhoneSyncBtn')) {
+      $('copyPhoneSyncBtn').addEventListener('click', async () => {
+        const input = $('phoneSyncUrlInput');
+        const link = input ? input.value : '';
+        if (!link) return;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(link);
+          } else {
+            input.select();
+            document.execCommand('copy');
+          }
+          showToast('Đã copy Link đồng bộ! Dán gửi qua Zalo/Messenger để mở trên iPhone.', 'success');
+        } catch (err) {
+          input.select();
+          document.execCommand('copy');
+          showToast('Đã chọn link — bấm Ctrl+C nếu chưa tự copy.', 'info');
+        }
+      });
+    }
+
+    window.addEventListener('hashchange', () => {
+      handleUrlSyncImport().then(imported => {
+        if (imported) {
+          initAuthGate();
+          renderSchedule();
+          updateDashboard();
+        }
+      });
+    });
+
     // Change Password Handlers
     $('openChangePwdBtn').addEventListener('click', () => {
+      if (isOfflineSession()) {
+        showToast('Hồ sơ tại máy (Offline) không sử dụng mật khẩu server.', 'info');
+        return;
+      }
       $('cpError').textContent = '';
       $('changePasswordForm').reset();
       $('changePasswordModal').showModal();

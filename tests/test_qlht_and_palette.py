@@ -66,5 +66,42 @@ class TestQlhtAndPalette(unittest.TestCase):
         # Old destructive filter must not be present
         self.assertNotIn("pickedWds.includes(r.wd)", self.index_content)
 
+    def test_zero_server_offline_and_phone_sync(self):
+        """Zero-server usage: offline sync guards, URL #sync= transfer modal, PWA assets, and cloud config"""
+        import os
+        import json
+
+        # 1. Offline session guards & instant standalone entry
+        self.assertIn("function isOfflineSession()", self.index_content)
+        self.assertIn("💾 Lưu tại máy (Offline)", self.index_content)
+        self.assertIn('id="gateStandaloneBtn"', self.index_content)
+        self.assertIn("function activateOfflineSession(", self.index_content)
+
+        # 2. Zero-server URL hash (#sync=...) transfer engine & modal
+        self.assertIn('id="phoneSyncModal"', self.index_content)
+        self.assertIn('id="openPhoneSyncSidebarBtn"', self.index_content)
+        self.assertIn('id="openPhoneSyncSettingsBtn"', self.index_content)
+        self.assertIn("async function encodeSyncPayload(", self.index_content)
+        self.assertIn("async function decodeSyncPayload(", self.index_content)
+        self.assertIn("async function handleUrlSyncImport()", self.index_content)
+
+        # 3. PWA meta tags & supporting files
+        self.assertIn('<link rel="manifest" href="manifest.json">', self.index_content)
+        self.assertIn('apple-mobile-web-app-capable', self.index_content)
+        self.assertTrue(os.path.exists("manifest.json"))
+        self.assertTrue(os.path.exists("sw.js"))
+        self.assertTrue(os.path.exists("icon.svg"))
+        with open("manifest.json", "r", encoding="utf-8") as mf:
+            manifest = json.load(mf)
+        self.assertEqual(manifest.get("display"), "standalone")
+        self.assertEqual(manifest.get("short_name"), "QLHT")
+
+        # 4. Cloud deployment support (optional 24/7 server hosting)
+        self.assertTrue(os.path.exists("render.yaml"))
+        with open("server.py", "r", encoding="utf-8") as sf:
+            srv = sf.read()
+        self.assertIn('os.environ.get("PORT"', srv)
+        self.assertIn('os.environ.get("QLHT_DB_PATH")', srv)
+
 if __name__ == "__main__":
     unittest.main()

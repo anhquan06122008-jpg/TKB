@@ -19,7 +19,7 @@ import os
 import sys
 from datetime import datetime, timedelta, timezone
 
-DB_FILE = os.path.join(os.path.dirname(__file__), "database.db")
+DB_FILE = os.environ.get("QLHT_DB_PATH") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "database.db")
 DEFAULT_PORT = int(os.environ.get("PORT", 8080))
 
 # ==============================================================================
@@ -123,9 +123,17 @@ def get_authenticated_user(headers):
 # HTTP REQUEST HANDLER
 # ==============================================================================
 class EduMateHandler(http.server.SimpleHTTPRequestHandler):
+    extensions_map = {
+        **http.server.SimpleHTTPRequestHandler.extensions_map,
+        '.js': 'application/javascript; charset=utf-8',
+        '.json': 'application/json; charset=utf-8',
+        '.webmanifest': 'application/manifest+json; charset=utf-8',
+        '.svg': 'image/svg+xml',
+    }
+
     def __init__(self, *args, **kwargs):
         # Serve static files from workspace directory
-        super().__init__(*args, directory=os.path.dirname(__file__), **kwargs)
+        super().__init__(*args, directory=os.path.dirname(os.path.abspath(__file__)), **kwargs)
 
     def send_json(self, status_code, data):
         body = json.dumps(data, ensure_ascii=False).encode('utf-8')
@@ -416,5 +424,5 @@ def run_server(port=DEFAULT_PORT):
 
 if __name__ == "__main__":
     init_db()
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_PORT
+    port = int(os.environ.get("PORT", sys.argv[1] if len(sys.argv) > 1 else DEFAULT_PORT))
     run_server(port)
