@@ -40,12 +40,11 @@ class TestQlhtAndPalette(unittest.TestCase):
         self.assertIn("-webkit-overflow-scrolling: touch;", self.index_content)
 
     def test_requirement_3_10_color_palette(self):
-        """10 Standard Colors Palette must be defined and integrated into Add & Edit modals"""
-        # Palette must contain 10 colors
+        """Extended Color Palette (>=30 colors) & sync helpers must be integrated into Add & Edit modals"""
         palette_match = re.search(r'const PALETTE = \[([\s\S]*?)\];', self.index_content)
         self.assertIsNotNone(palette_match, "PALETTE definition must exist")
         hex_colors = re.findall(r"'#[0-9a-fA-F]{6}'", palette_match.group(1))
-        self.assertEqual(len(hex_colors), 10, f"PALETTE must contain exactly 10 colors, found {len(hex_colors)}")
+        self.assertGreaterEqual(len(hex_colors), 30, f"PALETTE must contain at least 30 colors, found {len(hex_colors)}")
 
         # Add modal swatch container & sync notice
         self.assertIn('id="courseColorPalette"', self.index_content)
@@ -59,6 +58,42 @@ class TestQlhtAndPalette(unittest.TestCase):
         # JavaScript helper functions
         self.assertIn('function renderColorPalette', self.index_content)
         self.assertIn('function syncAddModalColorFromExisting', self.index_content)
+
+    def test_requirement_course_integration_and_advanced_color_system(self):
+        """Master Prompt: Existing course selector, courseId binding, duplicate-code safety, >=30 colors, HEX picker, auto-assign, contrast, safe delete"""
+        # 1. Existing Course Selector + New Course toggle & 10-field Add Form
+        self.assertIn('id="modeExistingCourseBtn"', self.index_content)
+        self.assertIn('id="modeNewCourseBtn"', self.index_content)
+        self.assertIn('id="existingCourseSelect"', self.index_content)
+        self.assertIn('id="selectedCourseId"', self.index_content)
+        self.assertIn('id="newCourseLecturer"', self.index_content)
+        self.assertIn('id="newCourseNotes"', self.index_content)
+        self.assertIn('function applySelectedCourseToAddForm', self.index_content)
+        self.assertIn('function setAddCourseMode', self.index_content)
+
+        # 2. courseId linkage, migration & duplicate course code protection
+        self.assertIn('s.courseId', self.index_content)
+        self.assertIn('r.courseId', self.index_content)
+        self.assertIn('backup-pre-courseid', self.index_content)
+        self.assertIn('function findSubjectByIdentity', self.index_content)
+
+        # 3. Advanced Color Picker (>=30 colors, native color picker, HEX input, auto/random/reset, contrast)
+        self.assertIn('const COLOR_GROUPS = [', self.index_content)
+        self.assertIn('id="colorPickerModal"', self.index_content)
+        self.assertIn('id="cpkNativeInput"', self.index_content)
+        self.assertIn('id="cpkHexInput"', self.index_content)
+        self.assertIn('id="cpkAutoBtn"', self.index_content)
+        self.assertIn('id="cpkRandomBtn"', self.index_content)
+        self.assertIn('id="cpkResetBtn"', self.index_content)
+        self.assertIn('id="cpkLiveCardPreview"', self.index_content)
+        self.assertIn('function autoAssignCourseColor', self.index_content)
+        self.assertIn('function getContrastPaletteForBg', self.index_content)
+        self.assertIn('function normalizeHexColor', self.index_content)
+
+        # 4. Safe Subject Deletion Modal
+        self.assertIn('id="deleteCourseModal"', self.index_content)
+        self.assertIn('name="delCourseAction"', self.index_content)
+        self.assertIn('function handleConfirmDeleteCourse', self.index_content)
 
     def test_requirement_3_multi_slot_retention(self):
         """Adding a second slot for the same course on the same day must not delete the first slot"""

@@ -650,14 +650,14 @@ body {
   border-radius: var(--radius-md);
   padding: 8px 10px;
   cursor: pointer;
-  border: none;
+  border: 1px solid var(--pill-border, rgba(255, 255, 255, 0.14));
   text-align: left;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+  color: var(--pill-text, #ffffff);
   position: relative;
   overflow: hidden;
 }
@@ -678,7 +678,7 @@ body {
 }
 .class-pill .details-row {
   font-size: 11px;
-  opacity: 0.92;
+  color: var(--pill-sub, rgba(255, 255, 255, 0.92));
   margin-top: 4px;
   display: flex;
   flex-direction: column;
@@ -687,11 +687,110 @@ body {
 .class-pill .code-badge {
   display: inline-block;
   font-size: 10px;
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.2);
+  font-weight: 700;
+  background: var(--pill-badge-bg, rgba(0, 0, 0, 0.22));
+  color: var(--pill-badge-text, #ffffff);
   padding: 1px 5px;
   border-radius: 4px;
   width: fit-content;
+}
+
+/* Course Selector Tabs & Extended Color Picker Modal */
+.course-mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: var(--bg-input);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.course-mode-tab {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.course-mode-tab.active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+.subject-row-card {
+  display: grid;
+  grid-template-columns: 44px minmax(140px, 2fr) minmax(90px, 1fr) minmax(110px, 1.2fr) auto;
+  gap: 8px;
+  align-items: center;
+  background: var(--bg-input);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+}
+.color-group-block {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+.color-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.color-group-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.cp-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.12s, border-color 0.12s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.22);
+}
+.cp-swatch:hover {
+  transform: scale(1.1);
+}
+.cp-swatch.active {
+  border-color: #ffffff;
+  outline: 2px solid var(--primary);
+}
+.cp-swatch .used-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  border: 1.5px solid var(--bg-card);
+}
+@media (max-width: 640px) {
+  .subject-row-card {
+    grid-template-columns: 40px 1fr 1fr;
+  }
+  .subject-row-card .subj-actions-cell {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+  .add-two-col-mobile {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* ==========================================================================
@@ -1728,20 +1827,41 @@ legend {
 </dialog>
 
 <!-- 1. ADD RECURRING CLASS MODAL -->
-<dialog id="addClassModal" style="max-width: 580px; max-height: 88vh; overflow-y: auto;" aria-labelledby="addModalTitle">
-  <form id="addClassForm" style="display: grid; gap: 14px;">
+<dialog id="addClassModal" style="max-width: 620px; max-height: 90vh; overflow-y: auto;" aria-labelledby="addModalTitle">
+  <form id="addClassForm" style="display: grid; gap: 12px;">
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
       <h2 id="addModalTitle" style="margin: 0; font-size: 18px;">📅 Xếp lịch môn học</h2>
       <button type="button" class="btn" id="closeAddClassBtn" style="padding: 2px 8px; font-size: 12px;">✕</button>
     </div>
-    
-    <!-- Bước 1: Mã môn & Tên môn -->
-    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
-      <label>Mã ngành / Mã môn
-        <input id="newCourseCode" maxlength="20" placeholder="VD: PEN301, PRN211" required>
+
+    <input type="hidden" id="addCourseMode" value="existing">
+    <input type="hidden" id="selectedCourseId" value="">
+
+    <!-- Bước 0: Chọn nguồn môn học (Đã có trong Quản lý môn học vs Tạo môn mới) -->
+    <div class="course-mode-tabs" role="tablist" aria-label="Phương thức chọn môn học">
+      <button type="button" class="course-mode-tab active" id="modeExistingCourseBtn" data-mode="existing">
+        📚 Chọn môn học đã có
+      </button>
+      <button type="button" class="course-mode-tab" id="modeNewCourseBtn" data-mode="new">
+        ✨ Tạo môn học mới
+      </button>
+    </div>
+
+    <!-- Danh sách môn học từ Quản lý môn học -->
+    <div id="existingCourseWrap" style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; background: var(--bg-input); display: grid; gap: 8px;">
+      <label style="font-weight: 700; font-size: 12.5px; color: var(--primary);">1. Chọn môn học đã có (hiển thị Tên môn — Mã môn)
+        <select id="existingCourseSelect" style="width: 100%; font-weight: 600;"></select>
+      </label>
+      <div id="existingCourseSummary" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted);"></div>
+    </div>
+
+    <!-- Bước 1: Mã môn & Tên môn (Tự động điền khi chọn môn đã có) -->
+    <div class="add-two-col-mobile" style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+      <label>Mã môn học
+        <input id="newCourseCode" maxlength="20" placeholder="VD: PEN301, VOV114" required>
       </label>
       <label>Tên môn học
-        <input id="newCourseName" list="subjectDatalist" maxlength="80" placeholder="VD: Tiếng Anh, Lập trình C#" required>
+        <input id="newCourseName" list="subjectDatalist" maxlength="80" placeholder="VD: Tiếng Anh, Vovinam" required>
       </label>
     </div>
     <datalist id="subjectDatalist"></datalist>
@@ -1749,16 +1869,16 @@ legend {
     <!-- Bước 2: Thời gian áp dụng (Bắt đầu & Kết thúc) -->
     <fieldset style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--bg-card);">
       <legend style="font-weight: 700; font-size: 12px; color: var(--primary); padding: 0 6px;">Thời gian áp dụng</legend>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <label>Áp dụng từ ngày (Bắt đầu)
+      <div class="add-two-col-mobile" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <label>Ngày bắt đầu
           <input type="date" id="newCourseFrom" required style="width: 100%;">
         </label>
-        <label>Đến ngày (Kết thúc)
+        <label>Ngày kết thúc
           <input type="date" id="newCourseTo" required style="width: 100%;">
         </label>
       </div>
       <p style="font-size: 11.5px; color: var(--text-muted); margin: 6px 0 0 0;">
-        💡 Hệ thống sẽ tự động tạo lịch học cho tất cả các tuần từ ngày bắt đầu đến ngày kết thúc.
+        💡 Hệ thống sẽ tự động tạo tất cả các buổi học từ ngày bắt đầu đến ngày kết thúc và liên kết bằng mã định danh môn học (courseId).
       </p>
     </fieldset>
 
@@ -1772,7 +1892,7 @@ legend {
 
     <!-- Bước 4: Chọn tiết học tương ứng -->
     <div id="newSlotConfigContainer" style="display: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--bg-card);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
         <span style="font-weight: 700; font-size: 12px; color: var(--primary);">Tiết học theo thứ</span>
         <label style="font-size: 11.5px; display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--text-muted);">
           <input type="checkbox" id="syncSlotsCheckbox" checked> Áp dụng cùng tiết cho mọi thứ đã chọn
@@ -1781,23 +1901,38 @@ legend {
       <div id="newSlotPickersGroup" style="display: grid; gap: 8px;"></div>
     </div>
 
-    <!-- Bước 5: Phòng học & Màu sắc -->
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+    <!-- Bước 5: Phòng học & Giảng viên -->
+    <div class="add-two-col-mobile" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
       <label>Phòng học / Nền tảng
         <input id="newCourseRoom" maxlength="60" placeholder="VD: 327, BE-302, Zoom">
       </label>
-      <div>
-        <label style="display:block; margin-bottom: 6px; font-weight:600; font-size:13px;">Màu sắc môn (10 màu tiêu chuẩn)
+      <label>Giảng viên (không bắt buộc)
+        <input id="newCourseLecturer" maxlength="60" placeholder="VD: Thầy A, Cô B...">
+      </label>
+    </div>
+
+    <!-- Bước 6: Ghi chú & Màu sắc môn học -->
+    <label>Ghi chú buổi học (không bắt buộc)
+      <input id="newCourseNotes" maxlength="160" placeholder="VD: Mang laptop, kiểm tra giữa kỳ...">
+    </label>
+
+    <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; background: var(--bg-card);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+        <label style="margin: 0; font-weight: 600; font-size: 13px;">Màu sắc môn học (36+ màu &amp; Tùy chỉnh HEX)
           <input type="hidden" id="newCourseColor" value="#2563eb">
         </label>
-        <div id="courseColorPalette" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 4px 0;"></div>
-        <div id="colorSyncNotice" style="font-size: 11.5px; color: var(--primary); margin-top: 4px; min-height: 16px;"></div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" class="btn" id="autoAssignAddColorBtn" style="padding: 4px 8px; font-size: 11px;">✨ Tự gán màu</button>
+          <button type="button" class="btn" id="openAddColorPickerBtn" style="padding: 4px 10px; font-size: 11px; border-color: var(--primary); color: var(--primary);">🎨 Bảng 36+ màu / HEX</button>
+        </div>
       </div>
+      <div id="courseColorPalette" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 4px 0;"></div>
+      <div id="colorSyncNotice" style="font-size: 11.5px; color: var(--primary); margin-top: 4px; min-height: 16px;"></div>
     </div>
 
     <p id="addClassError" style="color: var(--danger); font-size: 12.5px; white-space: pre-line; margin: 0;"></p>
 
-    <!-- Bước 6: Lưu -->
+    <!-- Bước 7: Lưu -->
     <div class="dialog-actions" style="margin-top: 4px;">
       <button type="button" class="btn" id="cancelAddClassBtn">Hủy</button>
       <button type="submit" class="btn primary" style="font-weight: 700; padding: 10px 20px;">Lưu vào lịch học</button>
@@ -1806,11 +1941,11 @@ legend {
 </dialog>
 
 <!-- 2. EDIT / DELETE OCCURRENCE MODAL (Phase 2 Spec) -->
-<dialog id="editClassModal" aria-labelledby="editModalTitle">
+<dialog id="editClassModal" style="max-width: 580px; max-height: 90vh; overflow-y: auto;" aria-labelledby="editModalTitle">
   <form id="editClassForm">
     <h2 id="editModalTitle">Chỉnh sửa buổi học</h2>
 
-    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+    <div class="add-two-col-mobile" style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
       <label>Mã ngành / môn
         <input id="editCourseCode" maxlength="20">
       </label>
@@ -1819,7 +1954,7 @@ legend {
       </label>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div class="add-two-col-mobile" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
       <label>Tiết học
         <select id="editCourseSlot"></select>
       </label>
@@ -1828,15 +1963,27 @@ legend {
       </label>
     </div>
 
-    <div>
-      <label style="display:block; margin-bottom: 6px; font-weight:600; font-size:13px;">Màu sắc môn (10 màu tiêu chuẩn)
-        <input type="hidden" id="editCourseColor" value="#2563eb">
+    <div class="add-two-col-mobile" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <label>Giảng viên
+        <input id="editCourseLecturer" maxlength="60" placeholder="Không bắt buộc">
       </label>
+      <label>Ghi chú
+        <input id="editCourseNotes" maxlength="160" placeholder="Không bắt buộc">
+      </label>
+    </div>
+
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
+        <label style="margin: 0; font-weight: 600; font-size: 13px;">Màu sắc môn học (Đồng bộ toàn môn)
+          <input type="hidden" id="editCourseColor" value="#2563eb">
+        </label>
+        <button type="button" class="btn" id="openEditColorPickerBtn" style="padding: 4px 10px; font-size: 11px; border-color: var(--primary); color: var(--primary);">🎨 Mở bảng 36+ màu / HEX</button>
+      </div>
       <div id="editColorPalette" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 4px 0;"></div>
     </div>
 
     <fieldset style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; background: var(--bg-card);">
-      <legend style="font-weight: 700; font-size: 12px; color: var(--primary); padding: 0 6px;">Phạm vi áp dụng (Chỉnh sửa & Xóa)</legend>
+      <legend style="font-weight: 700; font-size: 12px; color: var(--primary); padding: 0 6px;">Phạm vi áp dụng (Chỉnh sửa &amp; Xóa)</legend>
       <div style="display: grid; gap: 8px; margin-top: 4px;">
         <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
           <input type="radio" name="editScope" value="one" checked>
@@ -1855,7 +2002,7 @@ legend {
 
     <fieldset>
       <legend>Khoảng ngày của môn</legend>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div class="add-two-col-mobile" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <label>Từ ngày <input type="date" id="editSubjFrom"></label>
         <label>Đến ngày <input type="date" id="editSubjTo"></label>
       </div>
@@ -1871,16 +2018,118 @@ legend {
   </form>
 </dialog>
 
-<!-- 4. SUBJECT MANAGEMENT MODAL (Phase 2 Spec) -->
-<dialog id="subjectModal" style="max-width: 600px;" aria-labelledby="subjModalTitle">
-  <h2 id="subjModalTitle">Quản lý danh sách môn học</h2>
-  <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
-    Đổi tên hoặc màu sắc sẽ áp dụng tự động cho toàn bộ các buổi học của môn đó.
-  </p>
-  <div id="subjectListContainer" style="display: grid; gap: 10px; max-height: 350px; overflow-y: auto;"></div>
+<!-- 4. SUBJECT MANAGEMENT MODAL (Unified Course Registry + Color Hub) -->
+<dialog id="subjectModal" style="max-width: 720px; max-height: 90vh; overflow-y: auto;" aria-labelledby="subjModalTitle">
+  <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:12px;">
+    <div>
+      <h2 id="subjModalTitle" style="margin:0;">📚 Quản lý danh sách môn học</h2>
+      <p style="font-size: 12.5px; color: var(--text-muted); margin: 4px 0 0 0;">
+        Nguồn dữ liệu duy nhất liên kết qua <b>courseId</b>. Đổi tên, mã môn hoặc bấm vào ô màu để cập nhật đồng bộ toàn bộ TKB.
+      </p>
+    </div>
+    <button type="button" class="btn" id="closeSubjectTopBtn" style="padding: 2px 8px; font-size: 12px;">✕</button>
+  </div>
+
+  <!-- Quick Add New Course directly in Subject Manager -->
+  <form id="quickAddCourseForm" style="background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 12px; display: grid; gap: 8px;">
+    <div style="font-size: 12px; font-weight: 700; color: var(--primary);">+ Thêm môn học mới vào danh sách</div>
+    <div class="add-two-col-mobile" style="display: grid; grid-template-columns: 44px 2fr 1fr 1.2fr auto; gap: 8px; align-items: center;">
+      <button type="button" id="quickCourseColorBtn" title="Chọn màu môn học" style="width: 38px; height: 38px; border-radius: 10px; border: 2px solid #ffffff; cursor: pointer; background: #2563eb;"></button>
+      <input type="text" id="quickCourseName" maxlength="80" placeholder="Tên môn (VD: Vovinam)" required>
+      <input type="text" id="quickCourseCode" maxlength="20" placeholder="Mã (VD: VOV114)">
+      <input type="text" id="quickCourseLecturer" maxlength="60" placeholder="Giảng viên">
+      <button type="submit" class="btn primary" style="padding: 9px 14px; white-space: nowrap;">+ Lưu môn</button>
+    </div>
+    <input type="hidden" id="quickCourseColorInput" value="#2563eb">
+  </form>
+
+  <div id="subjectListContainer" style="display: grid; gap: 10px; max-height: 360px; overflow-y: auto; padding-right: 2px;"></div>
   <div class="dialog-actions" style="margin-top: 16px;">
     <button type="button" class="btn primary" id="closeSubjectModalBtn">Đóng</button>
   </div>
+</dialog>
+
+<!-- 4B. ADVANCED COLOR PICKER MODAL (36+ Colors + Custom Picker + HEX + Contrast Preview) -->
+<dialog id="colorPickerModal" style="max-width: 600px; max-height: 90vh; overflow-y: auto;" aria-labelledby="cpkModalTitle">
+  <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:12px;">
+    <h2 id="cpkModalTitle" style="margin:0; font-size:18px;">🎨 Hệ thống chọn màu môn học</h2>
+    <button type="button" class="btn" id="cpkCancelTopBtn" style="padding: 2px 8px; font-size: 12px;">✕</button>
+  </div>
+
+  <!-- Live Contrast Card Preview -->
+  <div style="display:grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; margin-bottom: 12px;">
+    <div>
+      <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; text-transform: uppercase;">Xem trước thẻ trên thời khóa biểu</div>
+      <div id="cpkLiveCardPreview" class="class-pill" style="min-height: 64px; cursor: default;">
+        <div class="title-row"><span>🎓</span> <span id="cpkPreviewTitle">Tên môn học</span></div>
+        <div class="details-row">
+          <span>10:30 – 12:00 · 📍 327</span>
+          <span class="code-badge" id="cpkPreviewCode">CODE</span>
+        </div>
+      </div>
+    </div>
+    <div style="text-align: center; min-width: 96px;">
+      <div id="cpkActiveSwatchBox" style="width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 6px auto; border: 2px solid #ffffff; box-shadow: var(--shadow-md);"></div>
+      <div id="cpkActiveHexBadge" style="font-family: monospace; font-size: 12px; font-weight: 700;">#2563EB</div>
+      <div id="cpkContrastBadge" style="font-size: 10.5px; color: var(--text-muted);">Chữ trắng</div>
+    </div>
+  </div>
+
+  <!-- Custom Picker + HEX Input + Auto Tools -->
+  <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px;">
+    <label style="margin:0; font-size:12px;">Bộ chọn màu
+      <input type="color" id="cpkNativeInput" value="#2563eb" style="width: 48px; height: 38px; padding: 2px; cursor: pointer;">
+    </label>
+    <label style="margin:0; font-size:12px; flex: 1; min-width: 130px;">Nhập mã HEX
+      <input type="text" id="cpkHexInput" maxlength="7" placeholder="#2563EB" style="font-family: monospace; text-transform: uppercase;">
+    </label>
+    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+      <button type="button" class="btn" id="cpkAutoBtn" style="padding: 8px 10px; font-size: 12px;">✨ Tự động gán</button>
+      <button type="button" class="btn" id="cpkRandomBtn" style="padding: 8px 10px; font-size: 12px;">🎲 Ngẫu nhiên</button>
+      <button type="button" class="btn" id="cpkResetBtn" style="padding: 8px 10px; font-size: 12px;">🔄 Mặc định</button>
+    </div>
+  </div>
+  <p id="cpkHexError" style="color: var(--danger); font-size: 12px; margin: -6px 0 8px 0; min-height: 16px;"></p>
+
+  <!-- 6 Color Groups Grid (36 Curated Colors) -->
+  <div id="cpkGroupsContainer" style="display: grid; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 2px;"></div>
+  <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+    ● Chấm cam nhỏ = màu đã có môn khác sử dụng (giúp bạn tránh trùng màu).
+  </div>
+
+  <div class="dialog-actions" style="margin-top: 12px;">
+    <button type="button" class="btn" id="cpkCancelBtn">Hủy</button>
+    <button type="button" class="btn primary" id="cpkConfirmBtn" style="font-weight: 700;">Xác nhận màu này</button>
+  </div>
+</dialog>
+
+<!-- 4C. SAFE COURSE DELETION MODAL -->
+<dialog id="deleteCourseModal" style="max-width: 480px;" aria-labelledby="delCourseTitle">
+  <form id="deleteCourseForm" style="display: grid; gap: 12px;">
+    <h2 id="delCourseTitle" style="margin: 0; color: var(--danger);">⚠️ Xác nhận xóa môn học</h2>
+    <p id="delCourseSummary" style="font-size: 13px; color: var(--text-main); line-height: 1.5; margin: 0;"></p>
+    <div id="delCourseOptionsWrap" style="display: grid; gap: 8px; background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+      <label style="display:flex; align-items:flex-start; gap:8px; font-size:13px; cursor:pointer;">
+        <input type="radio" name="delCourseAction" value="detach_keep" checked style="margin-top:3px;">
+        <span><b>Giữ lại các buổi học trên TKB</b> (chỉ xóa môn khỏi danh sách Quản lý môn học, lịch đã xếp vẫn hiển thị an toàn)</span>
+      </label>
+      <label style="display:flex; align-items:flex-start; gap:8px; font-size:13px; cursor:pointer;">
+        <input type="radio" name="delCourseAction" value="delete_all" style="margin-top:3px;">
+        <span><b>Xóa môn học và toàn bộ buổi học liên quan</b> trên Thời khóa biểu</span>
+      </label>
+      <div id="delReassignRow" style="display:none; padding-left: 4px; margin-top: 2px;">
+        <label style="display:flex; align-items:flex-start; gap:8px; font-size:13px; cursor:pointer;">
+          <input type="radio" name="delCourseAction" value="reassign" style="margin-top:3px;">
+          <span><b>Chuyển các buổi học sang môn khác:</b></span>
+        </label>
+        <select id="delReassignSelect" style="width: 100%; margin-top: 6px;"></select>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="cancelDeleteCourseBtn">Hủy (Không xóa)</button>
+      <button type="submit" class="btn danger" style="font-weight: 700;">Xác nhận xóa</button>
+    </div>
+  </form>
 </dialog>
 
 <!-- 5. TASK ADD MODAL -->
@@ -2115,20 +2364,245 @@ legend {
     ['19:30', '21:00']  // Tiết 8
   ];
 
-  // Palette with vivid modern colors
-  // 10 Màu sắc tiêu chuẩn cao cấp, tương phản tốt, dễ nhìn trên cả nền tối & sáng
-  const PALETTE = [
-    '#2563eb', // 1. Xanh hoàng gia (Royal Blue)
-    '#7c3aed', // 2. Tím thạch anh (Deep Violet)
-    '#059669', // 3. Xanh ngọc lục (Emerald Green)
-    '#ea580c', // 4. Cam san hô (Coral Orange)
-    '#0284c7', // 5. Xanh dương sáng (Sky Blue)
-    '#db2777', // 6. Hồng cánh sen (Rose Pink)
-    '#0d9488', // 7. Xanh mòng két (Teal)
-    '#d97706', // 8. Vàng hổ phách (Amber Gold)
-    '#4f46e5', // 9. Chàm Indigo (Modern Indigo)
-    '#9333ea'  // 10. Tím phong lan (Purple Orchid)
+  // 36 Curated Colors across 6 Color Groups + Unlimited Custom HEX/Color Picker
+  const COLOR_GROUPS = [
+    {
+      label: 'Nhóm Xanh Dương & Cyan',
+      colors: [
+        { hex: '#2563eb', name: 'Xanh dương' },
+        { hex: '#1e3a8a', name: 'Xanh navy' },
+        { hex: '#0284c7', name: 'Xanh da trời' },
+        { hex: '#0891b2', name: 'Xanh cyan' },
+        { hex: '#0d9488', name: 'Xanh ngọc' },
+        { hex: '#2dd4bf', name: 'Xanh mint' }
+      ]
+    },
+    {
+      label: 'Nhóm Tím',
+      colors: [
+        { hex: '#9333ea', name: 'Tím' },
+        { hex: '#a855f7', name: 'Tím lavender' },
+        { hex: '#7c3aed', name: 'Tím violet' },
+        { hex: '#581c87', name: 'Tím đậm' },
+        { hex: '#c4b5fd', name: 'Tím pastel' },
+        { hex: '#4f46e5', name: 'Chàm Indigo' }
+      ]
+    },
+    {
+      label: 'Nhóm Đỏ & Hồng',
+      colors: [
+        { hex: '#dc2626', name: 'Đỏ' },
+        { hex: '#f43f5e', name: 'Đỏ san hô' },
+        { hex: '#ec4899', name: 'Hồng' },
+        { hex: '#db2777', name: 'Hồng đậm' },
+        { hex: '#f9a8d4', name: 'Hồng pastel' },
+        { hex: '#be123c', name: 'Đỏ rượu' }
+      ]
+    },
+    {
+      label: 'Nhóm Vàng & Cam',
+      colors: [
+        { hex: '#eab308', name: 'Vàng' },
+        { hex: '#d97706', name: 'Vàng gold' },
+        { hex: '#f97316', name: 'Cam' },
+        { hex: '#c2410c', name: 'Cam đất' },
+        { hex: '#ea580c', name: 'Cam đậm' },
+        { hex: '#fde047', name: 'Vàng pastel' }
+      ]
+    },
+    {
+      label: 'Nhóm Xanh Lá',
+      colors: [
+        { hex: '#16a34a', name: 'Xanh lá' },
+        { hex: '#65a30d', name: 'Xanh lime' },
+        { hex: '#4d7c0f', name: 'Xanh olive' },
+        { hex: '#059669', name: 'Xanh emerald' },
+        { hex: '#10b981', name: 'Ngọc bích sáng' },
+        { hex: '#86efac', name: 'Xanh lá pastel' }
+      ]
+    },
+    {
+      label: 'Nhóm Trung Tính & Đặc Biệt',
+      colors: [
+        { hex: '#475569', name: 'Xám' },
+        { hex: '#94a3b8', name: 'Bạc' },
+        { hex: '#78350f', name: 'Nâu' },
+        { hex: '#0f172a', name: 'Đen xanh' },
+        { hex: '#93c5fd', name: 'Xanh pastel' },
+        { hex: '#fdba74', name: 'Cam đào pastel' }
+      ]
+    }
   ];
+
+  const PALETTE = [
+    '#2563eb', '#1e3a8a', '#0284c7', '#0891b2', '#0d9488', '#2dd4bf',
+    '#9333ea', '#a855f7', '#7c3aed', '#581c87', '#c4b5fd', '#4f46e5',
+    '#dc2626', '#f43f5e', '#ec4899', '#db2777', '#f9a8d4', '#be123c',
+    '#eab308', '#d97706', '#f97316', '#c2410c', '#ea580c', '#fde047',
+    '#16a34a', '#65a30d', '#4d7c0f', '#059669', '#10b981', '#86efac',
+    '#475569', '#94a3b8', '#78350f', '#0f172a', '#93c5fd', '#fdba74'
+  ];
+
+  function normalizeHexColor(raw) {
+    if (!raw || typeof raw !== 'string') return null;
+    let s = raw.trim();
+    if (!s.startsWith('#')) s = '#' + s;
+    const m3 = s.match(/^#([0-9a-fA-F]{3})$/);
+    if (m3) {
+      const h = m3[1];
+      return ('#' + h[0] + h[0] + h[1] + h[1] + h[2] + h[2]).toLowerCase();
+    }
+    const m6 = s.match(/^#([0-9a-fA-F]{6})$/);
+    return m6 ? ('#' + m6[1].toLowerCase()) : null;
+  }
+
+  function hexToRgb(hex) {
+    const norm = normalizeHexColor(hex) || '#2563eb';
+    const n = parseInt(norm.slice(1), 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+
+  function getRelativeLuminance(hex) {
+    const { r, g, b } = hexToRgb(hex);
+    const toLin = v => {
+      const c = v / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * toLin(r) + 0.7152 * toLin(g) + 0.0722 * toLin(b);
+  }
+
+  function getContrastPaletteForBg(hex) {
+    const lum = getRelativeLuminance(hex);
+    if (lum > 0.40) {
+      return {
+        isLight: true,
+        text: '#0f172a',
+        subText: 'rgba(15, 23, 42, 0.85)',
+        border: 'rgba(15, 23, 42, 0.24)',
+        badgeBg: 'rgba(15, 23, 42, 0.14)',
+        badgeText: '#0f172a',
+        label: 'Chữ tối (nền sáng)'
+      };
+    }
+    return {
+      isLight: false,
+      text: '#ffffff',
+      subText: 'rgba(255, 255, 255, 0.92)',
+      border: lum < 0.06 ? 'rgba(255, 255, 255, 0.34)' : 'rgba(255, 255, 255, 0.16)',
+      badgeBg: 'rgba(0, 0, 0, 0.28)',
+      badgeText: '#ffffff',
+      label: 'Chữ trắng (tương phản tốt)'
+    };
+  }
+
+  function colorDistanceSq(hexA, hexB) {
+    const a = hexToRgb(hexA);
+    const b = hexToRgb(hexB);
+    const dr = a.r - b.r;
+    const dg = a.g - b.g;
+    const db = a.b - b.b;
+    return 2 * dr * dr + 4 * dg * dg + 3 * db * db;
+  }
+
+  function hslToHex(h, s, l) {
+    s /= 100;
+    l /= 100;
+    const k = n => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    const toHex = x => Math.round(x * 255).toString(16).padStart(2, '0');
+    return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`.toLowerCase();
+  }
+
+  function autoAssignCourseColor(excludeCourseId = null, listOverride = null) {
+    const subjects = listOverride || appState.subjects || [];
+    const used = new Set(
+      subjects
+        .filter(s => !excludeCourseId || (s.id !== excludeCourseId && s.courseId !== excludeCourseId))
+        .map(s => normalizeHexColor(s.color))
+        .filter(Boolean)
+    );
+    const usedList = [...used];
+    const unused = PALETTE.map(c => normalizeHexColor(c)).filter(c => c && !used.has(c));
+
+    // Prefer mid-contrast vivid colors first before very light pastels
+    const preferredUnused = unused.filter(c => {
+      const lum = getRelativeLuminance(c);
+      return lum >= 0.05 && lum <= 0.65;
+    });
+    const pool = preferredUnused.length ? preferredUnused : unused;
+
+    if (pool.length) {
+      if (!usedList.length) return pool[0];
+      let best = pool[0];
+      let bestMinDist = -1;
+      for (const cand of pool) {
+        const minDist = Math.min(...usedList.map(u => colorDistanceSq(cand, u)));
+        if (minDist > bestMinDist) {
+          bestMinDist = minDist;
+          best = cand;
+        }
+      }
+      return best;
+    }
+
+    // All 36 palette colors are used: generate maximally distant HSL color
+    let bestGen = '#2563eb';
+    let bestGenDist = -1;
+    for (let h = 0; h < 360; h += 12) {
+      for (const [s, l] of [[78, 46], [72, 54], [82, 38], [68, 62]]) {
+        const cand = hslToHex(h, s, l);
+        if (used.has(cand)) continue;
+        const minDist = usedList.length ? Math.min(...usedList.map(u => colorDistanceSq(cand, u))) : 999999;
+        if (minDist > bestGenDist) {
+          bestGenDist = minDist;
+          bestGen = cand;
+        }
+      }
+    }
+    return bestGen;
+  }
+
+  function pickRandomDistinctColor(currentHex = '', excludeCourseId = null) {
+    const cur = normalizeHexColor(currentHex);
+    const unused = PALETTE.filter(c => normalizeHexColor(c) !== cur && !appState.subjects.some(s =>
+      (!excludeCourseId || (s.id !== excludeCourseId && s.courseId !== excludeCourseId)) &&
+      normalizeHexColor(s.color) === normalizeHexColor(c)
+    ));
+    if (unused.length) {
+      return unused[Math.floor(Math.random() * unused.length)];
+    }
+    const others = PALETTE.filter(c => normalizeHexColor(c) !== cur);
+    if (others.length) return others[Math.floor(Math.random() * others.length)];
+    return hslToHex(Math.floor(Math.random() * 360), 76, 48);
+  }
+
+  function findSubjectByIdentity(subjects, name, code, selectedCourseId = '') {
+    if (!Array.isArray(subjects)) return null;
+    if (selectedCourseId) {
+      const byId = subjects.find(s => s.id === selectedCourseId || s.courseId === selectedCourseId);
+      if (byId) return byId;
+    }
+    const cleanName = (name || '').trim().toLowerCase();
+    const cleanCode = (code || '').trim().toUpperCase();
+    return subjects.find(s => {
+      const sName = (s.name || '').trim().toLowerCase();
+      const sCode = (s.code || '').trim().toUpperCase();
+      // Both code AND name match -> definite match
+      if (cleanCode && sCode && cleanName && sName) {
+        return sCode === cleanCode && sName === cleanName;
+      }
+      // Match by exact name when code isn't conflicting
+      if (cleanName && sName === cleanName && (!cleanCode || !sCode)) {
+        return true;
+      }
+      // Match by code only if name is absent or placeholder === code
+      if (cleanCode && sCode === cleanCode && (!cleanName || cleanName === cleanCode.toLowerCase() || sName === sCode.toLowerCase())) {
+        return true;
+      }
+      return false;
+    }) || null;
+  }
 
   // Primary State Container
   let appState = {
@@ -2225,6 +2699,29 @@ legend {
       semester: 'Fall 2026',
       viewMode: 'grid'
     };
+
+    // Safe non-destructive courseId migration (preserves existing id/sid compatibility)
+    d.subjects.forEach(s => {
+      if (!s || typeof s !== 'object') return;
+      const cid = s.courseId || s.id || uid();
+      s.id = cid;
+      s.courseId = cid;
+      const norm = normalizeHexColor(s.color);
+      s.color = norm || autoAssignCourseColor(cid, d.subjects);
+      if (s.lecturer === undefined) s.lecturer = '';
+    });
+
+    d.rules.forEach(r => {
+      if (!r || typeof r !== 'object') return;
+      const sid = r.sid || r.courseId || '';
+      if (sid) {
+        r.sid = sid;
+        r.courseId = sid;
+      }
+      if (r.lecturer === undefined) r.lecturer = '';
+      if (r.notes === undefined) r.notes = '';
+    });
+
     d.v = 3;
     return d;
   }
@@ -2245,6 +2742,12 @@ legend {
     try {
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.subjects) && Array.isArray(parsed.rules)) {
+        const needsCourseIdBackup = parsed.subjects.some(s => !s.courseId) || parsed.rules.some(r => !r.courseId);
+        if (needsCourseIdBackup && !localStorage.getItem(STORAGE_KEY + '-backup-pre-courseid')) {
+          try {
+            localStorage.setItem(STORAGE_KEY + '-backup-pre-courseid', raw);
+          } catch (backupErr) { /* ignore quota error */ }
+        }
         appState = upgradeData(parsed);
       } else {
         localStorage.setItem(STORAGE_KEY + '-backup-corrupted', raw);
@@ -2560,10 +3063,10 @@ legend {
   // ==========================================================================
   // TIMETABLE & CLASH LOGIC
   // ==========================================================================
-  const subj = id => appState.subjects.find(s => s.id === id);
+  const subj = id => appState.subjects.find(s => s.id === id || s.courseId === id);
 
   function occOn(r, k) {
-    const sub = subj(r.sid) || {};
+    const sub = subj(r.sid) || subj(r.courseId) || r.detachedCourse || {};
     // Rule date bounds take absolute precedence over subject
     const fromDate = r.from || sub.from;
     const toDate = r.to || sub.to;
@@ -2576,11 +3079,14 @@ legend {
     return {
       rule: r,
       date: k,
+      courseId: sub.courseId || sub.id || r.courseId || r.sid || '',
       slot: m.slot ?? r.slot,
       room: m.room ?? r.room,
-      name: m.name ?? r.name ?? sub.name,
-      code: m.code ?? r.code ?? sub.code,
-      color: sub.color || '#2563eb'
+      name: m.name ?? r.name ?? sub.name ?? 'Môn học',
+      code: m.code ?? r.code ?? sub.code ?? '',
+      lecturer: m.lecturer ?? r.lecturer ?? sub.lecturer ?? '',
+      notes: m.notes ?? r.notes ?? '',
+      color: sub.color || r.detachedColor || '#2563eb'
     };
   }
 
@@ -2696,24 +3202,55 @@ legend {
   }
 
   function renderClassCard(o) {
-    const sub = subj(o.rule.sid) || {};
-    const color = sub.color || '#7c3aed';
+    const sub = subj(o.rule.sid) || subj(o.rule.courseId) || o.rule.detachedCourse || {};
+    const color = normalizeHexColor(sub.color || o.color) || '#7c3aed';
+    const cp = getContrastPaletteForBg(color);
     const slotTime = DEFAULT_SLOTS[o.slot - 1];
     const timeStr = `${slotTime[0]} – ${slotTime[1]}`;
+    const tipParts = [o.name, o.code, o.room, o.lecturer, o.notes].filter(Boolean);
 
     return `
-      <button type="button" class="class-pill" style="background: ${color};" 
-              data-rule="${o.rule.id}" data-date="${o.date}" title="${esc(o.name)} - ${esc(o.room)}">
+      <button type="button" class="class-pill"
+              style="background: ${color}; color: ${cp.text}; --pill-text: ${cp.text}; --pill-sub: ${cp.subText}; --pill-border: ${cp.border}; --pill-badge-bg: ${cp.badgeBg}; --pill-badge-text: ${cp.badgeText};" 
+              data-rule="${o.rule.id}" data-date="${o.date}" data-course-id="${esc(o.courseId || '')}" title="${esc(tipParts.join(' · '))}">
         <div class="title-row">
           <span class="subj-icon">🎓</span>
           <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(o.name)}</span>
         </div>
         <div class="details-row">
           <span>${timeStr}</span>
-          <span>${o.room ? '📍 ' + esc(o.room) : ''}</span>
+          <span>${o.room ? '📍 ' + esc(o.room) : ''}${o.lecturer ? (o.room ? ' · ' : '') + '👤 ' + esc(o.lecturer) : ''}</span>
           ${o.code ? `<span class="code-badge">${esc(o.code)}</span>` : ''}
         </div>
       </button>
+    `;
+  }
+
+  function renderAgendaItemCard(o, interactive = true) {
+    const sub = subj(o.rule.sid) || subj(o.rule.courseId) || o.rule.detachedCourse || {};
+    const color = normalizeHexColor(sub.color || o.color) || '#7c3aed';
+    const cp = getContrastPaletteForBg(color);
+    const slotTime = DEFAULT_SLOTS[o.slot - 1];
+    const attrs = interactive ? `data-rule="${o.rule.id}" data-date="${o.date}"` : '';
+    const extraMeta = [
+      o.room ? `📍 ${esc(o.room)}` : '📍 Chưa có phòng',
+      `Tiết ${o.slot}`,
+      o.lecturer ? `👤 ${esc(o.lecturer)}` : '',
+      o.notes ? `📝 ${esc(o.notes)}` : ''
+    ].filter(Boolean).join(' · ');
+
+    return `
+      <div class="agenda-item" style="--subj-color: ${color}; border-left: 5px solid ${color};" ${attrs}>
+        <div class="agenda-item-left">
+          <span class="agenda-item-title" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="width:10px; height:10px; border-radius:50%; background:${color}; display:inline-block; flex-shrink:0;"></span>
+            <span>${esc(o.name)}</span>
+            ${o.code ? `<span style="font-size:11px; padding:1px 6px; border-radius:4px; background:${color}; color:${cp.text}; border:1px solid ${cp.border}; font-weight:700;">${esc(o.code)}</span>` : ''}
+          </span>
+          <span class="agenda-item-sub">${extraMeta}</span>
+        </div>
+        <div class="agenda-item-time">${slotTime[0]} – ${slotTime[1]}</div>
+      </div>
     `;
   }
 
@@ -2737,19 +3274,7 @@ legend {
             ${isToday ? '<span class="today-tag">Hôm nay</span>' : ''}
           </div>
           <div class="agenda-events">
-            ${dayClasses.length ? dayClasses.map(o => {
-              const sub = subj(o.rule.sid) || {};
-              const slotTime = DEFAULT_SLOTS[o.slot - 1];
-              return `
-                <div class="agenda-item" style="--subj-color: ${sub.color || '#7c3aed'};" data-rule="${o.rule.id}" data-date="${o.date}">
-                  <div class="agenda-item-left">
-                    <span class="agenda-item-title">${esc(o.name)} ${o.code ? `(${esc(o.code)})` : ''}</span>
-                    <span class="agenda-item-sub">📍 ${esc(o.room || 'Chưa có phòng')} · Tiết ${o.slot}</span>
-                  </div>
-                  <div class="agenda-item-time">${slotTime[0]} – ${slotTime[1]}</div>
-                </div>
-              `;
-            }).join('') : '<p style="color:var(--text-muted); font-size:13px;">Không có lịch học</p>'}
+            ${dayClasses.length ? dayClasses.map(o => renderAgendaItemCard(o, true)).join('') : '<p style="color:var(--text-muted); font-size:13px;">Không có lịch học</p>'}
           </div>
         </div>
       `;
@@ -2774,19 +3299,7 @@ legend {
           <span class="today-tag">Hôm nay</span>
         </div>
         <div class="agenda-events">
-          ${dayClasses.length ? dayClasses.map(o => {
-            const sub = subj(o.rule.sid) || {};
-            const slotTime = DEFAULT_SLOTS[o.slot - 1];
-            return `
-              <div class="agenda-item" style="--subj-color: ${sub.color || '#7c3aed'};" data-rule="${o.rule.id}" data-date="${o.date}">
-                <div class="agenda-item-left">
-                  <span class="agenda-item-title">${esc(o.name)} ${o.code ? `(${esc(o.code)})` : ''}</span>
-                  <span class="agenda-item-sub">📍 ${esc(o.room || 'Chưa có phòng')} · Tiết ${o.slot}</span>
-                </div>
-                <div class="agenda-item-time">${slotTime[0]} – ${slotTime[1]}</div>
-              </div>
-            `;
-          }).join('') : '<p style="color:var(--text-muted); font-size:14px; text-align:center; padding:20px;">Hôm nay bạn không có tiết học nào. Hãy tận hưởng ngày nghỉ hoặc tập trung làm bài tập!</p>'}
+          ${dayClasses.length ? dayClasses.map(o => renderAgendaItemCard(o, true)).join('') : '<p style="color:var(--text-muted); font-size:14px; text-align:center; padding:20px;">Hôm nay bạn không có tiết học nào. Hãy tận hưởng ngày nghỉ hoặc tập trung làm bài tập!</p>'}
         </div>
       </div>
     `;
@@ -2876,19 +3389,7 @@ legend {
       if (o) todayClasses.push(o);
     }
     if (todayClasses.length) {
-      $('dashTodayList').innerHTML = todayClasses.map(o => {
-        const sub = subj(o.rule.sid) || {};
-        const slotTime = DEFAULT_SLOTS[o.slot - 1];
-        return `
-          <div class="agenda-item" style="--subj-color: ${sub.color || '#7c3aed'};">
-            <div class="agenda-item-left">
-              <span class="agenda-item-title">${esc(o.name)} · Tiết ${o.slot}</span>
-              <span class="agenda-item-sub">📍 ${esc(o.room || 'Phòng học')}</span>
-            </div>
-            <div class="agenda-item-time">${slotTime[0]} – ${slotTime[1]}</div>
-          </div>
-        `;
-      }).join('');
+      $('dashTodayList').innerHTML = todayClasses.map(o => renderAgendaItemCard(o, false)).join('');
     } else {
       $('dashTodayList').innerHTML = '<p style="color:var(--text-muted); padding:16px 0; text-align:center;">Hôm nay bạn không có lịch học!</p>';
     }
@@ -2986,20 +3487,36 @@ legend {
   // SUBJECT MANAGEMENT
   // ==========================================================================
   function renderSubjectList() {
+    const quickBtn = $('quickCourseColorBtn');
+    const quickInp = $('quickCourseColorInput');
+    if (quickBtn && quickInp) {
+      const nextCol = normalizeHexColor(quickInp.dataset.userPicked === '1' ? quickInp.value : autoAssignCourseColor()) || autoAssignCourseColor();
+      quickInp.value = nextCol;
+      quickBtn.style.background = nextCol;
+    }
+
     if (!appState.subjects.length) {
-      $('subjectListContainer').innerHTML = '<p style="color:var(--text-muted); padding:16px;">Chưa có môn học nào.</p>';
+      $('subjectListContainer').innerHTML = '<p style="color:var(--text-muted); padding:16px; text-align:center;">Chưa có môn học nào. Hãy thêm môn mới ở khung phía trên!</p>';
       return;
     }
     let html = '';
     appState.subjects.forEach(s => {
-      const ruleCount = appState.rules.filter(r => r.sid === s.id).length;
+      const cid = s.courseId || s.id;
+      const col = normalizeHexColor(s.color) || '#7c3aed';
+      const cp = getContrastPaletteForBg(col);
+      const ruleCount = appState.rules.filter(r => r.sid === s.id || r.courseId === cid).length;
       html += `
-        <div style="display:grid; grid-template-columns: 40px 2fr 1fr 60px auto; gap:8px; align-items:center; background:var(--bg-input); padding:8px 12px; border-radius:var(--radius-sm);" data-id="${s.id}">
-          <input type="color" value="${esc(s.color || '#7c3aed')}" data-act="color" style="padding:0; width:34px; height:34px; border:none; cursor:pointer;">
-          <input type="text" value="${esc(s.name)}" maxlength="80" data-act="name" placeholder="Tên môn" style="font-weight:600;">
-          <input type="text" value="${esc(s.code || '')}" maxlength="20" data-act="code" placeholder="Mã môn">
-          <span style="font-size:11px; color:var(--text-muted);">${ruleCount} lịch</span>
-          <button type="button" class="btn danger" data-act="del" style="padding:4px 8px; font-size:11px;">Xóa</button>
+        <div class="subject-row-card" data-id="${esc(s.id)}" data-course-id="${esc(cid)}">
+          <button type="button" data-act="pick-color" title="Bấm để mở bảng 36+ màu / HEX (${esc(col.toUpperCase())})"
+                  style="width: 38px; height: 38px; border-radius: 10px; background: ${col}; color: ${cp.text}; border: 2px solid ${cp.border}; cursor: pointer; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">🎨</button>
+          <input type="text" value="${esc(s.name)}" maxlength="80" data-act="name" placeholder="Tên môn" style="font-weight:600; min-width: 0;">
+          <input type="text" value="${esc(s.code || '')}" maxlength="20" data-act="code" placeholder="Mã môn" style="min-width: 0;">
+          <input type="text" value="${esc(s.lecturer || '')}" maxlength="60" data-act="lecturer" placeholder="Giảng viên" style="min-width: 0;">
+          <div class="subj-actions-cell" style="display:flex; align-items:center; gap:6px; white-space:nowrap;">
+            <span style="font-size:11px; color:var(--text-muted);">${ruleCount} lịch</span>
+            <button type="button" class="btn" data-act="add-schedule" title="Thêm lịch cho môn này vào TKB" style="padding:4px 8px; font-size:11px; border-color:var(--primary); color:var(--primary);">+ Lịch</button>
+            <button type="button" class="btn danger" data-act="del" style="padding:4px 8px; font-size:11px;">Xóa</button>
+          </div>
         </div>
       `;
     });
@@ -3142,30 +3659,41 @@ legend {
   }
 
   // ==========================================================================
+  // EXTENDED COLOR PALETTE CONTROLLER, PICKER MODAL & CONTRAST ENGINE
   // ==========================================================================
-  // 10 STANDARD COLORS PALETTE CONTROLLER & SYNC ENGINE
-  // ==========================================================================
+  let activeColorPickerCtx = null;
+
   function renderColorPalette(containerId, inputId, activeColor, onSelect) {
     const container = $(containerId);
     const hiddenInput = $(inputId);
     if (!container || !hiddenInput) return;
 
-    let currentColor = (activeColor || hiddenInput.value || PALETTE[0]).toLowerCase();
-    const match = PALETTE.find(c => c.toLowerCase() === currentColor);
-    currentColor = match || PALETTE[0];
+    const currentColor = normalizeHexColor(activeColor || hiddenInput.value) || PALETTE[0];
     hiddenInput.value = currentColor;
 
-    container.innerHTML = PALETTE.map((hex, i) => {
+    // Show quick high-contrast subset + custom swatch if currentColor isn't in quick row
+    const quickHexes = PALETTE.slice(0, 12).map(c => c.toLowerCase());
+    if (!quickHexes.includes(currentColor)) {
+      quickHexes[quickHexes.length - 1] = currentColor;
+    }
+
+    const cpCur = getContrastPaletteForBg(currentColor);
+    container.innerHTML = quickHexes.map((hex, i) => {
       const isSelected = hex.toLowerCase() === currentColor.toLowerCase();
+      const cp = getContrastPaletteForBg(hex);
       return `
         <button type="button" class="color-swatch-btn ${isSelected ? 'active' : ''}" 
                 data-color="${hex}" 
-                title="Màu ${i + 1}: ${hex}"
-                style="width: 28px; height: 28px; border-radius: 50%; background: ${hex}; border: ${isSelected ? '2.5px solid #ffffff' : '2px solid transparent'}; outline: ${isSelected ? '2px solid var(--primary)' : 'none'}; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.25); transition: transform 0.15s, outline 0.15s;">
-          ${isSelected ? '<span style="color: #ffffff; font-size: 13px; font-weight: 800; line-height: 1;">✓</span>' : ''}
+                title="Màu ${i + 1}: ${hex.toUpperCase()}"
+                style="width: 28px; height: 28px; border-radius: 50%; background: ${hex}; border: ${isSelected ? '2.5px solid #ffffff' : '2px solid ' + cp.border}; outline: ${isSelected ? '2px solid var(--primary)' : 'none'}; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.25); transition: transform 0.15s, outline 0.15s;">
+          ${isSelected ? `<span style="color: ${cp.text}; font-size: 13px; font-weight: 800; line-height: 1;">✓</span>` : ''}
         </button>
       `;
-    }).join('');
+    }).join('') + `
+      <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:var(--radius-full); background:${currentColor}; color:${cpCur.text}; border:1px solid ${cpCur.border}; font-family:monospace; font-size:11px; font-weight:700; margin-left:4px;">
+        ${currentColor.toUpperCase()}
+      </span>
+    `;
 
     container.querySelectorAll('.color-swatch-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3177,25 +3705,117 @@ legend {
     });
   }
 
-  function syncAddModalColorFromExisting() {
-    const code = $('newCourseCode') ? $('newCourseCode').value.trim().toUpperCase() : '';
-    const name = $('newCourseName') ? $('newCourseName').value.trim().toLowerCase() : '';
-    const existing = appState.subjects.find(s => 
-      (code && s.code && s.code.toUpperCase() === code) ||
-      (name && s.name && s.name.toLowerCase() === name)
+  function applyColorPickerPreview(rawHex, fromInput = false) {
+    if (!activeColorPickerCtx) return;
+    const norm = normalizeHexColor(rawHex);
+    const errEl = $('cpkHexError');
+    if (!norm) {
+      if (errEl) errEl.textContent = rawHex && rawHex.trim().length >= 4 ? 'Mã HEX không hợp lệ (VD đúng: #2563EB hoặc #9333EA).' : '';
+      return;
+    }
+    if (errEl) errEl.textContent = '';
+    activeColorPickerCtx.pendingHex = norm;
+
+    const cp = getContrastPaletteForBg(norm);
+    if ($('cpkNativeInput')) $('cpkNativeInput').value = norm;
+    if (!fromInput && $('cpkHexInput')) $('cpkHexInput').value = norm.toUpperCase();
+    if ($('cpkActiveSwatchBox')) $('cpkActiveSwatchBox').style.background = norm;
+    if ($('cpkActiveHexBadge')) $('cpkActiveHexBadge').textContent = norm.toUpperCase();
+    if ($('cpkContrastBadge')) $('cpkContrastBadge').textContent = cp.label;
+
+    const preview = $('cpkLiveCardPreview');
+    if (preview) {
+      preview.style.background = norm;
+      preview.style.color = cp.text;
+      preview.style.setProperty('--pill-text', cp.text);
+      preview.style.setProperty('--pill-sub', cp.subText);
+      preview.style.setProperty('--pill-border', cp.border);
+      preview.style.setProperty('--pill-badge-bg', cp.badgeBg);
+      preview.style.setProperty('--pill-badge-text', cp.badgeText);
+    }
+
+    document.querySelectorAll('#cpkGroupsContainer .cp-swatch').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.hex === norm);
+      const chk = btn.querySelector('.cp-check');
+      if (chk) chk.style.display = btn.dataset.hex === norm ? 'inline' : 'none';
+    });
+  }
+
+  function openColorPickerModal({ initialColor, defaultColor, courseId = null, courseName = 'Môn học', courseCode = 'CODE', onConfirm }) {
+    const startHex = normalizeHexColor(initialColor) || autoAssignCourseColor(courseId);
+    const defHex = normalizeHexColor(defaultColor) || startHex;
+    activeColorPickerCtx = {
+      pendingHex: startHex,
+      defaultHex: defHex,
+      courseId,
+      onConfirm
+    };
+
+    if ($('cpkPreviewTitle')) $('cpkPreviewTitle').textContent = courseName || 'Môn học mẫu';
+    if ($('cpkPreviewCode')) $('cpkPreviewCode').textContent = courseCode || 'COURSE';
+    if ($('cpkHexError')) $('cpkHexError').textContent = '';
+
+    const usedByOthers = new Set(
+      appState.subjects
+        .filter(s => !courseId || (s.id !== courseId && s.courseId !== courseId))
+        .map(s => normalizeHexColor(s.color))
+        .filter(Boolean)
     );
+
+    const groupsContainer = $('cpkGroupsContainer');
+    if (groupsContainer) {
+      groupsContainer.innerHTML = COLOR_GROUPS.map(g => `
+        <div class="color-group-block">
+          <div class="color-group-title">${esc(g.label)}</div>
+          <div class="color-group-grid">
+            ${g.colors.map(c => {
+              const hex = normalizeHexColor(c.hex);
+              const cp = getContrastPaletteForBg(hex);
+              const isUsed = usedByOthers.has(hex);
+              return `
+                <button type="button" class="cp-swatch" data-hex="${hex}" title="${esc(c.name)} (${hex.toUpperCase()})${isUsed ? ' · Đã có môn dùng' : ''}"
+                        style="background: ${hex}; color: ${cp.text};">
+                  <span class="cp-check" style="display:none; font-size:13px; font-weight:800; line-height:1;">✓</span>
+                  ${isUsed ? '<span class="used-dot"></span>' : ''}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
+
+      groupsContainer.querySelectorAll('.cp-swatch').forEach(btn => {
+        btn.addEventListener('click', () => applyColorPickerPreview(btn.dataset.hex));
+      });
+    }
+
+    applyColorPickerPreview(startHex);
+    $('colorPickerModal').showModal();
+  }
+
+  function syncAddModalColorFromExisting() {
+    const mode = $('addCourseMode') ? $('addCourseMode').value : 'new';
+    if (mode === 'existing') return;
+    const code = $('newCourseCode') ? $('newCourseCode').value.trim().toUpperCase() : '';
+    const name = $('newCourseName') ? $('newCourseName').value.trim() : '';
+    const existing = findSubjectByIdentity(appState.subjects, name, code);
     if (existing) {
-      const col = existing.color || PALETTE[0];
+      const col = normalizeHexColor(existing.color) || PALETTE[0];
       $('newCourseColor').value = col;
       renderColorPalette('courseColorPalette', 'newCourseColor', col);
       if (existing.room && $('newCourseRoom') && !$('newCourseRoom').value) {
         $('newCourseRoom').value = existing.room;
       }
+      if (existing.lecturer && $('newCourseLecturer') && !$('newCourseLecturer').value) {
+        $('newCourseLecturer').value = existing.lecturer;
+      }
       if ($('colorSyncNotice')) {
-        $('colorSyncNotice').innerHTML = `🔄 <i>Đã tự động đồng bộ màu với môn <b>${esc(existing.name || existing.code)}</b></i>`;
+        $('colorSyncNotice').innerHTML = `🔄 <i>Tìm thấy môn trùng khớp: <b>${esc(existing.name)} (${esc(existing.code || '')})</b> — đã tự động đồng bộ màu sắc.</i>`;
       }
     } else {
-      if ($('colorSyncNotice')) $('colorSyncNotice').innerHTML = '';
+      if ($('colorSyncNotice')) {
+        $('colorSyncNotice').innerHTML = '✨ <i>Sẽ tạo môn học mới với định danh courseId riêng &amp; màu sắc tự động.</i>';
+      }
     }
   }
 
@@ -3293,6 +3913,12 @@ legend {
         const targetView = btn.dataset.view;
 
         if (targetView === 'subjects') {
+          const quickInp = $('quickCourseColorInput');
+          if (quickInp && quickInp.dataset.userPicked !== '1') {
+            const nextAuto = autoAssignCourseColor();
+            quickInp.value = nextAuto;
+            if ($('quickCourseColorBtn')) $('quickCourseColorBtn').style.background = nextAuto;
+          }
           renderSubjectList();
           $('subjectModal').showModal();
           return;
@@ -3512,9 +4138,9 @@ legend {
       }
     });
 
-        // Add Class Modal & Dynamic Slot Pickers
-    $('openAddClassBtn').addEventListener('click', openAddModal);
-    $('fabAddBtn').addEventListener('click', openAddModal);
+    // Add Class Modal, Existing Course Selector & Dynamic Slot Pickers
+    $('openAddClassBtn').addEventListener('click', () => openAddModal());
+    $('fabAddBtn').addEventListener('click', () => openAddModal());
     $('cancelAddClassBtn').addEventListener('click', () => $('addClassModal').close());
 
     const closeAddBtn = $('closeAddClassBtn');
@@ -3522,6 +4148,68 @@ legend {
     $('newDaysCheckboxGroup').addEventListener('change', updateSlotPickersGroup);
     $('newCourseCode').addEventListener('input', syncAddModalColorFromExisting);
     $('newCourseName').addEventListener('input', syncAddModalColorFromExisting);
+
+    if ($('modeExistingCourseBtn')) {
+      $('modeExistingCourseBtn').addEventListener('click', () => setAddCourseMode('existing'));
+    }
+    if ($('modeNewCourseBtn')) {
+      $('modeNewCourseBtn').addEventListener('click', () => setAddCourseMode('new'));
+    }
+    if ($('existingCourseSelect')) {
+      $('existingCourseSelect').addEventListener('change', e => applySelectedCourseToAddForm(e.target.value));
+    }
+    if ($('autoAssignAddColorBtn')) {
+      $('autoAssignAddColorBtn').addEventListener('click', () => {
+        const cid = $('selectedCourseId') ? $('selectedCourseId').value : '';
+        const col = autoAssignCourseColor(cid);
+        $('newCourseColor').value = col;
+        renderColorPalette('courseColorPalette', 'newCourseColor', col);
+        if ($('colorSyncNotice')) {
+          $('colorSyncNotice').innerHTML = `✨ <i>Đã tự động gán màu nổi bật chưa trùng: <b>${col.toUpperCase()}</b></i>`;
+        }
+      });
+    }
+    if ($('openAddColorPickerBtn')) {
+      $('openAddColorPickerBtn').addEventListener('click', () => {
+        const cid = $('selectedCourseId') ? $('selectedCourseId').value : '';
+        const curName = ($('newCourseName') && $('newCourseName').value.trim()) || 'Môn học mới';
+        const curCode = ($('newCourseCode') && $('newCourseCode').value.trim().toUpperCase()) || 'COURSE';
+        const curColor = ($('newCourseColor') && $('newCourseColor').value) || PALETTE[0];
+        openColorPickerModal({
+          initialColor: curColor,
+          defaultColor: curColor,
+          courseId: cid || null,
+          courseName: curName,
+          courseCode: curCode,
+          onConfirm: (hex) => {
+            $('newCourseColor').value = hex;
+            renderColorPalette('courseColorPalette', 'newCourseColor', hex);
+            if ($('colorSyncNotice')) {
+              $('colorSyncNotice').innerHTML = `🎨 <i>Đã chọn màu <b>${hex.toUpperCase()}</b> cho môn này.</i>`;
+            }
+          }
+        });
+      });
+    }
+    if ($('openEditColorPickerBtn')) {
+      $('openEditColorPickerBtn').addEventListener('click', () => {
+        const rid = editingClass && editingClass.ruleId;
+        const r = appState.rules.find(x => x.id === rid);
+        const sub = (r && (subj(r.sid) || subj(r.courseId))) || {};
+        const curColor = ($('editCourseColor') && $('editCourseColor').value) || sub.color || PALETTE[0];
+        openColorPickerModal({
+          initialColor: curColor,
+          defaultColor: sub.color || PALETTE[0],
+          courseId: sub.courseId || sub.id || null,
+          courseName: ($('editCourseName') && $('editCourseName').value.trim()) || sub.name || 'Môn học',
+          courseCode: ($('editCourseCode') && $('editCourseCode').value.trim().toUpperCase()) || sub.code || 'COURSE',
+          onConfirm: (hex) => {
+            $('editCourseColor').value = hex;
+            renderColorPalette('editColorPalette', 'editCourseColor', hex);
+          }
+        });
+      });
+    }
 
     $('addClassForm').addEventListener('submit', handleSaveAddClass);
 
@@ -3536,10 +4224,113 @@ legend {
       radio.addEventListener('change', () => updateDeleteButtonLabel(radio.value));
     });
 
-    // Subject List Modal Actions
+    // Subject List Modal & Quick Course Add Actions
     $('closeSubjectModalBtn').addEventListener('click', () => $('subjectModal').close());
+    if ($('closeSubjectTopBtn')) $('closeSubjectTopBtn').addEventListener('click', () => $('subjectModal').close());
+    if ($('quickCourseColorBtn')) {
+      $('quickCourseColorBtn').addEventListener('click', () => {
+        const inp = $('quickCourseColorInput');
+        const cur = (inp && inp.value) || autoAssignCourseColor();
+        openColorPickerModal({
+          initialColor: cur,
+          defaultColor: cur,
+          courseId: null,
+          courseName: ($('quickCourseName') && $('quickCourseName').value.trim()) || 'Môn học mới',
+          courseCode: ($('quickCourseCode') && $('quickCourseCode').value.trim().toUpperCase()) || 'COURSE',
+          onConfirm: (hex) => {
+            if (inp) {
+              inp.value = hex;
+              inp.dataset.userPicked = '1';
+            }
+            $('quickCourseColorBtn').style.background = hex;
+          }
+        });
+      });
+    }
+    if ($('quickAddCourseForm')) {
+      $('quickAddCourseForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const name = ($('quickCourseName') && $('quickCourseName').value.trim()) || '';
+        let code = ($('quickCourseCode') && $('quickCourseCode').value.trim().toUpperCase()) || '';
+        const lecturer = ($('quickCourseLecturer') && $('quickCourseLecturer').value.trim()) || '';
+        if (!name) return;
+        if (!code) code = name.split(/\s+/)[0].toUpperCase();
+        const dupExact = findSubjectByIdentity(appState.subjects, name, code);
+        if (dupExact) {
+          showToast(`Môn "${dupExact.name}" (${dupExact.code || ''}) đã có sẵn trong danh sách!`, 'info');
+          return;
+        }
+        const inp = $('quickCourseColorInput');
+        const col = (inp && inp.dataset.userPicked === '1' && normalizeHexColor(inp.value)) || autoAssignCourseColor();
+        const cid = uid();
+        appState.subjects.push({ id: cid, courseId: cid, name, code, color: col, lecturer });
+        $('quickAddCourseForm').reset();
+        const nextAuto = autoAssignCourseColor();
+        if (inp) {
+          inp.dataset.userPicked = '0';
+          inp.value = nextAuto;
+        }
+        if ($('quickCourseColorBtn')) $('quickCourseColorBtn').style.background = nextAuto;
+        saveStorage();
+        renderSubjectList();
+        updateDashboard();
+        showToast(`Đã thêm môn "${name}" (${code}) với mã courseId riêng!`, 'success');
+      });
+    }
     $('subjectListContainer').addEventListener('change', handleSubjectChange);
-    $('subjectListContainer').addEventListener('click', handleSubjectDelete);
+    $('subjectListContainer').addEventListener('click', handleSubjectClick);
+
+    // Extended Color Picker Modal Listeners
+    if ($('cpkNativeInput')) {
+      $('cpkNativeInput').addEventListener('input', e => applyColorPickerPreview(e.target.value));
+    }
+    if ($('cpkHexInput')) {
+      $('cpkHexInput').addEventListener('input', e => applyColorPickerPreview(e.target.value, true));
+    }
+    if ($('cpkAutoBtn')) {
+      $('cpkAutoBtn').addEventListener('click', () => {
+        if (!activeColorPickerCtx) return;
+        applyColorPickerPreview(autoAssignCourseColor(activeColorPickerCtx.courseId));
+      });
+    }
+    if ($('cpkRandomBtn')) {
+      $('cpkRandomBtn').addEventListener('click', () => {
+        if (!activeColorPickerCtx) return;
+        applyColorPickerPreview(pickRandomDistinctColor(activeColorPickerCtx.pendingHex, activeColorPickerCtx.courseId));
+      });
+    }
+    if ($('cpkResetBtn')) {
+      $('cpkResetBtn').addEventListener('click', () => {
+        if (!activeColorPickerCtx) return;
+        applyColorPickerPreview(activeColorPickerCtx.defaultHex);
+      });
+    }
+    if ($('cpkCancelBtn')) $('cpkCancelBtn').addEventListener('click', () => $('colorPickerModal').close());
+    if ($('cpkCancelTopBtn')) $('cpkCancelTopBtn').addEventListener('click', () => $('colorPickerModal').close());
+    if ($('cpkConfirmBtn')) {
+      $('cpkConfirmBtn').addEventListener('click', () => {
+        if (!activeColorPickerCtx) return;
+        const hex = normalizeHexColor($('cpkHexInput').value) || activeColorPickerCtx.pendingHex;
+        if (!normalizeHexColor(hex)) {
+          if ($('cpkHexError')) $('cpkHexError').textContent = 'Vui lòng nhập mã HEX hợp lệ (#RRGGBB) trước khi xác nhận.';
+          return;
+        }
+        const cb = activeColorPickerCtx.onConfirm;
+        $('colorPickerModal').close();
+        if (cb) cb(hex);
+      });
+    }
+
+    // Safe Course Deletion Modal Listeners
+    if ($('cancelDeleteCourseBtn')) {
+      $('cancelDeleteCourseBtn').addEventListener('click', () => {
+        pendingDeleteCourseId = null;
+        $('deleteCourseModal').close();
+      });
+    }
+    if ($('deleteCourseForm')) {
+      $('deleteCourseForm').addEventListener('submit', handleConfirmDeleteCourse);
+    }
 
     // Tasks Actions
     $('openAddTaskModalBtn').addEventListener('click', () => {
@@ -4250,11 +5041,110 @@ legend {
     });
   }
 
-  function openAddModal() {
+  function populateExistingCourseSelect(preselectCourseId = '') {
+    const sel = $('existingCourseSelect');
+    if (!sel) return;
+    if (!appState.subjects.length) {
+      sel.innerHTML = '<option value="">(Chưa có môn học nào — hãy chuyển sang Tạo môn học mới)</option>';
+      return;
+    }
+    sel.innerHTML = appState.subjects.map(s => {
+      const cid = s.courseId || s.id;
+      const ruleCount = appState.rules.filter(r => r.sid === s.id || r.courseId === cid).length;
+      const codeStr = s.code ? ` — ${s.code}` : '';
+      return `<option value="${esc(cid)}">${esc(s.name)}${esc(codeStr)} (${ruleCount} lịch)</option>`;
+    }).join('');
+    if (preselectCourseId && appState.subjects.some(s => s.id === preselectCourseId || s.courseId === preselectCourseId)) {
+      sel.value = preselectCourseId;
+    } else if (appState.subjects.length) {
+      const first = appState.subjects[0];
+      sel.value = first.courseId || first.id;
+    }
+  }
+
+  function applySelectedCourseToAddForm(courseId) {
+    const sub = subj(courseId);
+    const summaryEl = $('existingCourseSummary');
+    if (!sub) {
+      if ($('selectedCourseId')) $('selectedCourseId').value = '';
+      if (summaryEl) summaryEl.innerHTML = '<span style="color:var(--warning);">Chưa chọn môn học.</span>';
+      return;
+    }
+    const cid = sub.courseId || sub.id;
+    const col = normalizeHexColor(sub.color) || PALETTE[0];
+    const cp = getContrastPaletteForBg(col);
+    const ruleCount = appState.rules.filter(r => r.sid === sub.id || r.courseId === cid).length;
+
+    if ($('selectedCourseId')) $('selectedCourseId').value = cid;
+    $('newCourseCode').value = sub.code || '';
+    $('newCourseName').value = sub.name || '';
+    $('newCourseCode').readOnly = true;
+    $('newCourseName').readOnly = true;
+    $('newCourseColor').value = col;
+    renderColorPalette('courseColorPalette', 'newCourseColor', col);
+
+    if ($('newCourseRoom') && !$('newCourseRoom').value && sub.room) {
+      $('newCourseRoom').value = sub.room;
+    }
+    if ($('newCourseLecturer')) {
+      $('newCourseLecturer').value = sub.lecturer || '';
+    }
+    if (summaryEl) {
+      summaryEl.innerHTML = `
+        <span style="display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:var(--radius-full); background:${col}; color:${cp.text}; border:1px solid ${cp.border}; font-weight:700;">
+          ● ${esc(sub.name)}${sub.code ? ' · ' + esc(sub.code) : ''}
+        </span>
+        <span>Liên kết <code>courseId: ${esc(cid)}</code> · Hiện có <b>${ruleCount}</b> quy tắc lịch</span>
+      `;
+    }
+    if ($('colorSyncNotice')) {
+      $('colorSyncNotice').innerHTML = `🔒 <i>Đang liên kết với môn <b>${esc(sub.name)}</b> (${esc(sub.code || cid)}) — tự động điền tên, mã &amp; màu sắc.</i>`;
+    }
+  }
+
+  function setAddCourseMode(mode, preselectCourseId = '') {
+    const hasSubjects = appState.subjects.length > 0;
+    const effectiveMode = (mode === 'existing' && hasSubjects) ? 'existing' : 'new';
+    if ($('addCourseMode')) $('addCourseMode').value = effectiveMode;
+
+    const btnExisting = $('modeExistingCourseBtn');
+    const btnNew = $('modeNewCourseBtn');
+    const wrapExisting = $('existingCourseWrap');
+
+    if (btnExisting) {
+      btnExisting.classList.toggle('active', effectiveMode === 'existing');
+      btnExisting.disabled = !hasSubjects;
+      btnExisting.style.opacity = hasSubjects ? '1' : '0.5';
+    }
+    if (btnNew) btnNew.classList.toggle('active', effectiveMode === 'new');
+    if (wrapExisting) wrapExisting.style.display = effectiveMode === 'existing' ? 'grid' : 'none';
+
+    if (effectiveMode === 'existing') {
+      populateExistingCourseSelect(preselectCourseId);
+      const chosenId = $('existingCourseSelect') ? $('existingCourseSelect').value : '';
+      applySelectedCourseToAddForm(chosenId);
+    } else {
+      if ($('selectedCourseId')) $('selectedCourseId').value = '';
+      $('newCourseCode').readOnly = false;
+      $('newCourseName').readOnly = false;
+      $('newCourseCode').value = '';
+      $('newCourseName').value = '';
+      if ($('newCourseLecturer')) $('newCourseLecturer').value = '';
+      const assigned = autoAssignCourseColor();
+      $('newCourseColor').value = assigned;
+      renderColorPalette('courseColorPalette', 'newCourseColor', assigned);
+      if ($('colorSyncNotice')) {
+        $('colorSyncNotice').innerHTML = `✨ <i>Tự động gán màu chưa sử dụng (<b>${assigned.toUpperCase()}</b>). Sẽ tạo môn mới với định danh riêng.</i>`;
+      }
+    }
+  }
+
+  function openAddModal(preselectCourseId = '') {
+    const targetCourseId = typeof preselectCourseId === 'string' ? preselectCourseId : '';
     $('addClassForm').reset();
     $('addClassError').textContent = '';
     $('subjectDatalist').innerHTML = appState.subjects.map(s => `<option value="${esc(s.name)}">`).join('');
-    
+
     // Render 7 weekday checkboxes: Thứ 2 (1) to Chủ nhật (7)
     $('newDaysCheckboxGroup').innerHTML = DAYS_VN.map((dayName, idx) => `
       <label style="display:flex; align-items:center; gap:5px; font-size:12.5px; background:var(--bg-input); padding:6px 10px; border-radius:var(--radius-sm); cursor:pointer;">
@@ -4264,24 +5154,27 @@ legend {
 
     $('newCourseFrom').value = currentMonday || mondayKey(todayKey());
     $('newCourseTo').value = addDays($('newCourseFrom').value, 7 * 7 - 3);
-    
-    const initialColor = PALETTE[appState.subjects.length % PALETTE.length];
-    $('newCourseColor').value = initialColor;
-    renderColorPalette('courseColorPalette', 'newCourseColor', initialColor);
-    if ($('colorSyncNotice')) $('colorSyncNotice').innerHTML = '';
-    
+
+    const initialMode = (targetCourseId || appState.subjects.length > 0) ? 'existing' : 'new';
+    setAddCourseMode(initialMode, targetCourseId);
+
     updateSlotPickersGroup();
     $('addClassModal').showModal();
   }
 
   function handleSaveAddClass(e) {
     e.preventDefault();
+    const mode = $('addCourseMode') ? $('addCourseMode').value : 'new';
+    const selectedCourseId = $('selectedCourseId') ? $('selectedCourseId').value : '';
     let name = $('newCourseName').value.trim();
     let code = $('newCourseCode').value.trim().toUpperCase();
     const room = $('newCourseRoom').value.trim();
+    const lecturer = $('newCourseLecturer') ? $('newCourseLecturer').value.trim() : '';
+    const notes = $('newCourseNotes') ? $('newCourseNotes').value.trim() : '';
     const from = $('newCourseFrom').value;
     const to = $('newCourseTo').value;
-    const color = $('newCourseColor') ? $('newCourseColor').value : PALETTE[appState.subjects.length % PALETTE.length];
+    const rawColor = $('newCourseColor') ? $('newCourseColor').value : '';
+    const color = normalizeHexColor(rawColor) || autoAssignCourseColor(selectedCourseId || null);
 
     // Auto-fallback: If user entered only code or only name, support both seamlessly!
     if (!name && code) name = code;
@@ -4302,39 +5195,76 @@ legend {
       return;
     }
 
-    let s = appState.subjects.find(x => 
-      (code && x.code && x.code.toUpperCase() === code) || 
-      (x.name && x.name.toLowerCase() === name.toLowerCase())
-    );
-
-    if (!s) {
-      s = { id: uid(), name, code, color, from, to };
-      appState.subjects.push(s);
-    } else {
-      s.name = name;
-      if (code) s.code = code;
+    let s = null;
+    if (mode === 'existing' && selectedCourseId) {
+      s = subj(selectedCourseId);
+      if (!s) {
+        $('addClassError').textContent = 'Môn học đã chọn không còn tồn tại. Vui lòng chọn lại hoặc tạo môn mới.';
+        return;
+      }
+      s.courseId = s.courseId || s.id;
       s.color = color;
+      if (lecturer && !s.lecturer) s.lecturer = lecturer;
       if (!s.from || from < s.from) s.from = from;
       if (!s.to || to > s.to) s.to = to;
-      // Chỉ xóa quy tắc nếu trùng cả Thứ VÀ Tiết học của môn này (giữ nguyên các tiết khác cùng môn trong cùng ngày)
-      appState.rules = appState.rules.filter(r => 
-        !(r.sid === s.id && slotPicks.some(p => p.wd === r.wd && p.slot === r.slot))
-      );
+    } else {
+      // Create new course unless BOTH code and name match an existing course identically
+      // Preserves separate courseId entries for duplicate codes (e.g., Tiếng Trung VOV114 vs Vovinam VOV114)
+      s = findSubjectByIdentity(appState.subjects, name, code);
+      if (!s) {
+        const cid = uid();
+        s = { id: cid, courseId: cid, name, code, color, lecturer, from, to };
+        appState.subjects.push(s);
+      } else {
+        s.courseId = s.courseId || s.id;
+        s.name = name;
+        if (code) s.code = code;
+        s.color = color;
+        if (lecturer && !s.lecturer) s.lecturer = lecturer;
+        if (!s.from || from < s.from) s.from = from;
+        if (!s.to || to > s.to) s.to = to;
+      }
     }
 
-    const newRules = slotPicks.map(p => ({
+    const candidateRules = slotPicks.map(p => ({
       id: uid(),
       sid: s.id,
+      courseId: s.courseId || s.id,
       wd: p.wd,
       slot: p.slot,
       room: room || '',
+      lecturer: lecturer || '',
+      notes: notes || '',
       from: from,
       to: to,
       skip: [],
       moved: {}
     }));
 
-    appState.rules.push(...newRules);
+    // Check slot clashes with OTHER courses
+    const clashHits = [];
+    for (const cand of candidateRules) {
+      clashHits.push(...clashes(cand, from, to));
+    }
+    if (clashHits.length) {
+      const sample = clashHits.slice(0, 5).join('\n• ');
+      const more = clashHits.length > 5 ? `\n... và ${clashHits.length - 5} buổi trùng khác.` : '';
+      if (!confirm(`⚠️ Phát hiện trùng lịch với môn khác:\n• ${sample}${more}\n\nBạn vẫn muốn thêm các buổi học này vào TKB?`)) {
+        return;
+      }
+    }
+
+    // Chỉ xóa quy tắc của chính môn này nếu trùng cả Thứ, Tiết học VÀ giao khoảng ngày
+    appState.rules = appState.rules.filter(r => {
+      const sameCourse = r.sid === s.id || r.courseId === s.courseId;
+      if (!sameCourse) return true;
+      const sameSlotDay = slotPicks.some(p => p.wd === r.wd && p.slot === r.slot);
+      if (!sameSlotDay) return true;
+      const disjointDates = (r.to && r.to < from) || (r.from && r.from > to);
+      return disjointDates;
+    });
+
+    appState.rules.push(...candidateRules);
     saveStorage();
     $('addClassModal').close();
 
@@ -4344,7 +5274,7 @@ legend {
     }
     renderSchedule();
     updateDashboard();
-    showToast(`Đã thêm thành công môn "${name}" (${slotPicks.length} buổi/tuần)!`, 'success');
+    showToast(`Đã thêm lịch môn "${s.name}" (${slotPicks.length} buổi/tuần)!`, 'success');
   }
 
   // --- Handlers for Edit Class ---
@@ -4369,8 +5299,8 @@ legend {
   function openEditModal(rid, d) {
     const r = appState.rules.find(x => x.id === rid);
     if (!r) return;
-    const sub = subj(r.sid) || {};
-    const o = occOn(r, d) || { slot: r.slot, room: r.room, name: sub.name, code: sub.code };
+    const sub = subj(r.sid) || subj(r.courseId) || r.detachedCourse || {};
+    const o = occOn(r, d) || { slot: r.slot, room: r.room, name: sub.name, code: sub.code, lecturer: r.lecturer || sub.lecturer, notes: r.notes };
     editingClass = { ruleId: rid, date: d };
 
     $('editModalTitle').textContent = `${o.name || 'Môn học'} · ${DAYS_VN[r.wd - 1]}, ${shown(d)}`;
@@ -4380,9 +5310,11 @@ legend {
       <option value="${i + 1}" ${i + 1 === o.slot ? 'selected' : ''}>Tiết ${i + 1} (${t[0]}–${t[1]})</option>
     `).join('');
     $('editCourseRoom').value = o.room || '';
+    if ($('editCourseLecturer')) $('editCourseLecturer').value = o.lecturer || '';
+    if ($('editCourseNotes')) $('editCourseNotes').value = o.notes || '';
     $('editSubjFrom').value = r.from || sub.from || '';
     $('editSubjTo').value = r.to || sub.to || '';
-    const curSubjColor = sub.color || PALETTE[0];
+    const curSubjColor = normalizeHexColor(sub.color || r.detachedColor) || PALETTE[0];
     if ($('editCourseColor')) $('editCourseColor').value = curSubjColor;
     renderColorPalette('editColorPalette', 'editCourseColor', curSubjColor);
 
@@ -4408,9 +5340,12 @@ legend {
     if (!r) return;
     const date = editingClass.date;
     const scope = document.querySelector('input[name="editScope"]:checked').value;
-    const sub = subj(r.sid) || {};
+    const sub = subj(r.sid) || subj(r.courseId) || r.detachedCourse || {};
+    const isRealSubj = Boolean(subj(r.sid) || subj(r.courseId));
     const slot = +$('editCourseSlot').value;
     const room = $('editCourseRoom').value.trim();
+    const lecturer = $('editCourseLecturer') ? $('editCourseLecturer').value.trim() : (r.lecturer || '');
+    const notes = $('editCourseNotes') ? $('editCourseNotes').value.trim() : (r.notes || '');
     const name = $('editCourseName').value.trim();
     const code = $('editCourseCode').value.trim().toUpperCase();
 
@@ -4418,8 +5353,11 @@ legend {
 
     const newFrom = $('editSubjFrom').value.trim();
     const newTo = $('editSubjTo').value.trim();
-    const newColor = $('editCourseColor') ? $('editCourseColor').value : '';
-    if (newColor) sub.color = newColor;
+    const newColor = normalizeHexColor($('editCourseColor') ? $('editCourseColor').value : '');
+    if (newColor) {
+      sub.color = newColor;
+      if (!isRealSubj) r.detachedColor = newColor;
+    }
     if (newFrom && newTo && newFrom > newTo) {
       $('editClassError').textContent = 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.';
       return;
@@ -4434,16 +5372,20 @@ legend {
     }
 
     if (scope === 'one') {
-      // 1. Chỉ ngày này
+      // 1. Chỉ ngày này (chỉ lưu override name/code khi thực sự khác với môn gốc)
       r.moved = r.moved || {};
-      r.moved[date] = { slot, room, name, code };
+      const entry = { slot, room, lecturer, notes };
+      if (name !== (sub.name || '')) entry.name = name;
+      if (code !== (sub.code || '')) entry.code = code;
+      r.moved[date] = entry;
     } else if (scope === 'after') {
       // 2. Ngày này và những ngày sau
       const prevDate = addDays(date, -1);
       if (!r.from || date <= r.from) {
-        // Áp dụng từ ngày bắt đầu: cập nhật trực tiếp rule
         r.slot = slot;
         r.room = room;
+        r.lecturer = lecturer;
+        r.notes = notes;
         if (r.moved) {
           Object.keys(r.moved).forEach(k => { if (k >= date) delete r.moved[k]; });
         }
@@ -4451,7 +5393,6 @@ legend {
           r.skip = r.skip.filter(k => k < date);
         }
       } else {
-        // Tách rule: rule cũ dừng ở prevDate, rule mới bắt đầu từ date
         const origTo = r.to;
         r.to = prevDate;
         if (r.moved) {
@@ -4463,9 +5404,12 @@ legend {
         appState.rules.push({
           id: uid(),
           sid: r.sid,
+          courseId: r.courseId || r.sid,
           wd: r.wd,
           slot: slot,
           room: room,
+          lecturer: lecturer,
+          notes: notes,
           from: date,
           to: origTo,
           skip: [],
@@ -4480,11 +5424,12 @@ legend {
       targets.forEach(x => {
         x.slot = slot;
         x.room = room;
+        x.lecturer = lecturer;
+        x.notes = notes;
         x.moved = {};
         if (newFrom) x.from = newFrom;
         if (newTo) x.to = newTo;
       });
-      // Cập nhật cả các rule khác của môn này nếu thay đổi ngày bắt đầu/kết thúc
       if (newFrom || newTo) {
         appState.rules.filter(x => x.sid === r.sid).forEach(x => {
           if (newFrom) x.from = newFrom;
@@ -4557,13 +5502,47 @@ legend {
     const s = subj(row.dataset.id);
     if (!s) return;
 
-    if (act === 'color') s.color = e.target.value;
-    else if (act === 'name') s.name = e.target.value.trim();
-    else if (act === 'code') s.code = e.target.value.trim();
+    s.courseId = s.courseId || s.id;
+    const oldName = s.name;
+    const oldCode = s.code;
+
+    if (act === 'color') {
+      const norm = normalizeHexColor(e.target.value);
+      if (norm) s.color = norm;
+    } else if (act === 'name') {
+      const nextName = e.target.value.trim();
+      if (!nextName) {
+        e.target.value = oldName;
+        return;
+      }
+      s.name = nextName;
+    } else if (act === 'code') {
+      s.code = e.target.value.trim().toUpperCase();
+    } else if (act === 'lecturer') {
+      s.lecturer = e.target.value.trim();
+    }
+
+    // Cascade sync to all linked rules by courseId/sid
+    appState.rules.forEach(r => {
+      if (r.sid === s.id || r.courseId === s.courseId) {
+        r.courseId = s.courseId;
+        if (r.name && r.name === oldName) delete r.name;
+        if (r.code && r.code === oldCode) delete r.code;
+        if (r.moved) {
+          Object.keys(r.moved).forEach(k => {
+            const m = r.moved[k];
+            if (m && m.name === oldName) delete m.name;
+            if (m && m.code === oldCode) delete m.code;
+          });
+        }
+      }
+    });
 
     saveStorage();
     renderSchedule();
     updateDashboard();
+    renderTasks();
+    renderExams();
   }
 
   // ==========================================================================
@@ -5008,8 +5987,8 @@ legend {
     }
 
     const news = [];
-    const findSubj = s => appState.subjects.find(x => (s.code && x.code && x.code.toLowerCase() === s.code.toLowerCase()) || x.name.toLowerCase() === s.name.toLowerCase())
-      || news.find(x => (s.code && x.code === s.code) || x.name.toLowerCase() === s.name.toLowerCase());
+    const findSubj = s => findSubjectByIdentity(appState.subjects, s.name, s.code)
+      || findSubjectByIdentity(news, s.name, s.code);
 
     const dates = selectedItems.map(s => s.date).sort();
     const bFrom = dates[0];
@@ -5019,15 +5998,18 @@ legend {
     for (const s of selectedItems) {
       let sub = findSubj(s);
       if (!sub) {
+        const cid = uid();
         sub = {
-          id: uid(),
+          id: cid,
+          courseId: cid,
           name: s.name,
           code: s.code,
-          color: PALETTE[(appState.subjects.length + news.length) % PALETTE.length]
+          color: autoAssignCourseColor(cid, [...appState.subjects, ...news])
         };
         news.push(sub);
-      } else if (s.code && !sub.code) {
-        sub.code = s.code;
+      } else {
+        sub.courseId = sub.courseId || sub.id;
+        if (s.code && !sub.code) sub.code = s.code;
       }
       if (sub.name === sub.code && s.name !== s.code) {
         sub.name = s.name;
@@ -5036,7 +6018,7 @@ legend {
       const wd = weekdayOf(s.date);
       const groupKey = `${sub.id}|${wd}|${s.slot}|${s.room}`;
       if (!groups.has(groupKey)) {
-        groups.set(groupKey, { sid: sub.id, wd, slot: s.slot, room: s.room, dates: new Set() });
+        groups.set(groupKey, { sid: sub.id, courseId: sub.courseId || sub.id, wd, slot: s.slot, room: s.room, dates: new Set() });
       }
       groups.get(groupKey).dates.add(s.date);
     }
@@ -5050,6 +6032,7 @@ legend {
       return {
         id: uid(),
         sid: g.sid,
+        courseId: g.courseId || g.sid,
         wd: g.wd,
         slot: g.slot,
         room: g.room,
@@ -5093,20 +6076,161 @@ legend {
     }, 100);
   }
 
-  function handleSubjectDelete(e) {
-    if (e.target.dataset.act !== 'del') return;
-    const row = e.target.closest('[data-id]');
+  let pendingDeleteCourseId = null;
+
+  function handleSubjectClick(e) {
+    const actBtn = e.target.closest('[data-act]');
+    if (!actBtn) return;
+    const act = actBtn.dataset.act;
+    const row = actBtn.closest('[data-id]');
     if (!row) return;
     const id = row.dataset.id;
     const s = subj(id);
-    if (!confirm(`Xác nhận xóa môn "${s.name}" cùng toàn bộ lịch học của môn này?`)) return;
+    if (!s) return;
 
-    appState.rules = appState.rules.filter(r => r.sid !== id);
-    appState.subjects = appState.subjects.filter(x => x.id !== id);
+    if (act === 'pick-color') {
+      openColorPickerModal({
+        initialColor: s.color || PALETTE[0],
+        defaultColor: s.color || autoAssignCourseColor(s.id),
+        courseId: s.courseId || s.id,
+        courseName: s.name,
+        courseCode: s.code || '',
+        onConfirm: (hex) => {
+          s.color = hex;
+          saveStorage();
+          renderSubjectList();
+          renderSchedule();
+          updateDashboard();
+          showToast(`Đã đổi màu môn "${s.name}" sang ${hex.toUpperCase()} — đồng bộ toàn bộ TKB!`, 'success');
+        }
+      });
+      return;
+    }
+
+    if (act === 'add-schedule') {
+      $('subjectModal').close();
+      openAddModal(s.courseId || s.id);
+      return;
+    }
+
+    if (act === 'del') {
+      handleSubjectDelete(e);
+    }
+  }
+
+  function handleSubjectDelete(e) {
+    const actBtn = e.target.closest('[data-act]');
+    if (!actBtn || actBtn.dataset.act !== 'del') return;
+    const row = actBtn.closest('[data-id]');
+    if (!row) return;
+    const id = row.dataset.id;
+    const s = subj(id);
+    if (!s) return;
+
+    const cid = s.courseId || s.id;
+    const linkedRules = appState.rules.filter(r => r.sid === s.id || r.courseId === cid);
+    const linkedTasks = appState.tasks.filter(t => t.sid === s.id);
+    const linkedExams = appState.exams.filter(ex => ex.sid === s.id);
+    const others = appState.subjects.filter(x => x.id !== s.id && x.courseId !== cid);
+
+    pendingDeleteCourseId = id;
+    const sumEl = $('delCourseSummary');
+    const optWrap = $('delCourseOptionsWrap');
+    const reassignRow = $('delReassignRow');
+    const reassignSel = $('delReassignSelect');
+
+    if (sumEl) {
+      if (linkedRules.length > 0 || linkedTasks.length > 0 || linkedExams.length > 0) {
+        sumEl.innerHTML = `Cảnh báo: Môn <b>${esc(s.name)}</b>${s.code ? ` (${esc(s.code)})` : ''} đang có <b>${linkedRules.length} quy tắc lịch học</b>${linkedTasks.length ? `, ${linkedTasks.length} bài tập` : ''}${linkedExams.length ? `, ${linkedExams.length} lịch thi` : ''}. Hãy chọn cách xử lý các buổi học liên quan trước khi xác nhận xóa:`;
+        if (optWrap) optWrap.style.display = 'grid';
+      } else {
+        sumEl.innerHTML = `Bạn có chắc muốn xóa môn <b>${esc(s.name)}</b>${s.code ? ` (${esc(s.code)})` : ''} khỏi danh sách Quản lý môn học không?`;
+        if (optWrap) optWrap.style.display = 'none';
+      }
+    }
+
+    const keepRadio = document.querySelector('input[name="delCourseAction"][value="detach_keep"]');
+    if (keepRadio) keepRadio.checked = true;
+
+    if (reassignRow && reassignSel) {
+      if (linkedRules.length > 0 && others.length > 0) {
+        reassignRow.style.display = 'block';
+        reassignSel.innerHTML = others.map(x => `<option value="${esc(x.courseId || x.id)}">${esc(x.name)}${x.code ? ' — ' + esc(x.code) : ''}</option>`).join('');
+      } else {
+        reassignRow.style.display = 'none';
+        reassignSel.innerHTML = '';
+      }
+    }
+
+    $('deleteCourseModal').showModal();
+  }
+
+  function handleConfirmDeleteCourse(e) {
+    e.preventDefault();
+    const id = pendingDeleteCourseId;
+    if (!id) return;
+    const s = subj(id);
+    if (!s) {
+      pendingDeleteCourseId = null;
+      $('deleteCourseModal').close();
+      return;
+    }
+
+    const cid = s.courseId || s.id;
+    const hasLinks = appState.rules.some(r => r.sid === s.id || r.courseId === cid);
+    const chosenRadio = document.querySelector('input[name="delCourseAction"]:checked');
+    const action = hasLinks && chosenRadio ? chosenRadio.value : 'delete_all';
+
+    if (action === 'detach_keep') {
+      appState.rules.forEach(r => {
+        if (r.sid === s.id || r.courseId === cid) {
+          r.detachedCourse = {
+            name: s.name,
+            code: s.code || '',
+            color: s.color || '#2563eb',
+            lecturer: s.lecturer || ''
+          };
+          r.detachedColor = s.color || '#2563eb';
+          r.sid = 'detached_' + s.id;
+          r.courseId = '';
+        }
+      });
+    } else if (action === 'reassign') {
+      const targetId = $('delReassignSelect') ? $('delReassignSelect').value : '';
+      const targetSub = subj(targetId);
+      if (targetSub) {
+        const targetCid = targetSub.courseId || targetSub.id;
+        appState.rules.forEach(r => {
+          if (r.sid === s.id || r.courseId === cid) {
+            r.sid = targetSub.id;
+            r.courseId = targetCid;
+          }
+        });
+        appState.tasks.forEach(t => { if (t.sid === s.id) t.sid = targetSub.id; });
+        appState.exams.forEach(ex => { if (ex.sid === s.id) ex.sid = targetSub.id; });
+      }
+    } else {
+      appState.rules = appState.rules.filter(r => r.sid !== s.id && r.courseId !== cid);
+    }
+
+    appState.subjects = appState.subjects.filter(x => x.id !== s.id && x.courseId !== cid);
+    pendingDeleteCourseId = null;
+
     saveStorage();
+    $('deleteCourseModal').close();
     renderSchedule();
     renderSubjectList();
     updateDashboard();
+    renderTasks();
+    renderExams();
+    showToast(
+      action === 'detach_keep'
+        ? `Đã xóa môn "${s.name}" khỏi danh mục, các buổi học trên TKB vẫn được giữ nguyên.`
+        : action === 'reassign'
+          ? `Đã chuyển toàn bộ buổi học sang môn đích và xóa "${s.name}".`
+          : `Đã xóa môn "${s.name}" và lịch học liên quan.`,
+      'info'
+    );
   }
 
   // Run initial setup on DOM ready
